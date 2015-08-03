@@ -15,26 +15,35 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+func writeError(w io.Writer, err error) {
+	ew := byteio.LittleEndianWriter{Writer: w}
+	ew.WriteUint8(0)
+	errStr := []byte(err.Error())
+	ew.WriteInt64(int64(len(errStr)))
+	ew.Write(errStr)
+	fmt.Println("write error", err)
+}
+
 func socketHandler(conn *websocket.Conn) {
 	r := byteio.LittleEndianReader{conn}
 	length, _, err := r.ReadInt64()
 	if err != nil {
-		fmt.Println(err)
+		writeError(conn, err)
 		return
 	}
 	f, err := ioutil.TempFile("", "mineWebGen")
 	if err != nil {
-		fmt.Println(err)
+		writeError(conn, err)
 		return
 	}
 	defer os.Remove(f.Name())
 	_, err = io.Copy(f, io.LimitReader(conn, int64(length)))
 	if err != nil {
-		fmt.Println(err)
+		writeError(conn, err)
 		return
 	}
+	conn.Write([]byte{1})
 	f.Seek(0, 0)
-	io.Copy(os.Stdout, f)
 }
 
 var port = flag.Uint("-p", 8080, "server port")
