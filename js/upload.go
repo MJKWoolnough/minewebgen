@@ -29,27 +29,52 @@ func upload(c dom.Element) {
 			length := file.Size()
 			pb := progress.New(color.RGBA{255, 0, 0, 0}, color.RGBA{0, 0, 255, 0}, 400, 50)
 			uploadDiv.RemoveChild(upl)
-			uploadDiv.AppendChild(xjs.CreateElement("br"))
+			status := xjs.CreateElement("div")
+			xjs.SetInnerText(status, "Uploading...")
+			uploadDiv.AppendChild(status)
 			uploadDiv.AppendChild(pb.HTMLCanvasElement)
 			go func() {
-				w, err := websocket.Dial("ws://" + js.Global.Get("location").Get("host").String() + "/socket")
+				conn, err := websocket.Dial("ws://" + js.Global.Get("location").Get("host").String() + "/socket")
 				if err != nil {
-					println(err)
+					xjs.SetInnerText(status, err.Error())
 					return
 				}
-				defer w.Close()
-				er := byteio.LittleEndianWriter{Writer: w}
-				_, err = er.WriteInt64(int64(length))
+				defer conn.Close()
+				ew := byteio.LittleEndianWriter{Writer: conn}
+				er := byteio.LittleEndianReader{conn}
+				_, err = ew.WriteInt64(int64(length))
 				if err != nil {
-					println(err)
+					xjs.SetInnerText(status, err.Error())
 					return
 				}
-				_, err = io.Copy(w, pb.Reader(files.NewFileReader(file), file.Size()))
+				_, err = io.Copy(conn, pb.Reader(files.NewFileReader(file), file.Size()))
 				if err != nil {
-					println(err)
+					xjs.SetInnerText(status, err.Error())
 					return
 				}
-				println("done")
+				statusCode, _, err := er.ReadUint8()
+				if err != nil {
+					xjs.SetInnerText(status, err.Error())
+					return
+				}
+				switch statusCode {
+				case 0:
+					length, _, err := er.ReadInt64()
+					if err != nil {
+						xjs.SetInnerText(status, err.Error())
+						return
+					}
+					errStr := make([]byte, length)
+					_, err = io.ReadFull(conn, errStr)
+					if err != nil {
+						xjs.SetInnerText(status, err.Error())
+						return
+					}
+					xjs.SetInnerText(status, string(errStr))
+					return
+				case 1:
+					xjs.SetInnerText(status, "Done")
+				}
 			}()
 		})
 		uploadDiv.AppendChild(upl)
