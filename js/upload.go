@@ -3,6 +3,7 @@ package main
 import (
 	"image/color"
 	"io"
+	"strconv"
 
 	"github.com/MJKWoolnough/byteio"
 	"github.com/MJKWoolnough/gopherjs/files"
@@ -32,18 +33,21 @@ func upload(c dom.Element) {
 			status := xjs.CreateElement("div")
 			xjs.SetInnerText(status, "Uploading...")
 			uploadDiv.AppendChild(status)
-			uploadDiv.AppendChild(pb.HTMLCanvasElement)
+			uploadDiv.AppendChild(pb)
 			go func() {
 				conn, err := websocket.Dial("ws://" + js.Global.Get("location").Get("host").String() + "/socket")
 				if err != nil {
 					xjs.SetInnerText(status, err.Error())
 					return
 				}
+				dom.GetWindow().AddEventListener("beforeunload", false, func(_ dom.Event) {
+					conn.Close()
+				})
 				defer conn.Close()
-				ew := byteio.LittleEndianWriter{Writer: conn}
-				er := byteio.LittleEndianReader{conn}
-				_, err = ew.WriteInt64(int64(length))
-				if err != nil {
+				w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
+				r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
+				w.WriteInt64(int64(length))
+				if w.Err != nil {
 					xjs.SetInnerText(status, err.Error())
 					return
 				}
@@ -52,32 +56,81 @@ func upload(c dom.Element) {
 					xjs.SetInnerText(status, err.Error())
 					return
 				}
-				statusCode, _, err := er.ReadUint8()
-				if err != nil {
+				statusCode := r.ReadUint8()
+				if r.Err != nil {
 					xjs.SetInnerText(status, err.Error())
 					return
 				}
 				switch statusCode {
 				case 0:
-					length, _, err := er.ReadInt64()
-					if err != nil {
-						xjs.SetInnerText(status, err.Error())
-						return
-					}
-					errStr := make([]byte, length)
-					_, err = io.ReadFull(conn, errStr)
-					if err != nil {
-						xjs.SetInnerText(status, err.Error())
-						return
-					}
-					xjs.SetInnerText(status, string(errStr))
+					readError(status, r)
 					return
 				case 1:
-					xjs.SetInnerText(status, "Done")
+				default:
+					xjs.SetInnerText(status, "unknown status")
+					return
+				}
+				uploadDiv.RemoveChild(pb)
+				width := r.ReadInt64()
+				height := r.ReadInt64()
+				if r.Err != nil {
+					xjs.SetInnerText(status, err.Error())
+					return
+				}
+				xjs.SetInnerText(status, strconv.FormatInt(width, 10)+"x"+strconv.FormatInt(height, 10))
+				return
+				canvas := xjs.CreateElement("canvas").(*dom.HTMLCanvasElement)
+				canvas.SetAttribute("width", strconv.FormatInt(width, 10))
+				canvas.SetAttribute("height", strconv.FormatInt(width, 10))
+				ctx := canvas.GetContext2d()
+				for {
+					statusCode := r.ReadUint8()
+					if r.Err != nil {
+						xjs.SetInnerText(status, err.Error())
+						return
+					}
+					switch statusCode {
+					case 0:
+						readError(status, r)
+						return
+					case 1:
+						x := r.ReadInt64()
+						y := r.ReadInt64()
+						red := r.ReadUint8()
+						green := r.ReadUint8()
+						blue := r.ReadUint8()
+						alpha := r.ReadUint8()
+						if r.Err != nil {
+							xjs.SetInnerText(status, err.Error())
+							return
+						}
+						ctx.FillStyle = "rgba(" + strconv.Itoa(int(red)) + ", " + strconv.Itoa(int(green)) + ", " + strconv.Itoa(int(blue)) + ", " + strconv.FormatFloat(float64(alpha)/255, 'f', -1, 32) + ")"
+						ctx.FillRect(int(x), int(y), 1, 1)
+					case 255:
+						return
+					default:
+						xjs.SetInnerText(status, "unknown status")
+						return
+					}
 				}
 			}()
 		})
 		uploadDiv.AppendChild(upl)
 	}
 	c.AppendChild(uploadDiv)
+}
+
+func readError(status dom.Element, r byteio.StickyReader) {
+	length := r.ReadInt64()
+	if r.Err != nil {
+		xjs.SetInnerText(status, r.Err.Error())
+		return
+	}
+	errStr := make([]byte, length)
+	_, err := io.ReadFull(r.Reader, errStr)
+	if err != nil {
+		xjs.SetInnerText(status, err.Error())
+		return
+	}
+	xjs.SetInnerText(status, string(errStr))
 }
