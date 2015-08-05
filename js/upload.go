@@ -71,22 +71,22 @@ func upload(c dom.Element) {
 					return
 				}
 				uploadDiv.RemoveChild(pb)
-				width := r.ReadInt64()
-				height := r.ReadInt64()
+				width := r.ReadInt32()
+				height := r.ReadInt32()
 				if r.Err != nil {
 					xjs.SetInnerText(status, err.Error())
 					return
 				}
-				xjs.SetInnerText(status, strconv.FormatInt(width, 10)+"x"+strconv.FormatInt(height, 10))
-				return
+				xjs.SetInnerText(status, strconv.FormatInt(int64(width), 10)+"x"+strconv.FormatInt(int64(height), 10))
 				canvas := xjs.CreateElement("canvas").(*dom.HTMLCanvasElement)
-				canvas.SetAttribute("width", strconv.FormatInt(width, 10))
-				canvas.SetAttribute("height", strconv.FormatInt(width, 10))
+				canvas.SetAttribute("width", strconv.FormatInt(int64(width), 10))
+				canvas.SetAttribute("height", strconv.FormatInt(int64(height), 10))
 				ctx := canvas.GetContext2d()
+				uploadDiv.AppendChild(canvas)
 				for {
 					statusCode := r.ReadUint8()
 					if r.Err != nil {
-						xjs.SetInnerText(status, err.Error())
+						xjs.SetInnerText(status, r.Err.Error())
 						return
 					}
 					switch statusCode {
@@ -94,8 +94,8 @@ func upload(c dom.Element) {
 						readError(status, r)
 						return
 					case 1:
-						x := r.ReadInt64()
-						y := r.ReadInt64()
+						x := r.ReadInt32()
+						y := r.ReadInt32()
 						red := r.ReadUint8()
 						green := r.ReadUint8()
 						blue := r.ReadUint8()
@@ -107,6 +107,7 @@ func upload(c dom.Element) {
 						ctx.FillStyle = "rgba(" + strconv.Itoa(int(red)) + ", " + strconv.Itoa(int(green)) + ", " + strconv.Itoa(int(blue)) + ", " + strconv.FormatFloat(float64(alpha)/255, 'f', -1, 32) + ")"
 						ctx.FillRect(int(x), int(y), 1, 1)
 					case 255:
+						xjs.SetInnerText(status, "Done")
 						return
 					default:
 						xjs.SetInnerText(status, "unknown status")
@@ -121,12 +122,12 @@ func upload(c dom.Element) {
 }
 
 func readError(status dom.Element, r byteio.StickyReader) {
-	length := r.ReadInt64()
+	length := r.ReadUint16()
 	if r.Err != nil {
 		xjs.SetInnerText(status, r.Err.Error())
 		return
 	}
-	errStr := make([]byte, length)
+	errStr := make([]byte, int(length))
 	_, err := io.ReadFull(r.Reader, errStr)
 	if err != nil {
 		xjs.SetInnerText(status, err.Error())
