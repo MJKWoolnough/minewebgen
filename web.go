@@ -16,22 +16,21 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-func writeError(w *byteio.LittleEndianWriter, err error) {
-	ew := byteio.LittleEndianWriter{Writer: w}
-	ew.WriteUint8(0)
+func writeError(w *byteio.StickyWriter, err error) {
+	w.WriteUint8(0)
 	errStr := []byte(err.Error())
-	ew.WriteInt64(int64(len(errStr)))
-	ew.Write(errStr)
+	w.WriteUint16(uint16(len(errStr)))
+	w.Writer.Write(errStr)
 	fmt.Println("error:", err)
 }
 
 func socketHandler(conn *websocket.Conn) {
 	conn.PayloadType = websocket.BinaryFrame
-	r := byteio.LittleEndianReader{conn}
-	w := byteio.LittleEndianWriter{Writer: conn}
-	length, _, err := r.ReadInt64()
-	if err != nil {
-		writeError(&w, err)
+	r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
+	w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
+	length := r.ReadInt64()
+	if r.Err != nil {
+		writeError(&w, r.Err)
 		return
 	}
 	f, err := ioutil.TempFile("", "mineWebGen")
@@ -66,25 +65,30 @@ func socketHandler(conn *websocket.Conn) {
 		writeError(&w, layerError{"height"})
 		return
 	}
-	_, err = w.WriteUint8(1)
-	if err != nil {
-		fmt.Println(err)
-		writeError(&w, err)
-		return
-	}
 	b := o.Bounds()
-	_, err = w.WriteInt64(int64(b.Max.X))
-	if err != nil {
-		fmt.Println(err)
-		writeError(&w, err)
+	w.WriteUint8(1)
+	w.WriteInt32(int32(b.Max.X))
+	w.WriteInt32(int32(b.Max.Y))
+	if w.Err != nil {
+		writeError(&w, w.Err)
 		return
 	}
-	_, err = w.WriteInt64(int64(b.Max.Y))
-	if err != nil {
-		fmt.Println(err)
-		writeError(&w, err)
-		return
+	for i := 0; i < 255; i++ {
+		for j := 0; j < 10; j++ {
+			w.WriteUint8(1)
+			w.WriteInt32(int32(i))
+			w.WriteInt32(int32(j))
+			w.WriteUint8(uint8(i + j*10))
+			w.WriteUint8(uint8(i + j*10))
+			w.WriteUint8(uint8(i + j*10))
+			w.WriteUint8(255)
+			if w.Err != nil {
+				writeError(&w, w.Err)
+				return
+			}
+		}
 	}
+	w.WriteUint8(255)
 }
 
 type layerError struct {
