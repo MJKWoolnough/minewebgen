@@ -62,13 +62,11 @@ func socketHandler(conn *websocket.Conn) {
 		writeError(&w, err)
 		return
 	}
-	terrain := o.Layer("terrain")
-	if terrain == nil {
+	if o.Layer("terrain") == nil {
 		writeError(&w, layerError{"terrain"})
 		return
 	}
-	heightMap := o.Layer("height")
-	if heightMap == nil {
+	if o.Layer("height") == nil {
 		writeError(&w, layerError{"height"})
 		return
 	}
@@ -81,7 +79,7 @@ func socketHandler(conn *websocket.Conn) {
 		return
 	}
 	c := make(chan paint, 1024)
-	go buildMap(c)
+	go buildMap(o, c)
 	for p := range c {
 		if p.Err != nil {
 			writeError(&w, p.Err)
