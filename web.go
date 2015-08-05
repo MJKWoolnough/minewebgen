@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"image/color"
 	"io"
 	"io/ioutil"
 	"log"
@@ -22,6 +23,12 @@ func writeError(w *byteio.StickyWriter, err error) {
 	w.WriteUint16(uint16(len(errStr)))
 	w.Writer.Write(errStr)
 	fmt.Println("error:", err)
+}
+
+type paint struct {
+	color.Color
+	X, Y int32
+	Err  error
 }
 
 func socketHandler(conn *websocket.Conn) {
@@ -67,25 +74,32 @@ func socketHandler(conn *websocket.Conn) {
 	}
 	b := o.Bounds()
 	w.WriteUint8(1)
-	w.WriteInt32(int32(b.Max.X))
-	w.WriteInt32(int32(b.Max.Y))
+	w.WriteInt32(int32(b.Max.X) >> 4)
+	w.WriteInt32(int32(b.Max.Y) >> 4)
 	if w.Err != nil {
 		writeError(&w, w.Err)
 		return
 	}
-	for i := 0; i < 255; i++ {
-		for j := 0; j < 10; j++ {
-			w.WriteUint8(1)
-			w.WriteInt32(int32(i))
-			w.WriteInt32(int32(j))
-			w.WriteUint8(uint8(i + j*10))
-			w.WriteUint8(uint8(i + j*10))
-			w.WriteUint8(uint8(i + j*10))
-			w.WriteUint8(255)
-			if w.Err != nil {
-				writeError(&w, w.Err)
-				return
+	c := make(chan paint, 1024)
+	go buildMap(c)
+	for p := range c {
+		if p.Err != nil {
+			writeError(&w, p.Err)
+			return
+		}
+		w.WriteUint8(1)
+		w.WriteInt32(p.X)
+		w.WriteInt32(p.Y)
+		r, g, b, a := p.Color.RGBA()
+		w.WriteUint8(uint8(r >> 8))
+		w.WriteUint8(uint8(g >> 8))
+		w.WriteUint8(uint8(b >> 8))
+		w.WriteUint8(uint8(a >> 8))
+		if w.Err != nil {
+			writeError(&w, w.Err)
+			for range c {
 			}
+			return
 		}
 	}
 	w.WriteUint8(255)
