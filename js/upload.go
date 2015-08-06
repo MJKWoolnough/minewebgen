@@ -81,6 +81,8 @@ func upload(c dom.Element) {
 				canvas := xjs.CreateElement("canvas").(*dom.HTMLCanvasElement)
 				canvas.SetAttribute("width", strconv.FormatInt(int64(width), 10))
 				canvas.SetAttribute("height", strconv.FormatInt(int64(height), 10))
+				canvas.Style().Set("width", strconv.FormatInt(int64(width*4), 10)+"px")
+				canvas.Style().Set("height", strconv.FormatInt(int64(width*4), 10)+"px")
 				ctx := canvas.GetContext2d()
 				uploadDiv.AppendChild(canvas)
 				for {
@@ -106,11 +108,20 @@ func upload(c dom.Element) {
 						}
 						ctx.FillStyle = "rgba(" + strconv.Itoa(int(red)) + ", " + strconv.Itoa(int(green)) + ", " + strconv.Itoa(int(blue)) + ", " + strconv.FormatFloat(float64(alpha)/255, 'f', -1, 32) + ")"
 						ctx.FillRect(int(x), int(y), 1, 1)
+					case 2:
+						length := r.ReadUint16()
+						message := make([]byte, length)
+						r.Read(message)
+						if r.Err != nil {
+							xjs.SetInnerText(status, err.Error())
+							return
+						}
+						xjs.SetInnerText(status, string(message))
 					case 255:
 						xjs.SetInnerText(status, "Done")
 						return
 					default:
-						xjs.SetInnerText(status, "unknown status")
+						xjs.SetInnerText(status, "Error")
 						return
 					}
 				}
