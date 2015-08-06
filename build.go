@@ -152,11 +152,16 @@ func buildMap(o *ora.ORA, c chan paint, m chan string, e chan error) {
 	}
 
 	m <- "Building Terrain"
-	buildTerrain(p, sTerrain, sHeight, c)
-	m <- "Building Height Map"
+	if !buildTerrain(p, sTerrain, sHeight, c, e) {
+		return
+	}
 	level, err := minecraft.NewLevel(p)
 	if err != nil {
 		e <- err
+		return
+	}
+	m <- "Building Height Map"
+	if !shapeTerrain(level, sTerrain, sHeight, c, e) {
 		return
 	}
 	level.LevelName("Test Generation")
@@ -174,7 +179,7 @@ func buildMap(o *ora.ORA, c chan paint, m chan string, e chan error) {
 	level.Close()
 }
 
-func buildTerrain(mpath minecraft.Path, terrain *image.Paletted, height *image.Gray, c chan paint) {
+func buildTerrain(mpath minecraft.Path, terrain *image.Paletted, height *image.Gray, c chan paint, e chan error) bool {
 	cc := newCache()
 	b := terrain.Bounds()
 	for j := 0; j < b.Max.Y; j += 16 {
@@ -185,16 +190,53 @@ func buildTerrain(mpath minecraft.Path, terrain *image.Paletted, height *image.G
 			g := height.SubImage(image.Rect(i, j, i+16, j+16)).(*image.Gray)
 			t := modeTerrain(p)
 			h := int32(meanHeight(g))
-			mpath.SetChunk(cc.getFromCache(chunkX, chunkZ, t, h))
+			err := mpath.SetChunk(cc.getFromCache(chunkX, chunkZ, t, h))
+			if err != nil {
+				e <- err
+				return false
+			}
 			c <- paint{
 				terrainColours[t],
 				chunkX, chunkZ,
-				nil,
 			}
 		}
 	}
+	return true
 }
 
-func buildHeight(level *minecraft.Level, terrain *image.Paletted, height *image.Gray, c chan paint) {
-
+func shapeTerrain(level *minecraft.Level, terrain *image.Paletted, height *image.Gray, c chan paint, e chan error) bool {
+	b := terrain.Bounds()
+	for j := 0; j < b.Max.Y; j += 16 {
+		chunkZ := int32(j >> 4)
+		for i := 0; i < b.Max.X; i += 16 {
+			chunkX := int32(i >> 4)
+			totalHeight := int32(0)
+			for x := int32(i); x < int32(i)+16; x++ {
+				for z := int32(j); z < int32(j)+16; z++ {
+					h := int32(height.GrayAt(int(x), int(z)).Y)
+					totalHeight += h
+					ch, err := level.GetHeight(x, z)
+					if err != nil {
+						e <- err
+						return false
+					}
+					for y := ch - 1; y > h; y-- {
+						level.SetBlock(x, y, z, minecraft.Block{})
+					}
+					t := terrainBlocks[terrain.ColorIndexAt(int(x), int(z))]
+					for y := h; y >= h-int32(t.TopLevel); y-- {
+						level.SetBlock(x, y, z, t.Top)
+					}
+					for y := h - int32(t.TopLevel) - 1; y >= ch; y-- {
+						level.SetBlock(x, y, z, t.Base)
+					}
+				}
+			}
+			c <- paint{
+				color.Alpha{uint8(totalHeight >> 8)},
+				chunkX, chunkZ,
+			}
+		}
+	}
+	return true
 }
