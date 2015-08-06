@@ -225,10 +225,10 @@ func shapeTerrain(level *minecraft.Level, terrain *image.Paletted, height *image
 						level.SetBlock(x, y, z, minecraft.Block{})
 					}
 					t := terrainBlocks[terrain.ColorIndexAt(int(x), int(z))]
-					for y := h; y >= h-int32(t.TopLevel); y-- {
+					for y := h; y > h-int32(t.TopLevel); y-- {
 						level.SetBlock(x, y, z, t.Top)
 					}
-					for y := h - int32(t.TopLevel) - 1; y >= ch; y-- {
+					for y := h - int32(t.TopLevel); y >= ch; y-- {
 						level.SetBlock(x, y, z, t.Base)
 					}
 				}
