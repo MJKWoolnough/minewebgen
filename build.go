@@ -159,7 +159,19 @@ func buildMap(o *ora.ORA, c chan paint, m chan string, e chan error) {
 		e <- err
 		return
 	}
+	level.LevelName("Test Generation")
+	level.MobSpawning(false)
+	level.KeepInventory(true)
+	level.FireTick(false)
+	level.DayLightCycle(false)
+	level.MobGriefing(false)
+	level.Spawn(10, 250, 10)
+	level.Generator(minecraft.FlatGenerator)
+	level.GeneratorOptions("0")
+	level.GameMode(minecraft.Creative)
+	level.AllowCommands(true)
 	level.Save()
+	level.Close()
 }
 
 func buildTerrain(mpath minecraft.Path, terrain *image.Paletted, height *image.Gray, c chan paint) {
