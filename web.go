@@ -21,7 +21,7 @@ func writeError(w *byteio.StickyWriter, err error) {
 	w.WriteUint8(0)
 	errStr := []byte(err.Error())
 	w.WriteUint16(uint16(len(errStr)))
-	w.Writer.Write(errStr)
+	w.Write(errStr)
 	fmt.Println("error:", err)
 }
 
@@ -79,25 +79,31 @@ func socketHandler(conn *websocket.Conn) {
 		return
 	}
 	c := make(chan paint, 1024)
-	go buildMap(o, c)
-	for p := range c {
-		if p.Err != nil {
-			writeError(&w, p.Err)
-			return
-		}
-		w.WriteUint8(1)
-		w.WriteInt32(p.X)
-		w.WriteInt32(p.Y)
-		r, g, b, a := p.Color.RGBA()
-		w.WriteUint8(uint8(r >> 8))
-		w.WriteUint8(uint8(g >> 8))
-		w.WriteUint8(uint8(b >> 8))
-		w.WriteUint8(uint8(a >> 8))
-		if w.Err != nil {
-			writeError(&w, w.Err)
-			for range c {
+	m := make(chan string, 1024)
+	go buildMap(o, c, m)
+Loop:
+	for {
+		select {
+		case p := <-c:
+			if p.Err != nil {
+				writeError(&w, p.Err)
+				return
 			}
-			return
+			if p.Color == nil {
+				break Loop
+			}
+			w.WriteUint8(1)
+			w.WriteInt32(p.X)
+			w.WriteInt32(p.Y)
+			r, g, b, a := p.RGBA()
+			w.WriteUint8(uint8(r >> 8))
+			w.WriteUint8(uint8(g >> 8))
+			w.WriteUint8(uint8(b >> 8))
+			w.WriteUint8(uint8(a >> 8))
+		case message := <-m:
+			w.WriteUint8(2)
+			w.WriteUint16(uint16(len(message)))
+			w.Write([]byte(message))
 		}
 	}
 	w.WriteUint8(255)
