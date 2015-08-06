@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 
 	"github.com/MJKWoolnough/byteio"
 	"github.com/MJKWoolnough/ora"
@@ -120,6 +121,7 @@ func (l layerError) Error() string {
 var port = flag.Uint("-p", 8080, "server port")
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	http.Handle("/socket", websocket.Handler(socketHandler))
 	http.Handle("/", http.FileServer(dir))
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
