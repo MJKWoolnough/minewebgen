@@ -29,7 +29,6 @@ func writeError(w *byteio.StickyWriter, err error) {
 type paint struct {
 	color.Color
 	X, Y int32
-	Err  error
 }
 
 func socketHandler(conn *websocket.Conn) {
