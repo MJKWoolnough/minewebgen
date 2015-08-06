@@ -175,6 +175,7 @@ func buildMap(o *ora.ORA, c chan paint, m chan string, e chan error) {
 	level.GeneratorOptions("0")
 	level.GameMode(minecraft.Creative)
 	level.AllowCommands(true)
+	m <- "Exporting"
 	level.Save()
 	level.Close()
 }
