@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -126,14 +125,14 @@ func (c *chunkCache) getFromCache(x, z int32, terrain uint8, height int32) nbt.T
 	return chunk
 }
 
-func buildMap(o *ora.ORA, c chan paint, m chan string) {
-	defer close(c)
+func buildMap(o *ora.ORA, c chan paint, m chan string, e chan error) {
+	defer close(e)
 	terrain := o.Layer("terrain")
 	height := o.Layer("height")
 	sTerrain := image.NewPaletted(o.Bounds(), terrainColours)
 	terrainI, err := terrain.Image()
 	if err != nil {
-		c <- paint{Err: err}
+		e <- err
 		return
 	}
 	draw.Draw(sTerrain, image.Rect(terrain.X, terrain.Y, sTerrain.Bounds().Max.X, sTerrain.Bounds().Max.Y), terrainI, image.Point{}, draw.Src)
@@ -141,20 +140,26 @@ func buildMap(o *ora.ORA, c chan paint, m chan string) {
 	sHeight := image.NewGray(o.Bounds())
 	heightI, err := height.Image()
 	if err != nil {
-		c <- paint{Err: err}
+		e <- err
 		return
 	}
 	draw.Draw(sHeight, image.Rect(height.X, height.Y, sTerrain.Bounds().Max.X, sTerrain.Bounds().Max.Y), heightI, image.Point{}, draw.Src)
 	heightI = nil
 	p, err := minecraft.NewFilePath("./test/")
 	if err != nil {
-		c <- paint{Err: err}
+		e <- err
 		return
 	}
 
 	m <- "Building Terrain"
 	buildTerrain(p, sTerrain, sHeight, c)
 	m <- "Building Height Map"
+	level, err := minecraft.NewLevel(p)
+	if err != nil {
+		e <- err
+		return
+	}
+	level.Save()
 }
 
 func buildTerrain(mpath minecraft.Path, terrain *image.Paletted, height *image.Gray, c chan paint) {
@@ -169,14 +174,12 @@ func buildTerrain(mpath minecraft.Path, terrain *image.Paletted, height *image.G
 			t := modeTerrain(p)
 			h := int32(meanHeight(g))
 			mpath.SetChunk(cc.getFromCache(chunkX, chunkZ, t, h))
-			fmt.Print(t)
 			c <- paint{
 				terrainColours[t],
 				chunkX, chunkZ,
 				nil,
 			}
 		}
-		fmt.Println()
 	}
 }
 

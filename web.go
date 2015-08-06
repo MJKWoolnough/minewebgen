@@ -79,19 +79,13 @@ func socketHandler(conn *websocket.Conn) {
 		return
 	}
 	c := make(chan paint, 1024)
-	m := make(chan string, 1024)
-	go buildMap(o, c, m)
+	m := make(chan string, 4)
+	e := make(chan error, 1)
+	go buildMap(o, c, m, e)
 Loop:
 	for {
 		select {
 		case p := <-c:
-			if p.Err != nil {
-				writeError(&w, p.Err)
-				return
-			}
-			if p.Color == nil {
-				break Loop
-			}
 			w.WriteUint8(1)
 			w.WriteInt32(p.X)
 			w.WriteInt32(p.Y)
@@ -104,6 +98,12 @@ Loop:
 			w.WriteUint8(2)
 			w.WriteUint16(uint16(len(message)))
 			w.Write([]byte(message))
+		case err := <-e:
+			if err == nil {
+				break Loop
+			}
+			writeError(&w, err)
+			return
 		}
 	}
 	w.WriteUint8(255)
