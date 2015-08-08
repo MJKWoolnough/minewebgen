@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/rpc/jsonrpc"
 	"os"
 	"os/signal"
 	"runtime"
@@ -13,14 +14,22 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-var port = flag.Uint("-p", 8080, "server port")
-
 func main() {
+	config := flag.Uint("-c", "config.json", "config file")
+	flag.Parse()
+
+	c, err := loadConfig(*config)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	http.Handle("/upload", websocket.Handler(uploadHandler))
-	http.Handle("/rpc", websocket.Handler(rpcHandler))
+	http.Handle("/rpc", websocket.Handler(func(c *websocket.Conn) { jsonrpc.ServeConn(conn) }))
 	http.Handle("/", http.FileServer(dir))
-	l, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", c.Port))
 	if err != nil {
 		log.Println(err)
 		return
