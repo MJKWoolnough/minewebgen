@@ -14,7 +14,7 @@ import (
 
 func closeOnExit(conn *websocket.Conn) {
 	dom.GetWindow().AddEventListener("beforeunload", false, func(_ dom.Event) {
-		if conn.ReadyState() != 3 {
+		if conn.ReadyState != 3 {
 			conn.Close()
 		}
 	})
