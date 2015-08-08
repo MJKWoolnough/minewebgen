@@ -34,10 +34,24 @@ func upload(c dom.Element) {
 			xjs.SetInnerText(status, "Uploading...")
 			uploadDiv.AppendChild(status)
 			uploadDiv.AppendChild(pb)
+			addRestart := func() {
+				reset := xjs.CreateElement("input")
+				reset.SetAttribute("type", "button")
+				reset.SetAttribute("value", "Restart")
+				reset.AddEventListener("click", false, func(dom.Event) {
+					xjs.RemoveChildren(uploadDiv)
+					upload(c)
+				})
+				uploadDiv.InsertBefore(reset, uploadDiv.FirstChild())
+			}
+			setError := func(err string) {
+				xjs.SetInnerText(status, err)
+				addRestart()
+			}
 			go func() {
 				conn, err := websocket.Dial("ws://" + js.Global.Get("location").Get("host").String() + "/socket")
 				if err != nil {
-					xjs.SetInnerText(status, err.Error())
+					setError(err.Error())
 					return
 				}
 				dom.GetWindow().AddEventListener("beforeunload", false, func(_ dom.Event) {
@@ -48,33 +62,49 @@ func upload(c dom.Element) {
 				r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
 				w.WriteInt64(int64(length))
 				if w.Err != nil {
-					xjs.SetInnerText(status, err.Error())
+					setError(w.Err.Error())
 					return
 				}
 				_, err = io.Copy(conn, pb.Reader(files.NewFileReader(file), file.Size()))
 				if err != nil {
-					xjs.SetInnerText(status, err.Error())
+					setError(err.Error())
 					return
 				}
 				statusCode := r.ReadUint8()
 				if r.Err != nil {
-					xjs.SetInnerText(status, err.Error())
+					setError(r.Err.Error())
 					return
 				}
+
+				readError := func() {
+					length := r.ReadUint16()
+					if r.Err != nil {
+						setError(r.Err.Error())
+						return
+					}
+					errStr := make([]byte, int(length))
+					_, err := io.ReadFull(r.Reader, errStr)
+					if err != nil {
+						setError(err.Error())
+						return
+					}
+					setError(string(errStr))
+				}
+
 				switch statusCode {
 				case 0:
-					readError(status, r)
+					readError()
 					return
 				case 1:
 				default:
-					xjs.SetInnerText(status, "unknown status")
+					setError("Unknown Status")
 					return
 				}
 				uploadDiv.RemoveChild(pb)
 				width := r.ReadInt32()
 				height := r.ReadInt32()
 				if r.Err != nil {
-					xjs.SetInnerText(status, err.Error())
+					setError(err.Error())
 					return
 				}
 				xjs.SetInnerText(status, strconv.FormatInt(int64(width), 10)+"x"+strconv.FormatInt(int64(height), 10))
@@ -88,12 +118,12 @@ func upload(c dom.Element) {
 				for {
 					statusCode := r.ReadUint8()
 					if r.Err != nil {
-						xjs.SetInnerText(status, r.Err.Error())
+						setError(r.Err.Error())
 						return
 					}
 					switch statusCode {
 					case 0:
-						readError(status, r)
+						readError()
 						return
 					case 1:
 						x := r.ReadInt32()
@@ -103,7 +133,7 @@ func upload(c dom.Element) {
 						blue := r.ReadUint8()
 						alpha := r.ReadUint8()
 						if r.Err != nil {
-							xjs.SetInnerText(status, err.Error())
+							setError(r.Err.Error())
 							return
 						}
 						ctx.FillStyle = "rgba(" + strconv.Itoa(int(red)) + ", " + strconv.Itoa(int(green)) + ", " + strconv.Itoa(int(blue)) + ", " + strconv.FormatFloat(float64(alpha)/255, 'f', -1, 32) + ")"
@@ -113,7 +143,7 @@ func upload(c dom.Element) {
 						message := make([]byte, length)
 						r.Read(message)
 						if r.Err != nil {
-							xjs.SetInnerText(status, err.Error())
+							setError(r.Err.Error())
 							return
 						}
 						xjs.SetInnerText(status, string(message))
@@ -121,7 +151,7 @@ func upload(c dom.Element) {
 						xjs.SetInnerText(status, "Done")
 						return
 					default:
-						xjs.SetInnerText(status, "Error")
+						setError("Unknown Error")
 						return
 					}
 				}
@@ -130,19 +160,4 @@ func upload(c dom.Element) {
 		uploadDiv.AppendChild(upl)
 	}
 	c.AppendChild(uploadDiv)
-}
-
-func readError(status dom.Element, r byteio.StickyReader) {
-	length := r.ReadUint16()
-	if r.Err != nil {
-		xjs.SetInnerText(status, r.Err.Error())
-		return
-	}
-	errStr := make([]byte, int(length))
-	_, err := io.ReadFull(r.Reader, errStr)
-	if err != nil {
-		xjs.SetInnerText(status, err.Error())
-		return
-	}
-	xjs.SetInnerText(status, string(errStr))
 }
