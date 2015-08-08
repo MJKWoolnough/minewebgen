@@ -60,6 +60,7 @@ func generate(c dom.Element) {
 				defer conn.Close()
 				w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
 				r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
+				w.WriteUint8(0)
 				w.WriteInt64(int64(length))
 				if w.Err != nil {
 					setError(w.Err.Error())
