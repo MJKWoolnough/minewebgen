@@ -148,6 +148,7 @@ func upload(c dom.Element) {
 						}
 						xjs.SetInnerText(status, string(message))
 					case 255:
+						addRestart()
 						xjs.SetInnerText(status, "Done")
 						return
 					default:
