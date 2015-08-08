@@ -13,7 +13,11 @@ import (
 )
 
 func generate(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) error {
-	o, err := ora.Open(f, length)
+	s, err := f.Stat()
+	if err != nil {
+		return err
+	}
+	o, err := ora.Open(f, s.Size())
 	if err != nil {
 		return err
 	}
@@ -57,6 +61,7 @@ Loop:
 			return err
 		}
 	}
+	return nil
 }
 
 type layerError struct {

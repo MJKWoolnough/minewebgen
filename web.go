@@ -19,13 +19,13 @@ func main() {
 	config := flag.String("-c", "config.json", "config file")
 	flag.Parse()
 
-	c, err := loadConfig(*config)
+	conf, err := loadConfig(*config)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	err = rpc.Register(c)
+	err = rpc.Register(conf)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -34,9 +34,9 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	http.Handle("/upload", websocket.Handler(uploadHandler))
-	http.Handle("/rpc", websocket.Handler(func(c *websocket.Conn) { jsonrpc.ServeConn(conn) }))
+	http.Handle("/rpc", websocket.Handler(func(conn *websocket.Conn) { jsonrpc.ServeConn(conn) }))
 	http.Handle("/", http.FileServer(dir))
-	l, err := net.Listen("tcp", fmt.Sprintf(":%d", c.Port))
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", conf.Port))
 	if err != nil {
 		log.Println(err)
 		return

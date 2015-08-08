@@ -39,7 +39,7 @@ func uploadHandler(conn *websocket.Conn) {
 	defer os.Remove(f.Name())
 	defer f.Close()
 	if uploadType == 3 {
-		url := make([]int, length)
+		url := make([]byte, length)
 		r.Read(url)
 		if r.Err != nil {
 			writeError(&w, r.Err)
