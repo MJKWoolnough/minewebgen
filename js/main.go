@@ -12,13 +12,17 @@ import (
 	"honnef.co/go/js/dom"
 )
 
-func closeOnExit(conn *websocket.Conn) {
-	dom.GetWindow().AddEventListener("beforeunload", false, func(_ dom.Event) {
+func closeOnExit(conn *websocket.Conn) func(*js.Object) {
+	return dom.GetWindow().AddEventListener("beforeunload", false, func(_ dom.Event) {
 		switch conn.ReadyState {
 		case websocket.Connecting, websocket.Open:
 			conn.Close()
 		}
 	})
+}
+
+func removeCloser(l func(*js.Object)) {
+	dom.GetWindow().RemoveEventListener("beforeunload", false, l)
 }
 
 var jrpc *rpc.Client

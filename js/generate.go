@@ -49,14 +49,12 @@ func generate(c dom.Element) {
 				addRestart()
 			}
 			go func() {
-				conn, err := websocket.Dial("ws://" + js.Global.Get("location").Get("host").String() + "/socket")
+				conn, err := websocket.Dial("ws://" + js.Global.Get("location").Get("host").String() + "/upload")
 				if err != nil {
 					setError(err.Error())
 					return
 				}
-				dom.GetWindow().AddEventListener("beforeunload", false, func(_ dom.Event) {
-					conn.Close()
-				})
+				defer removeCloser(closeOnExit(conn))
 				defer conn.Close()
 				w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
 				r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
