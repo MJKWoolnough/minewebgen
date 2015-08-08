@@ -14,10 +14,10 @@ import (
 	"honnef.co/go/js/dom"
 )
 
-var uploadDiv = xjs.CreateElement("div")
+var gDiv = xjs.CreateElement("div")
 
-func upload(c dom.Element) {
-	if !uploadDiv.HasChildNodes() {
+func generate(c dom.Element) {
+	if !gDiv.HasChildNodes() {
 		upl := xjs.CreateElement("input")
 		upl.SetAttribute("name", "file")
 		upl.SetAttribute("type", "file")
@@ -29,20 +29,20 @@ func upload(c dom.Element) {
 			file := files.NewFile(fs[0])
 			length := file.Size()
 			pb := progress.New(color.RGBA{255, 0, 0, 0}, color.RGBA{0, 0, 255, 0}, 400, 50)
-			uploadDiv.RemoveChild(upl)
+			gDiv.RemoveChild(upl)
 			status := xjs.CreateElement("div")
 			xjs.SetInnerText(status, "Uploading...")
-			uploadDiv.AppendChild(status)
-			uploadDiv.AppendChild(pb)
+			gDiv.AppendChild(status)
+			gDiv.AppendChild(pb)
 			addRestart := func() {
 				reset := xjs.CreateElement("input")
 				reset.SetAttribute("type", "button")
 				reset.SetAttribute("value", "Restart")
 				reset.AddEventListener("click", false, func(dom.Event) {
-					xjs.RemoveChildren(uploadDiv)
-					upload(c)
+					xjs.RemoveChildren(gDiv)
+					generate(c)
 				})
-				uploadDiv.InsertBefore(reset, uploadDiv.FirstChild())
+				gDiv.InsertBefore(reset, gDiv.FirstChild())
 			}
 			setError := func(err string) {
 				xjs.SetInnerText(status, err)
@@ -100,7 +100,7 @@ func upload(c dom.Element) {
 					setError("Unknown Status")
 					return
 				}
-				uploadDiv.RemoveChild(pb)
+				gDiv.RemoveChild(pb)
 				width := r.ReadInt32()
 				height := r.ReadInt32()
 				if r.Err != nil {
@@ -114,7 +114,7 @@ func upload(c dom.Element) {
 				canvas.Style().Set("width", strconv.FormatInt(int64(width*4), 10)+"px")
 				canvas.Style().Set("height", strconv.FormatInt(int64(width*4), 10)+"px")
 				ctx := canvas.GetContext2d()
-				uploadDiv.AppendChild(canvas)
+				gDiv.AppendChild(canvas)
 				for {
 					statusCode := r.ReadUint8()
 					if r.Err != nil {
@@ -158,7 +158,7 @@ func upload(c dom.Element) {
 				}
 			}()
 		})
-		uploadDiv.AppendChild(upl)
+		gDiv.AppendChild(upl)
 	}
-	c.AppendChild(uploadDiv)
+	c.AppendChild(gDiv)
 }
