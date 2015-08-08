@@ -1,13 +1,13 @@
 package main
 
 import (
+	"errors"
 	"image/color"
 	"io"
 	"io/ioutil"
 	"os"
 
 	"github.com/MJKWoolnough/byteio"
-	"github.com/MJKWoolnough/ora"
 	"golang.org/x/net/websocket"
 )
 
@@ -16,10 +16,15 @@ type paint struct {
 	X, Y int32
 }
 
-func socketHandler(conn *websocket.Conn) {
+func uploadHandler(conn *websocket.Conn) {
 	conn.PayloadType = websocket.BinaryFrame
 	r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
 	w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
+	uploadType := r.ReadUint8()
+	if uploadType > 1 {
+		writeError(&w, ErrInvalidType)
+		return
+	}
 	length := r.ReadInt64()
 	if r.Err != nil {
 		writeError(&w, r.Err)
@@ -42,62 +47,25 @@ func socketHandler(conn *websocket.Conn) {
 		return
 	}
 	f.Seek(0, 0)
-	o, err := ora.Open(f, length)
+	switch uploadType {
+	case 0:
+		err = generate(f, &r, &w)
+	case 1:
+		err = unpack(f, &r, &w)
+	}
 	if err != nil {
 		writeError(&w, err)
 		return
 	}
-	if o.Layer("terrain") == nil {
-		writeError(&w, layerError{"terrain"})
+	if r.Err != nil {
+		writeError(&w, r.Err)
 		return
 	}
-	if o.Layer("height") == nil {
-		writeError(&w, layerError{"height"})
-		return
-	}
-	b := o.Bounds()
-	w.WriteUint8(1)
-	w.WriteInt32(int32(b.Max.X) >> 4)
-	w.WriteInt32(int32(b.Max.Y) >> 4)
 	if w.Err != nil {
 		writeError(&w, w.Err)
 		return
 	}
-	c := make(chan paint, 1024)
-	m := make(chan string, 4)
-	e := make(chan error, 1)
-	go buildMap(o, c, m, e)
-Loop:
-	for {
-		select {
-		case p := <-c:
-			w.WriteUint8(1)
-			w.WriteInt32(p.X)
-			w.WriteInt32(p.Y)
-			r, g, b, a := p.RGBA()
-			w.WriteUint8(uint8(r >> 8))
-			w.WriteUint8(uint8(g >> 8))
-			w.WriteUint8(uint8(b >> 8))
-			w.WriteUint8(uint8(a >> 8))
-		case message := <-m:
-			w.WriteUint8(2)
-			w.WriteUint16(uint16(len(message)))
-			w.Write([]byte(message))
-		case err := <-e:
-			if err == nil {
-				break Loop
-			}
-			writeError(&w, err)
-			return
-		}
-	}
 	w.WriteUint8(255)
 }
 
-type layerError struct {
-	name string
-}
-
-func (l layerError) Error() string {
-	return "missing layer: " + l.name
-}
+var ErrInvalidType = errors.New("invalid upload type")

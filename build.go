@@ -4,11 +4,68 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"os"
 
+	"github.com/MJKWoolnough/byteio"
 	"github.com/MJKWoolnough/minecraft"
 	"github.com/MJKWoolnough/minecraft/nbt"
 	"github.com/MJKWoolnough/ora"
 )
+
+func generate(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) error {
+	o, err := ora.Open(f, length)
+	if err != nil {
+		return err
+	}
+	if o.Layer("terrain") == nil {
+		return layerError{"terrain"}
+	}
+	if o.Layer("height") == nil {
+		return layerError{"height"}
+	}
+	b := o.Bounds()
+	w.WriteUint8(1)
+	w.WriteInt32(int32(b.Max.X) >> 4)
+	w.WriteInt32(int32(b.Max.Y) >> 4)
+	if w.Err != nil {
+		return nil
+	}
+	c := make(chan paint, 1024)
+	m := make(chan string, 4)
+	e := make(chan error, 1)
+	go buildMap(o, c, m, e)
+Loop:
+	for {
+		select {
+		case p := <-c:
+			w.WriteUint8(1)
+			w.WriteInt32(p.X)
+			w.WriteInt32(p.Y)
+			r, g, b, a := p.RGBA()
+			w.WriteUint8(uint8(r >> 8))
+			w.WriteUint8(uint8(g >> 8))
+			w.WriteUint8(uint8(b >> 8))
+			w.WriteUint8(uint8(a >> 8))
+		case message := <-m:
+			w.WriteUint8(2)
+			w.WriteUint16(uint16(len(message)))
+			w.Write([]byte(message))
+		case err := <-e:
+			if err == nil {
+				break Loop
+			}
+			return err
+		}
+	}
+}
+
+type layerError struct {
+	name string
+}
+
+func (l layerError) Error() string {
+	return "missing layer: " + l.name
+}
 
 type terrain struct {
 	Base, Top minecraft.Block
