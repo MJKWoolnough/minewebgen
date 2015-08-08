@@ -10,17 +10,8 @@ import (
 	"os/signal"
 	"runtime"
 
-	"github.com/MJKWoolnough/byteio"
 	"golang.org/x/net/websocket"
 )
-
-func writeError(w *byteio.StickyWriter, err error) {
-	w.WriteUint8(0)
-	errStr := []byte(err.Error())
-	w.WriteUint16(uint16(len(errStr)))
-	w.Write(errStr)
-	fmt.Println("error:", err)
-}
 
 var port = flag.Uint("-p", 8080, "server port")
 
