@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/rpc"
 	"net/rpc/jsonrpc"
 	"os"
 	"os/signal"
@@ -15,10 +16,16 @@ import (
 )
 
 func main() {
-	config := flag.Uint("-c", "config.json", "config file")
+	config := flag.String("-c", "config.json", "config file")
 	flag.Parse()
 
 	c, err := loadConfig(*config)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = rpc.Register(c)
 	if err != nil {
 		fmt.Println(err)
 		return
