@@ -39,7 +39,13 @@ func main() {
 			jrpc = jsonrpc.NewClient(conn)
 			body := dom.GetWindow().Document().(dom.HTMLDocument).Body()
 			xjs.RemoveChildren(body)
-			body.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Server"))
+			var title string
+			err = jrpc.Call("Server.Name", nil, &title)
+			if err != nil {
+				dom.GetWindow().Alert("Error connection to RPC server: " + err.Error())
+				return
+			}
+			body.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), title+" Server"))
 			body.AppendChild(tabs.MakeTabs([]tabs.Tab{
 				{"Maps", maps},
 				{"Add", add},

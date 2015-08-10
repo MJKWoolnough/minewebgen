@@ -10,8 +10,10 @@ type Server struct {
 }
 
 type Config struct {
-	Port    uint16
-	Servers []Server
+	filename   string
+	ServerName string
+	Port       uint16
+	Servers    []Server
 }
 
 func loadConfig(filename string) (*Config, error) {
@@ -26,5 +28,20 @@ func loadConfig(filename string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	c.filename = filename
 	return c, nil
+}
+
+func (c *Config) save() error {
+	f, err := os.Create(c.filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return json.NewEncoder(f).Encode(c)
+}
+
+func (c *Config) Name(_ struct{}, serverName *string) error {
+	*serverName = c.ServerName
+	return nil
 }
