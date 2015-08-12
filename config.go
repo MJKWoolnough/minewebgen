@@ -14,6 +14,7 @@ type Config struct {
 	ServerName string
 	Port       uint16
 	Servers    []Server
+	selected   int
 }
 
 func loadConfig(filename string) (*Config, error) {
@@ -22,13 +23,16 @@ func loadConfig(filename string) (*Config, error) {
 		return nil, err
 	}
 	c := &Config{
-		Port: 8080,
+		filename:   filename,
+		ServerName: "Minecraft",
+		Port:       8080,
+		Servers:    make([]Server, 0),
+		selected:   -1,
 	}
 	err = json.NewDecoder(f).Decode(c)
 	if err != nil {
 		return nil, err
 	}
-	c.filename = filename
 	return c, nil
 }
 
@@ -43,5 +47,10 @@ func (c *Config) save() error {
 
 func (c *Config) Name(_ struct{}, serverName *string) error {
 	*serverName = c.ServerName
+	return nil
+}
+
+func (c *Config) List(_ struct{}, list *[]Server) error {
+	*list = c.Servers
 	return nil
 }
