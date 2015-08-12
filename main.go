@@ -1,3 +1,4 @@
+// A minecraft server manager and map generator
 package main
 
 import (
