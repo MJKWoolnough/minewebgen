@@ -12,6 +12,11 @@ import (
 	"github.com/MJKWoolnough/ora"
 )
 
+type paint struct {
+	color.Color
+	X, Y int32
+}
+
 func generate(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) error {
 	s, err := f.Stat()
 	if err != nil {

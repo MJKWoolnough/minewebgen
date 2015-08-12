@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"image/color"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -11,11 +10,6 @@ import (
 	"github.com/MJKWoolnough/byteio"
 	"golang.org/x/net/websocket"
 )
-
-type paint struct {
-	color.Color
-	X, Y int32
-}
 
 func uploadHandler(conn *websocket.Conn) {
 	conn.PayloadType = websocket.BinaryFrame
