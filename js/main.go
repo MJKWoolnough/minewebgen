@@ -39,6 +39,7 @@ func main() {
 			}
 			body.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), title+" Server"))
 			body.AppendChild(tabs.MakeTabs([]tabs.Tab{
+				{"Servers", servers},
 				{"Maps", maps},
 				{"Add", add},
 			}))
