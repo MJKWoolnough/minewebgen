@@ -35,3 +35,13 @@ func ServerList() ([]Server, error) {
 	err := jrpc.Call("Server.List", nil, &list)
 	return list, err
 }
+
+type Map struct {
+	Name string
+}
+
+func MapList() ([]Map, error) {
+	var list []Server
+	err := jrpc.Call("Server.Maps", nil, &list)
+	return list, err
+}
