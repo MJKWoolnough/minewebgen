@@ -9,6 +9,13 @@ import (
 type Server struct {
 	ID         uint32
 	Name, Path string
+	status     string
+}
+
+type Map struct {
+	ID         uint32
+	Name, Path string
+	Status     tring
 }
 
 type Config struct {
@@ -16,7 +23,8 @@ type Config struct {
 	filename   string
 	ServerName string
 	Port       uint16
-	Servers    map[uint32]Server
+	Servers    []Server
+	Maps       []Map
 	selected   int
 }
 
@@ -29,7 +37,8 @@ func loadConfig(filename string) (*Config, error) {
 		filename:   filename,
 		ServerName: "Minecraft",
 		Port:       8080,
-		Servers:    make(map[uint32]Server, 0),
+		Servers:    make([]Server, 0),
+		Maps:       make([]Map, 0),
 		selected:   -1,
 	}
 	err = json.NewDecoder(f).Decode(c)
@@ -65,4 +74,36 @@ func (c *Config) List(_ struct{}, list *[]Server) error {
 		*list = append(*list, s)
 	}
 	return nil
+}
+
+func (c *Config) Maps(_ struct{}, list *[]Map) error {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	*list = make([]Map, 0, len(c.Maps))
+	for _, m := range c.Maps {
+		*list = append(*list, m)
+	}
+	return nil
+}
+
+func (c *Config) newServer(name, path, string) int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	id := len(c.Servers)
+	c.Servers = append(c.Servers, Server{ID: id, Name: name, Path: path})
+	return id
+}
+
+func (c *Config) newMap(name, path string) int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	id := len(c.Maps)
+	c.Servers = append(c.Maps, Map{ID: id, Name: name, Path: path})
+	return id
+}
+
+func (c *Config) serverStatus(id int, status string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.Servers[id].status = status
 }
