@@ -16,17 +16,20 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+var config *Config
+
 func main() {
-	config := flag.String("-c", "config.json", "config file")
+	configFile := flag.String("-c", "config.json", "config file")
 	flag.Parse()
 
-	conf, err := loadConfig(*config)
+	var err error
+	config, err = loadConfig(*configFile)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	err = rpc.RegisterName("Server", conf)
+	err = rpc.RegisterName("Server", config)
 	if err != nil {
 		fmt.Println(err)
 		return
