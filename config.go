@@ -7,15 +7,16 @@ import (
 )
 
 type Server struct {
-	ID         uint32
+	ID         int
 	Name, Path string
+	Args       []string
 	status     string
 }
 
 type Map struct {
-	ID         uint32
+	ID         int
 	Name, Path string
-	Status     tring
+	Status     string
 }
 
 type Config struct {
@@ -76,7 +77,7 @@ func (c *Config) List(_ struct{}, list *[]Server) error {
 	return nil
 }
 
-func (c *Config) Maps(_ struct{}, list *[]Map) error {
+func (c *Config) MapList(_ struct{}, list *[]Map) error {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	*list = make([]Map, 0, len(c.Maps))
@@ -86,7 +87,7 @@ func (c *Config) Maps(_ struct{}, list *[]Map) error {
 	return nil
 }
 
-func (c *Config) newServer(name, path, string) int {
+func (c *Config) newServer(name, path string) int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	id := len(c.Servers)
@@ -98,7 +99,7 @@ func (c *Config) newMap(name, path string) int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	id := len(c.Maps)
-	c.Servers = append(c.Maps, Map{ID: id, Name: name, Path: path})
+	c.Maps = append(c.Maps, Map{ID: id, Name: name, Path: path})
 	return id
 }
 

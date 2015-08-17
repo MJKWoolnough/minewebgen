@@ -27,7 +27,7 @@ func (r *running) Write(p []byte) (int, error) {
 var serverRunning = &running{id: -1}
 
 func stopServer() error {
-	if serverRunning.ID < 0 {
+	if serverRunning.id < 0 {
 		return ErrServerNotRunning
 	}
 	serverRunning.stdin.Write(stopCmd)
@@ -37,7 +37,7 @@ func stopServer() error {
 }
 
 func saveServer() error {
-	if serverRunning.ID < 0 {
+	if serverRunning.id < 0 {
 		return ErrServerNotRunning
 	}
 	_, err := serverRunning.stdin.Write(saveCmd)
@@ -58,8 +58,11 @@ func (c *Config) startServer(id int) error {
 	d, e := path.Split(s.Path)
 	r.cmd = exec.Command(e, s.Args...)
 	r.cmd.Dir = d
-	r.cb = circbuf.NewBuffer(1024 * 1024)
 	stdin, err := r.cmd.StdinPipe()
+	if err != nil {
+		return nil
+	}
+	r.cb, err = circbuf.NewBuffer(1024 * 1024)
 	if err != nil {
 		return nil
 	}
