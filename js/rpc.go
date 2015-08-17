@@ -42,6 +42,6 @@ type Map struct {
 
 func MapList() ([]Map, error) {
 	var list []Map
-	err := jrpc.Call("Server.Maps", nil, &list)
+	err := jrpc.Call("Server.MapList", nil, &list)
 	return list, err
 }
