@@ -16,7 +16,7 @@ func servers(c dom.Element) {
 	newButton := xjs.CreateElement("div")
 	xjs.SetInnerText(newButton, "New Server")
 	newButton.SetAttribute("class", "newServer")
-	newButton.AddEventListener("click", newServer)
+	newButton.AddEventListener("click", false, newServer)
 	for _, s := range list {
 		sd := xjs.CreateElement("div")
 		xjs.SetInnerText(sd, s.Name)
