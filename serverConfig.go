@@ -10,12 +10,12 @@ func ReadConfig(r io.Reader) (map[string]string, error) {
 	br := bufio.NewReader(r)
 	data := make(map[string]string)
 	for {
-		l, err := br.ReadBytes('\n')
+		l, err := br.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
 				return data, nil
 			}
-			return nil, errr
+			return nil, err
 		}
 		if l[0] == '#' {
 			continue
@@ -37,7 +37,7 @@ func SaveConfig(w io.Writer, c map[string]string) error {
 		toWrite = toWrite[:0]
 		toWrite = append(toWrite, k...)
 		toWrite = append(toWrite, '=')
-		toWrite = append(toWrite, b...)
+		toWrite = append(toWrite, v...)
 		toWrite = append(toWrite, '\n')
 		_, err := w.Write(toWrite)
 		if err != nil {
