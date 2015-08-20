@@ -11,12 +11,20 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+var uploadFuncs = [...]func(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) error{
+	generate,
+	unpack,
+	unpack,
+	setupServer,
+	setupServer,
+}
+
 func uploadHandler(conn *websocket.Conn) {
 	conn.PayloadType = websocket.BinaryFrame
 	r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
 	w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
 	uploadType := r.ReadUint8()
-	if uploadType > 2 {
+	if uploadType >= uint8(len(uploadFuncs)) {
 		writeError(&w, ErrInvalidType)
 		return
 	}
@@ -32,7 +40,7 @@ func uploadHandler(conn *websocket.Conn) {
 	}
 	defer os.Remove(f.Name())
 	defer f.Close()
-	if uploadType == 3 {
+	if uploadType&1 == 1 {
 		url := make([]byte, length)
 		r.Read(url)
 		if r.Err != nil {
@@ -62,12 +70,7 @@ func uploadHandler(conn *websocket.Conn) {
 		}
 	}
 	f.Seek(0, 0)
-	switch uploadType {
-	case 0:
-		err = generate(f, &r, &w)
-	case 1, 2:
-		err = unpack(f, &r, &w)
-	}
+	err = uploadFuncs[uploadType](f, &r, &w)
 	if err != nil {
 		writeError(&w, err)
 		return
