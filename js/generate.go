@@ -27,7 +27,7 @@ func generate(c dom.Element) {
 				return
 			}
 			file := files.NewFile(fs[0])
-			length := file.Size()
+			length := file.Len()
 			pb := progress.New(color.RGBA{255, 0, 0, 0}, color.RGBA{0, 0, 255, 0}, 400, 50)
 			gDiv.RemoveChild(upl)
 			status := xjs.CreateElement("div")
@@ -58,15 +58,9 @@ func generate(c dom.Element) {
 				defer conn.Close()
 				w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
 				r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
-				w.WriteUint8(0)
-				w.WriteInt64(int64(length))
+				uploadFile(0, pb.Reader(files.NewFileReader(file), length), w)
 				if w.Err != nil {
 					setError(w.Err.Error())
-					return
-				}
-				_, err = io.Copy(conn, pb.Reader(files.NewFileReader(file), file.Size()))
-				if err != nil {
-					setError(err.Error())
 					return
 				}
 				statusCode := r.ReadUint8()

@@ -31,3 +31,11 @@ func add(c dom.Element) {
 	c.AppendChild(d)
 	c.AppendChild(g)
 }
+
+func upload(c dom.Element) {
+
+}
+
+func download(c dom.Element) {
+
+}
