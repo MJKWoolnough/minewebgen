@@ -31,10 +31,6 @@ func setupServer(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) err
 	d, err := setupServerDir(string(name))
 	if len(jars) == 0 {
 		err = os.Rename(f.Name(), path.Join(d, "server.jar"))
-		if err != nil {
-			os.RemoveAll(d)
-			return err
-		}
 	} else {
 		if len(jars) > 1 {
 			w.WriteInt8(2)
@@ -46,6 +42,13 @@ func setupServer(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) err
 			jars[0] = jars[p]
 		}
 		err = unzip(zr, d)
+		if err == nil {
+			err = os.Rename(path.Join(d, jars[0]), path.Join(d, "server.jar"))
+		}
+	}
+	if err != nil {
+		os.RemoveAll(d)
+		return err
 	}
 	w.WriteUint8(1)
 	config.createServer(string(name), d)
