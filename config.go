@@ -87,7 +87,7 @@ func (c *Config) MapList(_ struct{}, list *[]Map) error {
 	return nil
 }
 
-func (c *Config) newServer(name, path string) int {
+func (c *Config) createServer(name, path string) int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	id := len(c.Servers)

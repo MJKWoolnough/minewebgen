@@ -21,7 +21,7 @@ func setupServer(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) err
 	}
 	l := r.ReadUint8()
 	name := make([]byte, l)
-	r.Read(l)
+	r.Read(name)
 	jars := make([]*zip.File, 0, 16)
 	for _, file := range zr.File {
 		if strings.HasSuffix(file.Name, ".jar") {
@@ -39,19 +39,20 @@ func setupServer(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) err
 		if len(jars) > 1 {
 			w.WriteInt8(2)
 			w.WriteInt16(int16(len(jars)))
-			p = r.ReadUint16()
-			if p >= len(jars) {
+			p := r.ReadUint16()
+			if int(p) >= len(jars) {
 				return ErrNoServer
 			}
 			jars[0] = jars[p]
 		}
-		// extract to dir
+		err = unzip(zr, d)
 	}
 	w.WriteUint8(1)
-	return config.createServer()
+	config.createServer(string(name), d)
+	return nil
 }
 
-func serupServerDir(name string) (string, error) {
+func setupServerDir(name string) (string, error) {
 	return "", nil
 }
 
