@@ -23,6 +23,7 @@ type Config struct {
 	mu         sync.RWMutex
 	filename   string
 	ServerName string
+	ServersDir string
 	Port       uint16
 	Servers    []Server
 	Maps       []Map
