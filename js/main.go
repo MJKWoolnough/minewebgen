@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/MJKWoolnough/gopherjs/style"
 	"github.com/MJKWoolnough/gopherjs/tabs"
 	"github.com/MJKWoolnough/gopherjs/xjs"
 	"github.com/gopherjs/gopherjs/js"
@@ -8,6 +9,22 @@ import (
 
 	"honnef.co/go/js/dom"
 )
+
+const css = `label {
+	display : block;
+	float : left;
+	text-align : right;
+	width : 200px;
+}
+
+label:after {
+	content : ':';
+}
+`
+
+func init() {
+	style.Add(css)
+}
 
 func closeOnExit(conn *websocket.Conn) func(*js.Object) {
 	return dom.GetWindow().AddEventListener("beforeunload", false, func(_ dom.Event) {
