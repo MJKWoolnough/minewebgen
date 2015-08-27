@@ -40,11 +40,12 @@ func setupServer(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) err
 			for _, jar := range jars {
 				writeString(w, jar.Name)
 			}
-			p := r.ReadUint16()
+			p := r.ReadInt16()
 			if int(p) >= len(jars) || p < 0 {
 				err = ErrNoServer
+			} else {
+				jars[0] = jars[p]
 			}
-			jars[0] = jars[p]
 		}
 		if err == nil {
 			err = unzip(zr, d)
