@@ -55,6 +55,10 @@ func main() {
 				return
 			}
 			body.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), title+" Server"))
+			tDoc, ok := dom.GetWindow().Document().(dom.HTMLDocument)
+			if ok {
+				tDoc.SetTitle(title + " Server")
+			}
 			body.AppendChild(tabs.MakeTabs([]tabs.Tab{
 				{"Servers", servers},
 				{"Maps", maps},
