@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"syscall"
 
 	"github.com/MJKWoolnough/byteio"
 )
@@ -19,6 +20,25 @@ func writeError(w *byteio.StickyWriter, err error) {
 func writeString(w *byteio.StickyWriter, str string) {
 	w.WriteUint16(uint16(len(str)))
 	w.Write([]byte(str))
+}
+
+func moveFile(from, to string) error {
+	err := os.Rename(from, to)
+	if e, ok := err.(*os.LinkError); !ok || e.Err != syscall.EXDEV {
+		return err
+	}
+	fromf, err := os.Open(from)
+	if err != nil {
+		return err
+	}
+	defer fromf.Close()
+	tof, err := os.Create(to)
+	if err != nil {
+		return err
+	}
+	defer tof.Close()
+	_, err = io.Copy(tof, fromf)
+	return err
 }
 
 func unzip(zr *zip.Reader, dest string) error {

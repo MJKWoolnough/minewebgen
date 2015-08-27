@@ -32,7 +32,7 @@ func setupServer(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) err
 	}
 	d, err := setupServerDir()
 	if len(jars) == 0 {
-		err = os.Rename(f.Name(), path.Join(d, "server.jar"))
+		err = moveFile(f.Name(), path.Join(d, "server.jar"))
 	} else {
 		if len(jars) > 1 {
 			w.WriteUint8(1)
