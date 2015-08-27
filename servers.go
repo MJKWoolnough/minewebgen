@@ -65,12 +65,13 @@ func setupServerDir() (string, error) {
 	num := 0
 	for {
 		dir := path.Join(config.ServersDir, strconv.Itoa(num))
-		err := os.MkdirAll(dir, 0777)
-		if err == nil {
+		_, err := os.Stat(dir)
+		if os.IsNotExist(err) {
+			err := os.MkdirAll(dir, 0777)
+			if err != nil {
+				return "", err
+			}
 			return dir, nil
-		}
-		if !os.IsExist(err) {
-			return "", err
 		}
 		num++
 	}
