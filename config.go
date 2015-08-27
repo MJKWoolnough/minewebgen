@@ -51,8 +51,6 @@ func loadConfig(filename string) (*Config, error) {
 }
 
 func (c *Config) save() error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
 	f, err := os.Create(c.filename)
 	if err != nil {
 		return err
@@ -91,6 +89,7 @@ func (c *Config) MapList(_ struct{}, list *[]Map) error {
 func (c *Config) createServer(name, path string) int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	defer c.save()
 	id := len(c.Servers)
 	c.Servers = append(c.Servers, Server{ID: id, Name: name, Path: path})
 	return id
@@ -99,6 +98,7 @@ func (c *Config) createServer(name, path string) int {
 func (c *Config) newMap(name, path string) int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	defer c.save()
 	id := len(c.Maps)
 	c.Maps = append(c.Maps, Map{ID: id, Name: name, Path: path})
 	return id
