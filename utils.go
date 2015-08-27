@@ -12,10 +12,13 @@ import (
 
 func writeError(w *byteio.StickyWriter, err error) {
 	w.WriteUint8(0)
-	errStr := []byte(err.Error())
-	w.WriteUint16(uint16(len(errStr)))
-	w.Write(errStr)
+	writeString(err.Error())
 	fmt.Println("error:", err)
+}
+
+func writeString(w *byteio.StickyWriter, str string) {
+	w.WriteUint16(uint16(len(str)))
+	w.Write([]byte(str))
 }
 
 func unzip(zr *zip.Reader, dest string) error {
