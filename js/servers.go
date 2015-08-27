@@ -160,7 +160,7 @@ func newServer(e dom.Event) {
 
 					c := make(chan int16, 1)
 
-					jarSelect := xjs.CreateElement("fieldset")
+					jarSelect := xjs.CreateElement("div")
 					jso := overlay.New(jarSelect)
 					selected := false
 					jso.OnClose(func() {
@@ -171,16 +171,17 @@ func newServer(e dom.Event) {
 					})
 
 					jarSelect.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Select Server JAR"))
+					radios := make([]*dom.HTMLInputElement, numJars)
 
 					for num, name := range jars {
-						r := xjs.CreateElement("input")
+						r := xjs.CreateElement("input").(*dom.HTMLInputElement)
 						r.SetAttribute("type", "radio")
 						r.SetAttribute("name", "jarChoose")
 						v := strconv.Itoa(num)
 						r.SetAttribute("value", v)
 						r.SetID("jarChoose_" + v)
 						if num == 0 {
-							r.SetAttribute("checked", "checked")
+							r.DefaultChecked = true
 						}
 
 						l := xjs.CreateElement("label")
@@ -190,6 +191,7 @@ func newServer(e dom.Event) {
 						jarSelect.AppendChild(r)
 						jarSelect.AppendChild(l)
 						jarSelect.AppendChild(xjs.CreateElement("br"))
+						radios[num] = r
 					}
 
 					choose := xjs.CreateElement("input")
@@ -198,7 +200,14 @@ func newServer(e dom.Event) {
 					choose.AddEventListener("click", false, func(dom.Event) {
 						if !selected {
 							selected = true
-							choice, _ := strconv.ParseInt(jarSelect.GetAttribute("value"), 10, 16)
+							choice := -1
+							for num, r := range radios {
+								if r.Checked {
+									choice = num
+									break
+								}
+							}
+
 							c <- int16(choice)
 							jso.Close()
 						}
