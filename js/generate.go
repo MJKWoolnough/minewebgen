@@ -2,7 +2,6 @@ package main
 
 import (
 	"image/color"
-	"io"
 	"strconv"
 
 	"github.com/MJKWoolnough/byteio"
@@ -44,14 +43,14 @@ func generate(c dom.Element) {
 				})
 				gDiv.InsertBefore(reset, gDiv.FirstChild())
 			}
-			setError := func(err string) {
-				xjs.SetInnerText(status, err)
+			setError := func(err error) {
+				xjs.SetInnerText(status, err.Error())
 				addRestart()
 			}
 			go func() {
 				conn, err := websocket.Dial("ws://" + js.Global.Get("location").Get("host").String() + "/upload")
 				if err != nil {
-					setError(err.Error())
+					setError(err)
 					return
 				}
 				defer removeCloser(closeOnExit(conn))
@@ -60,44 +59,29 @@ func generate(c dom.Element) {
 				r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
 				uploadFile(0, pb.Reader(files.NewFileReader(file), length), w)
 				if w.Err != nil {
-					setError(w.Err.Error())
+					setError(w.Err)
 					return
 				}
 				statusCode := r.ReadUint8()
 				if r.Err != nil {
-					setError(r.Err.Error())
+					setError(r.Err)
 					return
-				}
-
-				readError := func() {
-					length := r.ReadUint16()
-					if r.Err != nil {
-						setError(r.Err.Error())
-						return
-					}
-					errStr := make([]byte, int(length))
-					_, err := io.ReadFull(r.Reader, errStr)
-					if err != nil {
-						setError(err.Error())
-						return
-					}
-					setError(string(errStr))
 				}
 
 				switch statusCode {
 				case 0:
-					readError()
+					setError(readError(r))
 					return
 				case 1:
 				default:
-					setError("Unknown Status")
+					setError(ErrUnknown)
 					return
 				}
 				gDiv.RemoveChild(pb)
 				width := r.ReadInt32()
 				height := r.ReadInt32()
 				if r.Err != nil {
-					setError(err.Error())
+					setError(err)
 					return
 				}
 				xjs.SetInnerText(status, strconv.FormatInt(int64(width), 10)+"x"+strconv.FormatInt(int64(height), 10))
@@ -111,12 +95,12 @@ func generate(c dom.Element) {
 				for {
 					statusCode := r.ReadUint8()
 					if r.Err != nil {
-						setError(r.Err.Error())
+						setError(r.Err)
 						return
 					}
 					switch statusCode {
 					case 0:
-						readError()
+						setError(readError(r))
 						return
 					case 1:
 						x := r.ReadInt32()
@@ -126,7 +110,7 @@ func generate(c dom.Element) {
 						blue := r.ReadUint8()
 						alpha := r.ReadUint8()
 						if r.Err != nil {
-							setError(r.Err.Error())
+							setError(r.Err)
 							return
 						}
 						ctx.FillStyle = "rgba(" + strconv.Itoa(int(red)) + ", " + strconv.Itoa(int(green)) + ", " + strconv.Itoa(int(blue)) + ", " + strconv.FormatFloat(float64(alpha)/255, 'f', -1, 32) + ")"
@@ -136,7 +120,7 @@ func generate(c dom.Element) {
 						message := make([]byte, length)
 						r.Read(message)
 						if r.Err != nil {
-							setError(r.Err.Error())
+							setError(r.Err)
 							return
 						}
 						xjs.SetInnerText(status, string(message))
@@ -145,7 +129,7 @@ func generate(c dom.Element) {
 						xjs.SetInnerText(status, "Done")
 						return
 					default:
-						setError("Unknown Error")
+						setError(ErrUnknown)
 						return
 					}
 				}
