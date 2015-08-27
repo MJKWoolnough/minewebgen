@@ -1,8 +1,19 @@
 package main
 
 import (
+	"image/color"
+	"strconv"
+	"strings"
+
+	"github.com/MJKWoolnough/byteio"
+	"github.com/MJKWoolnough/gopherjs/files"
+	"github.com/MJKWoolnough/gopherjs/progress"
 	"github.com/MJKWoolnough/gopherjs/xjs"
+	"github.com/gopherjs/gopherjs/js"
+	"github.com/gopherjs/websocket"
 	"honnef.co/go/js/dom"
+
+	"github.com/MJKWoolnough/gopherjs/overlay"
 )
 
 func servers(c dom.Element) {
@@ -13,17 +24,221 @@ func servers(c dom.Element) {
 		xjs.SetInnerText(serversDiv, err.Error())
 		return
 	}
-	newButton := xjs.CreateElement("div")
-	xjs.SetInnerText(newButton, "New Server")
-	newButton.SetAttribute("class", "newServer")
+	newButton := xjs.CreateElement("input")
+	newButton.SetAttribute("value", "New Server")
+	newButton.SetAttribute("type", "button")
 	newButton.AddEventListener("click", false, newServer)
+	c.AppendChild(newButton)
 	for _, s := range list {
 		sd := xjs.CreateElement("div")
 		xjs.SetInnerText(sd, s.Name)
 		serversDiv.AppendChild(sd)
 	}
+	c.AppendChild(serversDiv)
 }
 
 func newServer(e dom.Event) {
+	f := xjs.CreateElement("div")
+	o := overlay.New(f)
+	f.SetAttribute("id", "serverUpload")
 
+	f.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "New Server"))
+
+	nameLabel := xjs.CreateElement("label")
+	nameLabel.SetAttribute("for", "name")
+	xjs.SetInnerText(nameLabel, "Level Name")
+	nameInput := xjs.CreateElement("input")
+	nameInput.SetAttribute("type", "text")
+	nameInput.SetID("name")
+
+	urlLabel := xjs.CreateElement("label")
+	urlLabel.SetAttribute("for", "url")
+	xjs.SetInnerText(urlLabel, "URL")
+	urlInput := xjs.CreateElement("input")
+	urlInput.SetAttribute("type", "radio")
+	urlInput.SetAttribute("name", "type")
+	urlInput.SetID("url")
+	urlInput.SetAttribute("checked", "true")
+
+	uploadLabel := xjs.CreateElement("label")
+	uploadLabel.SetAttribute("for", "upload")
+	xjs.SetInnerText(uploadLabel, "Upload")
+	uploadInput := xjs.CreateElement("input")
+	uploadInput.SetAttribute("type", "radio")
+	uploadInput.SetAttribute("name", "type")
+	uploadInput.SetID("upload")
+
+	fileLabel := xjs.CreateElement("label")
+	fileLabel.SetAttribute("for", "name")
+	xjs.SetInnerText(fileLabel, "File")
+	fileInput := xjs.CreateElement("input")
+	fileInput.SetAttribute("type", "text")
+	fileInput.SetID("name")
+
+	urlInput.AddEventListener("click", false, func(dom.Event) {
+		fileInput.SetAttribute("type", "text")
+	})
+
+	uploadInput.AddEventListener("click", false, func(dom.Event) {
+		fileInput.SetAttribute("type", "file")
+	})
+
+	submit := xjs.CreateElement("input")
+	submit.SetAttribute("value", "Submit")
+	submit.SetAttribute("type", "button")
+
+	submit.AddEventListener("click", false, func(e dom.Event) {
+		name := nameInput.GetAttribute("value")
+		if len(name) == 0 {
+			return
+		}
+		var file readLener
+		uploadType := uint8(3)
+		if fileInput.GetAttribute("type") != "file" {
+			uploadType = 4
+			url := fileInput.GetAttribute("value")
+			if len(url) == 0 {
+				return
+			}
+			file = strings.NewReader(url)
+		} else {
+			fs := e.Target().(*dom.HTMLInputElement).Files()
+			if len(fs) != 1 {
+				return
+			}
+			f := files.NewFile(fs[0])
+			file = files.NewFileReader(f)
+
+		}
+		length := file.Len()
+		status := xjs.CreateElement("div")
+		pb := progress.New(color.RGBA{255, 0, 0, 0}, color.RGBA{0, 0, 255, 0}, 400, 50)
+		xjs.RemoveChildren(f)
+		f.AppendChild(status)
+		f.AppendChild(pb)
+
+		go func() {
+			conn, err := websocket.Dial("ws://" + js.Global.Get("location").Get("host").String() + "/upload")
+			if err != nil {
+				xjs.SetInnerText(status, err.Error())
+				return
+			}
+			defer removeCloser(closeOnExit(conn))
+			defer conn.Close()
+			o.OnClose(func() { conn.Close() })
+
+			w := &byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
+			xjs.SetInnerText(status, "Uploading Data...")
+			uploadFile(uploadType, pb.Reader(file, length), w)
+			if w.Err != nil {
+				xjs.SetInnerText(status, w.Err.Error())
+				return
+			}
+
+			r := &byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
+
+			if r.ReadUint8() == 0 {
+				xjs.SetInnerText(status, readError(r).Error())
+				return
+			}
+
+			f.RemoveChild(pb)
+			xjs.SetInnerText(status, "Checking Zip...")
+
+			w.WriteUint8(uint8(len(name)))
+			w.Write([]byte(name))
+			for {
+				switch r.ReadUint8() {
+				case 1:
+					numJars := r.ReadInt16()
+					jars := make([]string, numJars)
+					for i := int16(0); i < numJars; i++ {
+						jars[i] = readString(r)
+					}
+					if r.Err != nil {
+						xjs.SetInnerText(status, r.Err.Error())
+					}
+
+					c := make(chan int16, 1)
+
+					jarSelect := xjs.CreateElement("fieldset")
+					jso := overlay.New(jarSelect)
+					selected := false
+					jso.OnClose(func() {
+						if !selected {
+							selected = true
+							c <- -1
+						}
+					})
+
+					jarSelect.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Select Server JAR"))
+
+					for num, name := range jars {
+						r := xjs.CreateElement("input")
+						r.SetAttribute("type", "radio")
+						r.SetAttribute("name", "jarChoose")
+						v := strconv.Itoa(num)
+						r.SetAttribute("value", v)
+						r.SetID("jarChoose_" + v)
+						if num == 0 {
+							r.SetAttribute("checked", "checked")
+						}
+
+						l := xjs.CreateElement("label")
+						xjs.SetInnerText(l, name)
+						l.SetAttribute("for", "jarChoose_"+v)
+
+						jarSelect.AppendChild(r)
+						jarSelect.AppendChild(l)
+						jarSelect.AppendChild(xjs.CreateElement("br"))
+					}
+
+					choose := xjs.CreateElement("input")
+					choose.SetAttribute("type", "button")
+					choose.SetAttribute("value", "Select")
+					choose.AddEventListener("click", false, func(dom.Event) {
+						if !selected {
+							selected = true
+							choice, _ := strconv.ParseInt(jarSelect.GetAttribute("value"), 10, 16)
+							c <- int16(choice)
+							jso.Close()
+						}
+					})
+					jarSelect.AppendChild(choose)
+					f.AppendChild(jso)
+					w.WriteInt16(<-c)
+					close(c)
+					if w.Err != nil {
+						xjs.SetInnerText(status, w.Err.Error())
+					}
+				case 255:
+					o.Close()
+					return
+				default:
+					xjs.SetInnerText(status, readError(r).Error())
+					return
+				}
+			}
+		}()
+	})
+
+	f.AppendChild(nameLabel)
+	f.AppendChild(nameInput)
+	f.AppendChild(xjs.CreateElement("br"))
+
+	f.AppendChild(urlLabel)
+	f.AppendChild(urlInput)
+	f.AppendChild(xjs.CreateElement("br"))
+
+	f.AppendChild(uploadLabel)
+	f.AppendChild(uploadInput)
+	f.AppendChild(xjs.CreateElement("br"))
+
+	f.AppendChild(fileLabel)
+	f.AppendChild(fileInput)
+	f.AppendChild(xjs.CreateElement("br"))
+
+	f.AppendChild(submit)
+
+	dom.GetWindow().Document().DocumentElement().AppendChild(o)
 }
