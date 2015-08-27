@@ -55,8 +55,8 @@ func generate(c dom.Element) {
 				}
 				defer removeCloser(closeOnExit(conn))
 				defer conn.Close()
-				w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
-				r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
+				w := &byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
+				r := &byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
 				uploadFile(0, pb.Reader(files.NewFileReader(file), length), w)
 				if w.Err != nil {
 					setError(w.Err)
