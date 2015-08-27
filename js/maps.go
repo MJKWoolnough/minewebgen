@@ -8,14 +8,14 @@ import (
 func maps(c dom.Element) {
 	mapsDiv := xjs.CreateElement("div")
 	defer c.AppendChild(mapsDiv)
-	list, err := ServerList()
+	list, err := MapList()
 	if err != nil {
 		xjs.SetInnerText(mapsDiv, err.Error())
 		return
 	}
-	for _, s := range list {
+	for _, m := range list {
 		sd := xjs.CreateElement("div")
-		xjs.SetInnerText(sd, s.Name)
+		xjs.SetInnerText(sd, m.Name)
 		mapsDiv.AppendChild(sd)
 	}
 }
