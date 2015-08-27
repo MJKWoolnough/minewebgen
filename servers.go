@@ -20,6 +20,7 @@ func setupServer(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) err
 	if err != nil {
 		return err
 	}
+	w.WriteUint8(1)
 	l := r.ReadUint8()
 	name := make([]byte, l)
 	r.Read(name)
@@ -34,8 +35,11 @@ func setupServer(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) err
 		err = os.Rename(f.Name(), path.Join(d, "server.jar"))
 	} else {
 		if len(jars) > 1 {
-			w.WriteInt8(1)
+			w.WriteUint8(1)
 			w.WriteInt16(int16(len(jars)))
+			for _, jar := range jars {
+				writeString(jar.Name())
+			}
 			p := r.ReadUint16()
 			if int(p) >= len(jars) {
 				err = ErrNoServer
