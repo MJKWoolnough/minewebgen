@@ -33,6 +33,7 @@ func servers(c dom.Element) {
 	for _, s := range list {
 		sd := xjs.CreateElement("div")
 		xjs.SetInnerText(sd, s.Name)
+		sd.AddEventListener("click", false, viewServer(sd, s))
 		serversDiv.AppendChild(sd)
 	}
 	c.AppendChild(serversDiv)
@@ -252,5 +253,23 @@ func newServer(c dom.Element) func(dom.Event) {
 		f.AppendChild(submit)
 
 		dom.GetWindow().Document().DocumentElement().AppendChild(o)
+	}
+}
+
+func viewServer(sd dom.Element, s Server) func(dom.Event) {
+	return func(dom.Event) {
+		d := xjs.CreateElement("div")
+		od := overlay.New(d)
+		d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Server Details"))
+		nameLabel := xjs.CreateElement("label")
+		xjs.SetInnerText(nameLabel, "Name")
+		name := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		name.Value = s.Name
+
+		d.AppendChild(nameLabel)
+		d.AppendChild(name)
+		d.AppendChild(xjs.CreateElement("br"))
+
+		dom.GetWindow().Document().DocumentElement().AppendChild(od)
 	}
 }

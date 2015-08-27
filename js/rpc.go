@@ -27,7 +27,9 @@ func ServerName() (string, error) {
 }
 
 type Server struct {
-	Name string
+	ID         int
+	Name, Path string
+	Args       []string
 }
 
 func ServerList() ([]Server, error) {
