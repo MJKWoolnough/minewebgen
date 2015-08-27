@@ -12,7 +12,7 @@ import (
 
 func writeError(w *byteio.StickyWriter, err error) {
 	w.WriteUint8(0)
-	writeString(err.Error())
+	writeString(w, err.Error())
 	fmt.Println("error:", err)
 }
 

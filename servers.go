@@ -38,7 +38,7 @@ func setupServer(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) err
 			w.WriteUint8(1)
 			w.WriteInt16(int16(len(jars)))
 			for _, jar := range jars {
-				writeString(jar.Name())
+				writeString(w, jar.Name)
 			}
 			p := r.ReadUint16()
 			if int(p) >= len(jars) {
@@ -49,7 +49,7 @@ func setupServer(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) err
 		if err == nil {
 			err = unzip(zr, d)
 			if err == nil {
-				err = os.Rename(path.Join(d, jars[0]), path.Join(d, "server.jar"))
+				err = os.Rename(path.Join(d, jars[0].Name), path.Join(d, "server.jar"))
 			}
 		}
 	}
@@ -67,14 +67,13 @@ func setupServerDir() (string, error) {
 		dir := path.Join(config.ServersDir, strconv.Itoa(num))
 		err := os.MkdirAll(dir, 0777)
 		if err == nil {
-			break
+			return dir, nil
 		}
 		if !os.IsExist(err) {
-			return err
+			return "", err
 		}
 		num++
 	}
-	return nil
 }
 
 // Errors
