@@ -47,7 +47,7 @@ func newServer(e dom.Event) {
 	nameLabel := xjs.CreateElement("label")
 	nameLabel.SetAttribute("for", "name")
 	xjs.SetInnerText(nameLabel, "Level Name")
-	nameInput := xjs.CreateElement("input")
+	nameInput := xjs.CreateElement("input").(*dom.HTMLInputElement)
 	nameInput.SetAttribute("type", "text")
 	nameInput.SetID("name")
 
@@ -69,11 +69,11 @@ func newServer(e dom.Event) {
 	uploadInput.SetID("upload")
 
 	fileLabel := xjs.CreateElement("label")
-	fileLabel.SetAttribute("for", "name")
+	fileLabel.SetAttribute("for", "file")
 	xjs.SetInnerText(fileLabel, "File")
-	fileInput := xjs.CreateElement("input")
+	fileInput := xjs.CreateElement("input").(*dom.HTMLInputElement)
 	fileInput.SetAttribute("type", "text")
-	fileInput.SetID("name")
+	fileInput.SetID("file")
 
 	urlInput.AddEventListener("click", false, func(dom.Event) {
 		fileInput.SetAttribute("type", "text")
@@ -88,27 +88,26 @@ func newServer(e dom.Event) {
 	submit.SetAttribute("type", "button")
 
 	submit.AddEventListener("click", false, func(e dom.Event) {
-		name := nameInput.GetAttribute("value")
+		name := nameInput.Value
 		if len(name) == 0 {
 			return
 		}
 		var file readLener
 		uploadType := uint8(3)
-		if fileInput.GetAttribute("type") != "file" {
+		if fileInput.GetAttribute("type") == "file" {
 			uploadType = 4
-			url := fileInput.GetAttribute("value")
-			if len(url) == 0 {
-				return
-			}
-			file = strings.NewReader(url)
-		} else {
-			fs := e.Target().(*dom.HTMLInputElement).Files()
+			fs := fileInput.Files()
 			if len(fs) != 1 {
 				return
 			}
 			f := files.NewFile(fs[0])
 			file = files.NewFileReader(f)
-
+		} else {
+			url := fileInput.Value
+			if len(url) == 0 {
+				return
+			}
+			file = strings.NewReader(url)
 		}
 		length := file.Len()
 		status := xjs.CreateElement("div")
