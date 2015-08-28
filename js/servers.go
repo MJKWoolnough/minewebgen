@@ -270,6 +270,11 @@ func viewServer(sd dom.Element, s Server) func(dom.Event) {
 		d.AppendChild(name)
 		d.AppendChild(xjs.CreateElement("br"))
 
+		argsLabel := xjs.CreateElement("label")
+		xjs.SetInnerText(argsLabel, "Arguments")
+
+		d.AppendChild(argsLabel)
+
 		dom.GetWindow().Document().DocumentElement().AppendChild(od)
 	}
 }
