@@ -276,10 +276,10 @@ func viewServer(sd dom.Element, s Server) func(dom.Event) {
 
 		d.AppendChild(argsLabel)
 
-		argSpans := make([]dom.Element, len(s.Args))
+		argSpans := make([]*dom.HTMLSpanElement, len(s.Args))
 
 		for num, arg := range s.Args {
-			a := xjs.CreateElement("span")
+			a := xjs.CreateElement("span").(*dom.HTMLSpanElement)
 			a.SetAttribute("contenteditable", "true")
 			a.SetAttribute("class", "sizeableInput")
 			a.SetTextContent(arg)
@@ -300,7 +300,7 @@ func viewServer(sd dom.Element, s Server) func(dom.Event) {
 		add.Type = "button"
 		add.Value = "+"
 		add.AddEventListener("click", false, func(dom.Event) {
-			a := xjs.CreateElement("span")
+			a := xjs.CreateElement("span").(*dom.HTMLSpanElement)
 			a.SetAttribute("contenteditable", "true")
 			a.SetAttribute("class", "sizeableInput")
 			argSpans = append(argSpans, a)
@@ -316,7 +316,17 @@ func viewServer(sd dom.Element, s Server) func(dom.Event) {
 		submit.Value = "Make Changes"
 		submit.SetAttribute("type", "button")
 		submit.AddEventListener("click", false, func(dom.Event) {
-
+			args := make([]string, len(argSpans))
+			for num, arg := range argSpans {
+				args[num] = arg.TextContent()
+			}
+			n := name.Value
+			SaveServer(Server{
+				ID:   s.ID,
+				Name: n,
+				Path: s.Path,
+				Args: args,
+			})
 		})
 
 		d.AppendChild(submit)

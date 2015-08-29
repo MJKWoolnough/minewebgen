@@ -38,6 +38,12 @@ func ServerList() ([]Server, error) {
 	return list, err
 }
 
+var emptyStruct = &struct{}{}
+
+func SaveServer(s Server) error {
+	return jrpc.Call("Server.Save", s, emptyStruct)
+}
+
 type Map struct {
 	Name string
 }
