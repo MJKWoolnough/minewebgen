@@ -265,6 +265,7 @@ func viewServer(sd dom.Element, s Server) func(dom.Event) {
 		xjs.SetInnerText(nameLabel, "Name")
 		name := xjs.CreateElement("input").(*dom.HTMLInputElement)
 		name.Value = s.Name
+		name.Type = "text"
 
 		d.AppendChild(nameLabel)
 		d.AppendChild(name)
@@ -274,6 +275,51 @@ func viewServer(sd dom.Element, s Server) func(dom.Event) {
 		xjs.SetInnerText(argsLabel, "Arguments")
 
 		d.AppendChild(argsLabel)
+
+		argSpans := make([]dom.Element, len(s.Args))
+
+		for num, arg := range s.Args {
+			a := xjs.CreateElement("span")
+			a.SetAttribute("contenteditable", "true")
+			a.SetAttribute("class", "sizeableInput")
+			a.SetTextContent(arg)
+			argSpans[num] = a
+			d.AppendChild(a)
+		}
+
+		remove := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		remove.Type = "button"
+		remove.Value = "-"
+		remove.AddEventListener("click", false, func(dom.Event) {
+			if len(argSpans) > 0 {
+				d.RemoveChild(argSpans[len(argSpans)-1])
+				argSpans = argSpans[:len(argSpans)-1]
+			}
+		})
+		add := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		add.Type = "button"
+		add.Value = "+"
+		add.AddEventListener("click", false, func(dom.Event) {
+			a := xjs.CreateElement("span")
+			a.SetAttribute("contenteditable", "true")
+			a.SetAttribute("class", "sizeableInput")
+			argSpans = append(argSpans, a)
+			d.InsertBefore(a, remove)
+		})
+
+		d.AppendChild(remove)
+		d.AppendChild(add)
+		d.AppendChild(xjs.CreateElement("br"))
+		d.AppendChild(xjs.CreateElement("br"))
+
+		submit := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		submit.Value = "Make Changes"
+		submit.SetAttribute("type", "button")
+		submit.AddEventListener("click", false, func(dom.Event) {
+
+		})
+
+		d.AppendChild(submit)
 
 		dom.GetWindow().Document().DocumentElement().AppendChild(od)
 	}

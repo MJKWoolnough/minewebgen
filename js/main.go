@@ -20,6 +20,17 @@ const css = `label {
 label:after {
 	content : ':';
 }
+
+.sizeableInput {
+	border : 2px inset #DCDAD5;
+	display : block;
+	float : left;
+	padding-left : 3px;
+	padding-right : 3px;
+	min-width : 50px;
+	height : 20px;
+	margin-top : 2px;
+}
 `
 
 func init() {
@@ -27,7 +38,7 @@ func init() {
 }
 
 func closeOnExit(conn *websocket.Conn) func(*js.Object) {
-	return dom.GetWindow().AddEventListener("beforeunload", false, func(_ dom.Event) {
+	return dom.GetWindow().AddEventListener("beforeunload", false, func(dom.Event) {
 		switch conn.ReadyState {
 		case websocket.Connecting, websocket.Open:
 			conn.Close()
@@ -40,7 +51,7 @@ func removeCloser(l func(*js.Object)) {
 }
 
 func main() {
-	dom.GetWindow().AddEventListener("load", false, func(_ dom.Event) {
+	dom.GetWindow().AddEventListener("load", false, func(dom.Event) {
 		go func() {
 			err := rpcInit()
 			if err != nil {
