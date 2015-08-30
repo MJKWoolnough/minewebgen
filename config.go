@@ -76,6 +76,20 @@ func (c *Config) List(_ struct{}, list *[]Server) error {
 	return nil
 }
 
+func (c *Config) Save(s Server, _ *struct{}) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	defer c.save()
+	ns, ok := c.Servers[s.ID]
+	if !ok {
+		return ErrNoServer
+	}
+	s.Path = ns.Path
+	s.status = ns.status
+	c.Servers[s.ID] = s
+	return nil
+}
+
 func (c *Config) MapList(_ struct{}, list *[]Map) error {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
