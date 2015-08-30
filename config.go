@@ -25,8 +25,8 @@ type Config struct {
 	ServerName string
 	ServersDir string
 	Port       uint16
-	Servers    []Server
-	Maps       []Map
+	Servers    map[int]Server
+	Maps       map[int]Map
 	selected   int
 }
 
@@ -90,7 +90,14 @@ func (c *Config) createServer(name, path string) int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	defer c.save()
-	id := len(c.Servers)
+	id := 0
+	for {
+		_, ok := c.Servers[id]
+		if !ok {
+			break
+		}
+		id++
+	}
 	c.Servers = append(c.Servers, Server{ID: id, Name: name, Path: path})
 	return id
 }
@@ -99,7 +106,14 @@ func (c *Config) newMap(name, path string) int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	defer c.save()
-	id := len(c.Maps)
+	id := 0
+	for {
+		_, ok := c.Maps[id]
+		if !ok {
+			break
+		}
+		id++
+	}
 	c.Maps = append(c.Maps, Map{ID: id, Name: name, Path: path})
 	return id
 }
