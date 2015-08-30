@@ -316,17 +316,27 @@ func viewServer(sd dom.Element, s Server) func(dom.Event) {
 		submit.Value = "Make Changes"
 		submit.SetAttribute("type", "button")
 		submit.AddEventListener("click", false, func(dom.Event) {
-			args := make([]string, len(argSpans))
-			for num, arg := range argSpans {
-				args[num] = arg.TextContent()
-			}
-			n := name.Value
-			SaveServer(Server{
-				ID:   s.ID,
-				Name: n,
-				Path: s.Path,
-				Args: args,
-			})
+			go func() {
+				args := make([]string, len(argSpans))
+				for num, arg := range argSpans {
+					args[num] = arg.TextContent()
+				}
+				n := name.Value
+				err := SaveServer(Server{
+					ID:   s.ID,
+					Name: n,
+					Path: s.Path,
+					Args: args,
+				})
+				if err == nil {
+					od.Close()
+					return
+				}
+				xjs.RemoveChildren(d)
+				errDiv := xjs.CreateElement("div")
+				xjs.SetPreText(errDiv, err.Error())
+				d.AppendChild(errDiv)
+			}()
 		})
 
 		d.AppendChild(submit)
