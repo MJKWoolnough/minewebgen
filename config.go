@@ -39,8 +39,8 @@ func loadConfig(filename string) (*Config, error) {
 		filename:   filename,
 		ServerName: "Minecraft",
 		Port:       8080,
-		Servers:    make([]Server, 0),
-		Maps:       make([]Map, 0),
+		Servers:    make(map[int]Server),
+		Maps:       make(map[int]Map),
 		selected:   -1,
 	}
 	err = json.NewDecoder(f).Decode(c)
@@ -98,7 +98,7 @@ func (c *Config) createServer(name, path string) int {
 		}
 		id++
 	}
-	c.Servers = append(c.Servers, Server{ID: id, Name: name, Path: path})
+	c.Servers[id] = Server{ID: id, Name: name, Path: path}
 	return id
 }
 
@@ -114,12 +114,17 @@ func (c *Config) newMap(name, path string) int {
 		}
 		id++
 	}
-	c.Maps = append(c.Maps, Map{ID: id, Name: name, Path: path})
+	c.Maps[id] = Map{ID: id, Name: name, Path: path}
 	return id
 }
 
 func (c *Config) serverStatus(id int, status string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.Servers[id].status = status
+	s, ok := c.Servers[id]
+	if !ok {
+		return
+	}
+	s.status = status
+	c.Servers[id] = s
 }
