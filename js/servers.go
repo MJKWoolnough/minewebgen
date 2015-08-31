@@ -33,7 +33,7 @@ func servers(c dom.Element) {
 	for _, s := range list {
 		sd := xjs.CreateElement("div")
 		xjs.SetInnerText(sd, s.Name)
-		sd.AddEventListener("click", false, viewServer(sd, s))
+		sd.AddEventListener("click", false, viewServer(c, sd, s))
 		serversDiv.AppendChild(sd)
 	}
 	c.AppendChild(serversDiv)
@@ -256,7 +256,7 @@ func newServer(c dom.Element) func(dom.Event) {
 	}
 }
 
-func viewServer(sd dom.Element, s Server) func(dom.Event) {
+func viewServer(c, sd dom.Element, s Server) func(dom.Event) {
 	return func(dom.Event) {
 		d := xjs.CreateElement("div")
 		od := overlay.New(d)
@@ -330,6 +330,7 @@ func viewServer(sd dom.Element, s Server) func(dom.Event) {
 				})
 				if err == nil {
 					od.Close()
+					servers(c)
 					return
 				}
 				xjs.RemoveChildren(d)
