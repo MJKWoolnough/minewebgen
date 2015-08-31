@@ -25,9 +25,53 @@ type Config struct {
 	ServerName string
 	ServersDir string
 	Port       uint16
-	Servers    map[int]Server
-	Maps       map[int]Map
+	Servers    serverMap
+	Maps       mapMap
 	selected   int
+}
+
+type serverMap map[int]Server
+
+func (m serverMap) MarshalJSON() ([]byte, error) {
+	s := make([]Server, 0, len(m))
+	for _, v := range m {
+		s = append(s, v)
+	}
+	return json.Marshal(s)
+}
+
+func (m serverMap) UnmarshalJSON(b []byte) error {
+	var s []Server
+	err := json.Unmarshal(b, &s)
+	if err != nil {
+		return err
+	}
+	for _, v := range s {
+		m[v.ID] = v
+	}
+	return nil
+}
+
+type mapMap map[int]Map
+
+func (m mapMap) MarshalJSON() ([]byte, error) {
+	s := make([]Map, 0, len(m))
+	for _, v := range m {
+		s = append(s, v)
+	}
+	return json.Marshal(s)
+}
+
+func (m mapMap) UnmarshalJSON(b []byte) error {
+	var s []Map
+	err := json.Unmarshal(b, &s)
+	if err != nil {
+		return err
+	}
+	for _, v := range s {
+		m[v.ID] = v
+	}
+	return nil
 }
 
 func loadConfig(filename string) (*Config, error) {
@@ -39,8 +83,8 @@ func loadConfig(filename string) (*Config, error) {
 		filename:   filename,
 		ServerName: "Minecraft",
 		Port:       8080,
-		Servers:    make(map[int]Server),
-		Maps:       make(map[int]Map),
+		Servers:    make(serverMap),
+		Maps:       make(mapMap),
 		selected:   -1,
 	}
 	err = json.NewDecoder(f).Decode(c)
