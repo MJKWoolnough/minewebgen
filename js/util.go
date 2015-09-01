@@ -34,6 +34,11 @@ func readError(r *byteio.StickyReader) error {
 	return errors.New(string(errStr))
 }
 
+func writeString(w *byteio.StickyWriter, s string) {
+	w.WriteInt16(int16(len(s)))
+	w.Write([]byte(s))
+}
+
 func readString(r *byteio.StickyReader) string {
 	length := r.ReadUint16()
 	str := make([]byte, int(length))
