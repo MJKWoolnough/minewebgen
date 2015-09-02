@@ -11,7 +11,6 @@ import (
 	"net/rpc/jsonrpc"
 	"os"
 	"os/signal"
-	"runtime"
 
 	"golang.org/x/net/websocket"
 )
@@ -34,8 +33,6 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
-	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	http.Handle("/upload", websocket.Handler(uploadHandler))
 	http.Handle("/rpc", websocket.Handler(func(conn *websocket.Conn) { jsonrpc.ServeConn(conn) }))
