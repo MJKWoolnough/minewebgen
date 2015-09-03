@@ -17,18 +17,36 @@ var gDiv = xjs.CreateElement("div")
 
 func generate(c dom.Element) {
 	if !gDiv.HasChildNodes() {
-		upl := xjs.CreateElement("input")
-		upl.SetAttribute("name", "file")
-		upl.SetAttribute("type", "file")
-		upl.AddEventListener("change", false, func(e dom.Event) {
-			fs := e.Target().(*dom.HTMLInputElement).Files()
+		nameLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+		nameLabel.For = "name"
+		xjs.SetInnerText(nameLabel, "Level Name")
+		name := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		name.Type = "name"
+		name.SetID("name")
+
+		uploadLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+		uploadLabel.For = "file"
+		xjs.SetInnerText(uploadLabel, "Input File")
+		upload := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		upload.Type = "file"
+		upload.SetID("file")
+
+		submit := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		submit.Type = "button"
+		submit.Value = "Generate"
+		submit.AddEventListener("click", false, func(dom.Event) {
+			nameStr := name.Value
+			if len(nameStr) == 0 {
+				return
+			}
+			fs := upload.Files()
 			if len(fs) != 1 {
 				return
 			}
 			file := files.NewFile(fs[0])
 			length := file.Len()
 			pb := progress.New(color.RGBA{255, 0, 0, 0}, color.RGBA{0, 0, 255, 0}, 400, 50)
-			gDiv.RemoveChild(upl)
+			gDiv.RemoveChild(upload)
 			status := xjs.CreateElement("div")
 			xjs.SetInnerText(status, "Uploading...")
 			gDiv.AppendChild(status)
@@ -58,6 +76,7 @@ func generate(c dom.Element) {
 				w := &byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
 				r := &byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
 				uploadFile(0, pb.Reader(files.NewFileReader(file), length), w)
+				writeString(w, nameStr)
 				if w.Err != nil {
 					setError(w.Err)
 					return
@@ -135,7 +154,14 @@ func generate(c dom.Element) {
 				}
 			}()
 		})
-		gDiv.AppendChild(upl)
+		gDiv.AppendChild(nameLabel)
+		gDiv.AppendChild(name)
+		gDiv.AppendChild(xjs.CreateElement("br"))
+		gDiv.AppendChild(uploadLabel)
+		gDiv.AppendChild(upload)
+		gDiv.AppendChild(xjs.CreateElement("br"))
+		gDiv.AppendChild(xjs.CreateElement("br"))
+		gDiv.AppendChild(submit)
 	}
 	c.AppendChild(gDiv)
 }
