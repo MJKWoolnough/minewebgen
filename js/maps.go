@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/MJKWoolnough/gopherjs/overlay"
 	"github.com/MJKWoolnough/gopherjs/tabs"
 	"github.com/MJKWoolnough/gopherjs/xjs"
@@ -58,6 +60,18 @@ func createMap(o overlay.Overlay) func(dom.Element) {
 		name.Type = "text"
 		name.SetID("name")
 
+		gameModeLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+		gameModeLabel.For = "gameMode"
+		xjs.SetInnerText(gameModeLabel, "Game Mode")
+
+		gameMode := xjs.CreateElement("select").(*dom.HTMLSelectElement)
+		for k, v := range []string{"Survival", "Creative", "Adventure", "Hardcore", "Spectator"} {
+			o := xjs.CreateElement("option").(*dom.HTMLOptionElement)
+			o.Value = strconv.Itoa(k)
+			xjs.SetInnerText(o, v)
+			gameMode.AppendChild(o)
+		}
+
 		seedLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
 		seedLabel.For = "seed"
 		xjs.SetInnerText(nameLabel, "Level Seed")
@@ -97,6 +111,9 @@ func createMap(o overlay.Overlay) func(dom.Element) {
 		c.AppendChild(nameLabel)
 		c.AppendChild(name)
 		c.AppendChild(xjs.CreateElement("br"))
+		c.AppendChild(gameModeLabel)
+		c.AppendChild(gameMode)
+		c.AppendChild(xjs.CreateElement("br"))
 		c.AppendChild(seedLabel)
 		c.AppendChild(seed)
 		c.AppendChild(xjs.CreateElement("br"))
@@ -104,44 +121,45 @@ func createMap(o overlay.Overlay) func(dom.Element) {
 		c.AppendChild(structures)
 		c.AppendChild(xjs.CreateElement("br"))
 		c.AppendChild(cheatsLabel)
-		c.AppendChild(cheatsLabel)
+		c.AppendChild(cheats)
 		c.AppendChild(xjs.CreateElement("br"))
 		c.AppendChild(bonusLabel)
 		c.AppendChild(bonus)
 		c.AppendChild(xjs.CreateElement("br"))
 
 		c.AppendChild(tabs.MakeTabs([]tabs.Tab{
-			{"Default", createDefaultMap(o)},
-			{"Super Flat", createSuperFlatMap(o)},
-			{"Large Biomes", createLargeBiomesMap(o)},
-			{"Amplified", createAmplifiedMap(o)},
-			{"Customised", createCustomisedMap(o)},
+			{"Default", createMapMode(0, o, name, seed, structures, cheats, bonus)},
+			{"Super Flat", createSuperFlatMap(o, name, seed, structures, cheats, bonus)},
+			{"Large Biomes", createMapMode(1, o, name, seed, structures, cheats, bonus)},
+			{"Amplified", createMapMode(2, o, name, seed, structures, cheats, bonus)},
+			{"Customised", createCustomisedMap(o, name, seed, structures, cheats, bonus)},
 		}))
 	}
 }
 
-func createDefaultMap(o overlay.Overlay) func(dom.Element) {
+func createMapMode(mode int, o overlay.Overlay, name, seed, structures, cheats, bonus *dom.HTMLInputElement) func(dom.Element) {
+	submit := xjs.CreateElement("input").(*dom.HTMLInputElement)
+	submit.Type = "button"
+	submit.Value = "Create Map"
+	submit.AddEventListener("click", false, func(dom.Event) {
+		o.Close()
+	})
 	return func(c dom.Element) {
+		c.AppendChild(submit)
 	}
 }
 
-func createSuperFlatMap(o overlay.Overlay) func(dom.Element) {
+func createSuperFlatMap(o overlay.Overlay, name, seed, structures, cheats, bonus *dom.HTMLInputElement) func(dom.Element) {
+	d := xjs.CreateElement("div")
 	return func(c dom.Element) {
+		c.AppendChild(d)
 	}
 }
 
-func createLargeBiomesMap(o overlay.Overlay) func(dom.Element) {
+func createCustomisedMap(o overlay.Overlay, name, seed, structures, cheats, bonus *dom.HTMLInputElement) func(dom.Element) {
+	d := xjs.CreateElement("div")
 	return func(c dom.Element) {
-	}
-}
-
-func createAmplifiedMap(o overlay.Overlay) func(dom.Element) {
-	return func(c dom.Element) {
-	}
-}
-
-func createCustomisedMap(o overlay.Overlay) func(dom.Element) {
-	return func(c dom.Element) {
+		c.AppendChild(d)
 	}
 	// Sea Level - 0-255
 	// Caves, Strongholds, Villages, Mineshafts, Temples, Ocean Monuments, Ravines
