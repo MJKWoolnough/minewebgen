@@ -53,3 +53,31 @@ func MapList() ([]Map, error) {
 	err := jrpc.Call("Server.MapList", nil, &list)
 	return list, err
 }
+
+type DefaultMap struct {
+	Mode                           int
+	Name                           string
+	GameMode                       int
+	Seed                           int64
+	Structures, Cheats, BonusChest bool
+}
+
+func CreateDefaultMap(data DefaultMap) error {
+	return jrpc.Call("Server.CreateDefaultMap", data, emptyStruct)
+}
+
+type SuperFlatMap struct {
+	DefaultMap
+}
+
+func CreateSuperFlatMap(data SuperFlatMap) error {
+	return nil
+}
+
+type CustomMap struct {
+	DefaultMap
+}
+
+func CreateCustomMap(data CustomMap) error {
+	return nil
+}

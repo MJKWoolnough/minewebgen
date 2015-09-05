@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/MJKWoolnough/gopherjs/overlay"
@@ -50,113 +51,159 @@ func newMap(c dom.Element) func(dom.Event) {
 	}
 }
 
+var gameModes = [...]string{"Survival", "Creative", "Adventure", "Hardcore", "Spectator"}
+
 func createMap(o overlay.Overlay) func(dom.Element) {
-	return func(c dom.Element) {
-		nameLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
-		nameLabel.For = "name"
-		xjs.SetInnerText(nameLabel, "Level Name")
+	c := xjs.CreateElement("div")
+	nameLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+	nameLabel.For = "name"
+	xjs.SetInnerText(nameLabel, "Level Name")
 
-		name := xjs.CreateElement("input").(*dom.HTMLInputElement)
-		name.Type = "text"
-		name.SetID("name")
+	name := xjs.CreateElement("input").(*dom.HTMLInputElement)
+	name.Type = "text"
+	name.SetID("name")
 
-		gameModeLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
-		gameModeLabel.For = "gameMode"
-		xjs.SetInnerText(gameModeLabel, "Game Mode")
+	gameModeLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+	gameModeLabel.For = "gameMode"
+	xjs.SetInnerText(gameModeLabel, "Game Mode")
 
-		gameMode := xjs.CreateElement("select").(*dom.HTMLSelectElement)
-		for k, v := range []string{"Survival", "Creative", "Adventure", "Hardcore", "Spectator"} {
-			o := xjs.CreateElement("option").(*dom.HTMLOptionElement)
-			o.Value = strconv.Itoa(k)
-			xjs.SetInnerText(o, v)
-			gameMode.AppendChild(o)
+	gameMode := xjs.CreateElement("select").(*dom.HTMLSelectElement)
+	for k, v := range gameModes {
+		o := xjs.CreateElement("option").(*dom.HTMLOptionElement)
+		o.Value = strconv.Itoa(k)
+		xjs.SetInnerText(o, v)
+		gameMode.AppendChild(o)
+	}
+
+	seedLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+	seedLabel.For = "seed"
+	xjs.SetInnerText(seedLabel, "Level Seed")
+
+	seed := xjs.CreateElement("input").(*dom.HTMLInputElement)
+	seed.Type = "text"
+	seed.SetID("seed")
+	seed.Value = ""
+
+	structuresLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+	structuresLabel.For = "structures"
+	xjs.SetInnerText(structuresLabel, "Generate Structures")
+
+	structures := xjs.CreateElement("input").(*dom.HTMLInputElement)
+	structures.Type = "checkbox"
+	structures.Checked = true
+	structures.SetID("structures")
+
+	cheatsLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+	cheatsLabel.For = "cheats"
+	xjs.SetInnerText(cheatsLabel, "Allow Cheats")
+
+	cheats := xjs.CreateElement("input").(*dom.HTMLInputElement)
+	cheats.Type = "checkbox"
+	cheats.Checked = false
+	cheats.SetID("cheats")
+
+	bonusLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+	bonusLabel.For = "bonus"
+	xjs.SetInnerText(bonusLabel, "Bonus Chest")
+
+	bonus := xjs.CreateElement("input").(*dom.HTMLInputElement)
+	bonus.Type = "checkbox"
+	bonus.Checked = false
+	xjs.SetInnerText(bonus, "Bonus Chest")
+
+	c.AppendChild(nameLabel)
+	c.AppendChild(name)
+	c.AppendChild(xjs.CreateElement("br"))
+	c.AppendChild(gameModeLabel)
+	c.AppendChild(gameMode)
+	c.AppendChild(xjs.CreateElement("br"))
+	c.AppendChild(seedLabel)
+	c.AppendChild(seed)
+	c.AppendChild(xjs.CreateElement("br"))
+	c.AppendChild(structuresLabel)
+	c.AppendChild(structures)
+	c.AppendChild(xjs.CreateElement("br"))
+	c.AppendChild(cheatsLabel)
+	c.AppendChild(cheats)
+	c.AppendChild(xjs.CreateElement("br"))
+	c.AppendChild(bonusLabel)
+	c.AppendChild(bonus)
+	c.AppendChild(xjs.CreateElement("br"))
+
+	dataParser := func(mode int) func() (DefaultMap, error) {
+		return func() (DefaultMap, error) {
+			data := DefaultMap{
+				Mode: mode,
+			}
+			var err error
+			data.Name = name.Value
+			si := gameMode.SelectedIndex
+			if si < 0 || si >= len(gameModes) {
+				return data, ErrInvalidGameMode
+			}
+			data.Seed, err = strconv.ParseInt(seed.Value, 10, 64)
+			if err != nil {
+				return data, err
+			}
+			data.Structures = structures.Checked
+			data.Cheats = cheats.Checked
+			data.BonusChest = bonus.Checked
+			return data, nil
 		}
+	}
 
-		seedLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
-		seedLabel.For = "seed"
-		xjs.SetInnerText(nameLabel, "Level Seed")
-
-		seed := xjs.CreateElement("input").(*dom.HTMLInputElement)
-		seed.Type = "text"
-		seed.SetID("seed")
-		seed.Value = ""
-
-		structuresLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
-		structuresLabel.For = "structures"
-		xjs.SetInnerText(structuresLabel, "Generate Structures")
-
-		structures := xjs.CreateElement("input").(*dom.HTMLInputElement)
-		structures.Type = "checkbox"
-		structures.Checked = true
-		structures.SetID("structures")
-
-		cheatsLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
-		cheatsLabel.For = "cheats"
-		xjs.SetInnerText(cheatsLabel, "Allow Cheats")
-
-		cheats := xjs.CreateElement("input").(*dom.HTMLInputElement)
-		cheats.Type = "checkbox"
-		cheats.Checked = false
-		cheats.SetID("cheats")
-
-		bonusLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
-		bonusLabel.For = "bonus"
-		xjs.SetInnerText(bonusLabel, "Bonus Chest")
-
-		bonus := xjs.CreateElement("input").(*dom.HTMLInputElement)
-		bonus.Type = "checkbox"
-		bonus.Checked = false
-		xjs.SetInnerText(bonus, "Bonus Chest")
-
-		c.AppendChild(nameLabel)
-		c.AppendChild(name)
-		c.AppendChild(xjs.CreateElement("br"))
-		c.AppendChild(gameModeLabel)
-		c.AppendChild(gameMode)
-		c.AppendChild(xjs.CreateElement("br"))
-		c.AppendChild(seedLabel)
-		c.AppendChild(seed)
-		c.AppendChild(xjs.CreateElement("br"))
-		c.AppendChild(structuresLabel)
-		c.AppendChild(structures)
-		c.AppendChild(xjs.CreateElement("br"))
-		c.AppendChild(cheatsLabel)
-		c.AppendChild(cheats)
-		c.AppendChild(xjs.CreateElement("br"))
-		c.AppendChild(bonusLabel)
-		c.AppendChild(bonus)
-		c.AppendChild(xjs.CreateElement("br"))
-
-		c.AppendChild(tabs.MakeTabs([]tabs.Tab{
-			{"Default", createMapMode(0, o, name, seed, structures, cheats, bonus)},
-			{"Super Flat", createSuperFlatMap(o, name, seed, structures, cheats, bonus)},
-			{"Large Biomes", createMapMode(1, o, name, seed, structures, cheats, bonus)},
-			{"Amplified", createMapMode(2, o, name, seed, structures, cheats, bonus)},
-			{"Customised", createCustomisedMap(o, name, seed, structures, cheats, bonus)},
-		}))
+	c.AppendChild(tabs.MakeTabs([]tabs.Tab{
+		{"Default", createMapMode(0, o, dataParser(0))},
+		{"Super Flat", createSuperFlatMap(o, dataParser(1))},
+		{"Large Biomes", createMapMode(2, o, dataParser(2))},
+		{"Amplified", createMapMode(3, o, dataParser(3))},
+		{"Customised", createCustomisedMap(o, dataParser(4))},
+	}))
+	return func(d dom.Element) {
+		d.AppendChild(c)
 	}
 }
 
-func createMapMode(mode int, o overlay.Overlay, name, seed, structures, cheats, bonus *dom.HTMLInputElement) func(dom.Element) {
+var worldTypes = [...]string{
+	"The standard minecraft map generation.",
+	"A simple generator allowing customised levels of blocks.",
+	"The standard minecraft map generation, but tweaked to allow for much larger biomes.",
+	"The standard minecraft map generation, but tweaked to stretch the land upwards.",
+	"A completely customiseable generator.",
+}
+
+func createMapMode(mode int, o overlay.Overlay, dataParser func() (DefaultMap, error)) func(dom.Element) {
 	submit := xjs.CreateElement("input").(*dom.HTMLInputElement)
 	submit.Type = "button"
 	submit.Value = "Create Map"
 	submit.AddEventListener("click", false, func(dom.Event) {
+		data, err := dataParser()
+		if err != nil {
+			return
+		}
+		err = CreateDefaultMap(data)
+		if err != nil {
+			dom.GetWindow().Alert(err.Error())
+		}
 		o.Close()
 	})
 	return func(c dom.Element) {
+		d := xjs.CreateElement("div")
+		xjs.SetPreText(d, worldTypes[mode])
+		c.AppendChild(d)
+		c.AppendChild(xjs.CreateElement("br"))
 		c.AppendChild(submit)
 	}
 }
 
-func createSuperFlatMap(o overlay.Overlay, name, seed, structures, cheats, bonus *dom.HTMLInputElement) func(dom.Element) {
+func createSuperFlatMap(o overlay.Overlay, dataParser func() (DefaultMap, error)) func(dom.Element) {
 	d := xjs.CreateElement("div")
 	return func(c dom.Element) {
 		c.AppendChild(d)
 	}
 }
 
-func createCustomisedMap(o overlay.Overlay, name, seed, structures, cheats, bonus *dom.HTMLInputElement) func(dom.Element) {
+func createCustomisedMap(o overlay.Overlay, dataParser func() (DefaultMap, error)) func(dom.Element) {
 	d := xjs.CreateElement("div")
 	return func(c dom.Element) {
 		c.AppendChild(d)
@@ -199,3 +246,6 @@ func uploadMap(o overlay.Overlay) func(dom.Element) {
 	return func(c dom.Element) {
 	}
 }
+
+// Errors
+var ErrInvalidGameMode = errors.New("invalid game mode")
