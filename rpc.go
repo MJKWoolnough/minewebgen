@@ -40,3 +40,15 @@ func (c *Config) MapList(_ struct{}, list *[]Map) error {
 	}
 	return nil
 }
+
+type DefaultMap struct {
+	Mode                           int
+	Name                           string
+	GameMode                       int
+	Seed                           int64
+	Structures, Cheats, BonusChest bool
+}
+
+func (c *Config) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
+	return nil
+}
