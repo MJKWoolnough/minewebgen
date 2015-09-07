@@ -1,5 +1,11 @@
 package main
 
+import (
+	"os"
+	"path"
+	"strconv"
+)
+
 func (c *Config) Name(_ struct{}, serverName *string) error {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -51,4 +57,20 @@ type DefaultMap struct {
 
 func (c *Config) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
 	return nil
+}
+
+func setupMapDir() (string, error) {
+	num := 0
+	for {
+		dir := path.Join(config.MapsDir, strconv.Itoa(num))
+		_, err := os.Stat(dir)
+		if os.IsNotExist(err) {
+			err := os.MkdirAll(dir, 0777)
+			if err != nil {
+				return "", err
+			}
+			return dir, nil
+		}
+		num++
+	}
 }
