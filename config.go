@@ -24,6 +24,7 @@ type Config struct {
 	filename   string
 	ServerName string
 	ServersDir string
+	MapsDir    string
 	Port       uint16
 	Servers    serverMap
 	Maps       mapMap
