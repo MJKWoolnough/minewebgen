@@ -55,11 +55,11 @@ func MapList() ([]Map, error) {
 }
 
 type DefaultMap struct {
-	Mode                           int
-	Name                           string
-	GameMode                       int
-	Seed                           int64
-	Structures, Cheats, BonusChest bool
+	Mode               int
+	Name               string
+	GameMode           int
+	Seed               int64
+	Structures, Cheats bool
 }
 
 func CreateDefaultMap(data DefaultMap) error {

@@ -102,15 +102,6 @@ func createMap(o overlay.Overlay) func(dom.Element) {
 	cheats.Checked = false
 	cheats.SetID("cheats")
 
-	bonusLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
-	bonusLabel.For = "bonus"
-	xjs.SetInnerText(bonusLabel, "Bonus Chest")
-
-	bonus := xjs.CreateElement("input").(*dom.HTMLInputElement)
-	bonus.Type = "checkbox"
-	bonus.Checked = false
-	xjs.SetInnerText(bonus, "Bonus Chest")
-
 	c.AppendChild(nameLabel)
 	c.AppendChild(name)
 	c.AppendChild(xjs.CreateElement("br"))
@@ -126,8 +117,6 @@ func createMap(o overlay.Overlay) func(dom.Element) {
 	c.AppendChild(cheatsLabel)
 	c.AppendChild(cheats)
 	c.AppendChild(xjs.CreateElement("br"))
-	c.AppendChild(bonusLabel)
-	c.AppendChild(bonus)
 	c.AppendChild(xjs.CreateElement("br"))
 
 	dataParser := func(mode int) func() (DefaultMap, error) {
