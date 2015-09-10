@@ -51,11 +51,11 @@ func (c *Config) MapList(_ struct{}, list *[]Map) error {
 }
 
 type DefaultMap struct {
-	Mode                           int
-	Name                           string
-	GameMode                       int
-	Seed                           int64
-	Structures, Cheats, BonusChest bool
+	Mode               int
+	Name               string
+	GameMode           int
+	Seed               int64
+	Structures, Cheats bool
 }
 
 func (c *Config) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
@@ -88,7 +88,6 @@ func (c *Config) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
 	l.Seed(data.Seed)
 	l.AllowCommands(data.Cheats)
 	l.MapFeatures(data.Structures)
-	// Find NBT for Bonus Chest
 	l.Save()
 	return nil
 }
