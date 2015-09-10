@@ -4,6 +4,9 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"sync"
+
+	"github.com/MJKWoolnough/minecraft"
 )
 
 func (c *Config) Name(_ struct{}, serverName *string) error {
@@ -56,10 +59,45 @@ type DefaultMap struct {
 }
 
 func (c *Config) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
+	d, err := setupMapDir()
+	if err != nil {
+		return err
+	}
+	p, err := mincraft.NewFilePath(d)
+	if err != nil {
+		return err
+	}
+	l, err := minecraft.NewLevel(p)
+	if err != nil {
+		return err
+	}
+	l.GameMode(int32(data.GameMode))
+	l.LevelName(data.Name)
+	switch data.Mode {
+	case 0:
+		l.Generator(minecraft.DefaultGenerator)
+	case 1:
+		l.Generator(minecraft.FlatGenerator)
+	case 2:
+		l.Generator(minecraft.LargeBiomeGenerator)
+	case 3:
+		l.Generator(minecraft.AmplifiedGenerator)
+	case 4:
+		l.Generator(minecraft.CustomGenerator)
+	}
+	l.Seed(data.Seed)
+	l.AllowCommands(data.Cheats)
+	l.MapFeatures(data.Structures)
+	// Find NBT for Bonus Chest
+	l.Save()
 	return nil
 }
 
+var mapDirLock sync.Mutex
+
 func setupMapDir() (string, error) {
+	mapDirLock.Lock()
+	defer mapDirLock.Unlock()
 	num := 0
 	for {
 		dir := path.Join(config.MapsDir, strconv.Itoa(num))
