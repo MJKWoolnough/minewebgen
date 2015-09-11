@@ -89,6 +89,7 @@ func (c *Config) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
 	l.AllowCommands(data.Cheats)
 	l.MapFeatures(data.Structures)
 	l.Save()
+	c.newMap(data.Name, d)
 	return nil
 }
 
