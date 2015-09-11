@@ -63,7 +63,7 @@ func (c *Config) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
 	if err != nil {
 		return err
 	}
-	p, err := mincraft.NewFilePath(d)
+	p, err := minecraft.NewFilePath(d)
 	if err != nil {
 		return err
 	}
