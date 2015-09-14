@@ -6,7 +6,9 @@ import (
 	"strings"
 )
 
-var defaultSettings = map[string]string{
+type ServerProperties map[string]string
+
+var defaultSettings = ServerProperties{
 	"allow-flight":                 "false",
 	"allow-nether":                 "true",
 	"announce-player-achievements": "true",
@@ -55,15 +57,15 @@ var defaultSettings = map[string]string{
 	"grow-trees":           "true",
 }
 
-func DefaultSettings() map[string]string {
-	m := make(map[string]string)
+func DefaultSettings() ServerProperties {
+	m := make(ServerProperties)
 	for k, v := range defaultSettings {
 		m[k] = v
 	}
 	return m
 }
 
-func ReadConfig(r io.Reader) (map[string]string, error) {
+func (s ServerProperties) ReadFrom(r io.Reader) error {
 	br := bufio.NewReader(r)
 	data := make(map[string]string)
 	for {
@@ -88,9 +90,9 @@ func ReadConfig(r io.Reader) (map[string]string, error) {
 	}
 }
 
-func SaveConfig(w io.Writer, c map[string]string) error {
+func (s ServerProperties) WriteTo(w io.Writer) error {
 	toWrite := make([]byte, 0, 1024)
-	for k, v := range c {
+	for k, v := range s {
 		toWrite = toWrite[:0]
 		toWrite = append(toWrite, k...)
 		toWrite = append(toWrite, '=')
