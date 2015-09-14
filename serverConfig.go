@@ -6,6 +6,63 @@ import (
 	"strings"
 )
 
+var defaultSettings = map[string]string{
+	"allow-flight":                 "false",
+	"allow-nether":                 "true",
+	"announce-player-achievements": "true",
+	"difficulty":                   "1",
+	"enable-query":                 "false",
+	"enable-rcon":                  "false",
+	"enable-command-block":         "false",
+	"force-gamemode":               "false",
+	"gamemode":                     "0",
+	"generate-structures":          "true",
+	"generator-settings":           "",
+	"hardcore":                     "false",
+	"level-name":                   "world",
+	"level-seed":                   "",
+	"level-type":                   "DEFAULT",
+	"max-build-height":             "256",
+	"max-players":                  "20",
+	"max-tick-time":                "60000",
+	"max-world-size":               "29999984",
+	"motd":                         "A MineWebGen Server",
+	"network-compression-threshold": "256",
+	"online-mode":                   "false",
+	"op-permission-level":           "4",
+	"player-idle-timeout":           "0",
+	"pvp":                  "true",
+	"query.port":           "25565",
+	"rcon.password":        "",
+	"rcon.port":            "25575",
+	"resource-pack":        "",
+	"resource-pack-hash":   "",
+	"server-ip":            "",
+	"server-port":          "25565",
+	"snooper-enabled":      "false",
+	"spawn-animals":        "true",
+	"spawn-monsters":       "true",
+	"spawn-npcs":           "true",
+	"spawn-protection":     "16",
+	"use-native-transport": "true",
+	"view-distance":        "10",
+	"white-list":           "false",
+	"verify-names":         "true",
+	"admin-slot":           "false",
+	"public":               "true",
+	"server-name":          "",
+	"max-connections":      "3",
+	"grow-trees":           "true",
+}
+
+func DefaultSettings() map[string]string {
+	m := make(map[string]string)
+	for k, v := range defaultSettings {
+		m[k] = v
+	}
+	return m
+}
+
 func ReadConfig(r io.Reader) (map[string]string, error) {
 	br := bufio.NewReader(r)
 	data := make(map[string]string)
