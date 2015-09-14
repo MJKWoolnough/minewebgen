@@ -7,6 +7,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/MJKWoolnough/byteio"
 )
@@ -62,7 +63,11 @@ func setupServer(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) err
 	return nil
 }
 
+var serverDirLock sync.Mutex
+
 func setupServerDir() (string, error) {
+	serverDirLock.Lock()
+	defer serverDirLock.Unlock()
 	num := 0
 	for {
 		dir := path.Join(config.ServersDir, strconv.Itoa(num))
