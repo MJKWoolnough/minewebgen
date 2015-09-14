@@ -90,6 +90,15 @@ func (c *Config) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
 	l.MapFeatures(data.Structures)
 	l.Save()
 	c.newMap(data.Name, d)
+	f, err := os.Create(path.Join(d, "server.properties"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	m := DefaultConfig()
+	if err := m.WriteTo(f); err != nil {
+		return err
+	}
 	return nil
 }
 
