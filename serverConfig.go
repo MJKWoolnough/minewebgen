@@ -72,9 +72,9 @@ func (s ServerProperties) ReadFrom(r io.Reader) error {
 		l, err := br.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				return data, nil
+				return nil
 			}
-			return nil, err
+			return err
 		}
 		if l[0] == '#' {
 			continue
