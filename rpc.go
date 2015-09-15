@@ -96,6 +96,29 @@ func (c *Config) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
 	}
 	defer f.Close()
 	m := DefaultConfig()
+	m["gamemode"] = strconv.Itoa(data.GameMode)
+	if !data.Structures {
+		m["generate-structures"] = "false"
+	}
+	if data.GameMode == 3 {
+		m["hardcore"] = "true"
+	}
+	data["level-name"] = data.Name
+	data["level-seed"] = strconv.FormatInt(data.Seed, 10)
+	switch data.Mode {
+	case 0:
+		data["level-type"] = minecraft.DefaultGenerator
+	case 1:
+		data["level-type"] = minecraft.FlatGenerator
+	case 2:
+		data["level-type"] = minecraft.LargeBiomeGenerator
+	case 3:
+		data["level-type"] = minecraft.AmplifiedGenerator
+	case 4:
+		data["level-type"] = minecraft.CustomGenerator
+	case 5:
+		data["level-type"] = minecraft.DebugGenerator
+	}
 	if err := m.WriteTo(f); err != nil {
 		return err
 	}
