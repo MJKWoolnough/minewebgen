@@ -11,6 +11,7 @@ import (
 )
 
 func maps(c dom.Element) {
+	xjs.RemoveChildren(c)
 	mapsDiv := xjs.CreateElement("div")
 	defer c.AppendChild(mapsDiv)
 	list, err := MapList()
@@ -29,6 +30,7 @@ func maps(c dom.Element) {
 	for _, m := range list {
 		sd := xjs.CreateElement("div")
 		xjs.SetInnerText(sd, m.Name)
+		sd.AddEventListener("click", false, viewMap(m))
 		mapsDiv.AppendChild(sd)
 	}
 	c.AppendChild(mapsDiv)
@@ -130,13 +132,15 @@ func createMap(o overlay.Overlay) func(dom.Element) {
 			if si < 0 || si >= len(gameModes) {
 				return data, ErrInvalidGameMode
 			}
+			if seed.Value == "" {
+				seed.Value = "0"
+			}
 			data.Seed, err = strconv.ParseInt(seed.Value, 10, 64)
 			if err != nil {
 				return data, err
 			}
 			data.Structures = structures.Checked
 			data.Cheats = cheats.Checked
-			data.BonusChest = bonus.Checked
 			return data, nil
 		}
 	}
@@ -170,11 +174,13 @@ func createMapMode(mode int, o overlay.Overlay, dataParser func() (DefaultMap, e
 		if err != nil {
 			return
 		}
-		err = CreateDefaultMap(data)
-		if err != nil {
-			dom.GetWindow().Alert(err.Error())
-		}
-		o.Close()
+		go func() {
+			err = CreateDefaultMap(data)
+			if err != nil {
+				dom.GetWindow().Alert(err.Error())
+			}
+			o.Close()
+		}()
 	})
 	return func(c dom.Element) {
 		d := xjs.CreateElement("div")
@@ -233,6 +239,27 @@ func createCustomisedMap(o overlay.Overlay, dataParser func() (DefaultMap, error
 
 func uploadMap(o overlay.Overlay) func(dom.Element) {
 	return func(c dom.Element) {
+	}
+}
+
+func viewMap(m Map) func(dom.Event) {
+	return func(dom.Event) {
+		d := xjs.CreateElement("div")
+		od := overlay.New(d)
+		d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Map Details"))
+
+		nameLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+		nameLabel.For = "name"
+		xjs.SetInnerText(nameLabel, "Name")
+		name := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		xjs.SetInnerText(nameLabel, "Name")
+		name.Value = m.Name
+		name.Type = "text"
+
+		d.AppendChild(nameLabel)
+		d.AppendChild(name)
+
+		dom.GetWindow().Document().DocumentElement().AppendChild(od)
 	}
 }
 
