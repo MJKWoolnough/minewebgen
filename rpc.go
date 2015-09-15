@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/rand"
 	"os"
 	"path"
 	"strconv"
@@ -59,6 +60,9 @@ type DefaultMap struct {
 }
 
 func (c *Config) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
+	if data.Seed == 0 {
+		data.Seed = rand.Int63()
+	}
 	d, err := setupMapDir()
 	if err != nil {
 		return err
