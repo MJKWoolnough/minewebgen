@@ -282,6 +282,9 @@ func viewMap(m Map) func(dom.Event) {
 			sel := xjs.CreateElement("select").(*dom.HTMLSelectElement)
 			sel.SetID("server")
 			for _, s := range servers {
+				if s.Map != -1 {
+					continue
+				}
 				o := xjs.CreateElement("option").(*dom.HTMLOptionElement)
 				o.Value = strconv.Itoa(s.ID)
 				xjs.SetInnerText(o, s.Name)

@@ -30,12 +30,17 @@ type Server struct {
 	ID         int
 	Name, Path string
 	Args       []string
+	Map        int
 }
 
 func ServerList() ([]Server, error) {
 	var list []Server
 	err := jrpc.Call("Server.List", nil, &list)
 	return list, err
+}
+
+func (s Server) IsRunning() bool {
+	return false
 }
 
 var emptyStruct = &struct{}{}
@@ -45,7 +50,8 @@ func SaveServer(s Server) error {
 }
 
 type Map struct {
-	Name string
+	Name   string
+	Server int
 }
 
 func MapList() ([]Map, error) {
