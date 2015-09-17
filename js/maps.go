@@ -265,6 +265,7 @@ func viewMap(m Map) func(dom.Event) {
 		serverLabel.For = "server"
 		xjs.SetInnerText(serverLabel, "Server")
 		serverEditable := true
+		serverSet := xjs.DocumentFragment()
 		var (
 			selServer Server
 			server    dom.Element
@@ -293,6 +294,14 @@ func viewMap(m Map) func(dom.Event) {
 				}
 				sel.AppendChild(o)
 			}
+			if len(servers) > 0 {
+				c := xjs.CreateElement("input").(*dom.HTMLInputElement)
+				c.Value = "Set Server"
+				serverSet.AppendChild(c)
+				c.AddEventListener("click", false, func(dom.Event) {
+
+				})
+			}
 			server = sel
 		} else {
 			server.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), selServer.Name))
@@ -303,6 +312,7 @@ func viewMap(m Map) func(dom.Event) {
 		d.AppendChild(xjs.CreateElement("br"))
 		d.AppendChild(serverLabel)
 		d.AppendChild(server)
+		d.AppendChild(serverSet)
 
 		dom.GetWindow().Document().DocumentElement().AppendChild(od)
 	}
