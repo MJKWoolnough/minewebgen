@@ -299,7 +299,10 @@ func viewMap(m Map) func(dom.Event) {
 				c.Value = "Set Server"
 				serverSet.AppendChild(c)
 				c.AddEventListener("click", false, func(dom.Event) {
-
+					err := SetMapServer(m.ID, servers[sel.SelectedIndex].ID)
+					if err != nil {
+						dom.GetWindow().Alert(err.Error())
+					}
 				})
 			}
 			server = sel
