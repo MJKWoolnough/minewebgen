@@ -89,6 +89,10 @@ func CreateCustomMap(data CustomMap) error {
 	return nil
 }
 
+type MapServer struct {
+	Map, Server int
+}
+
 func SetMapServer(mapID, serverID int) error {
-	return jrpc.Call("Server.SetMapServer", struct{ Map, Server int }{mapID, serverID})
+	return jrpc.Call("Server.SetMapServer", MapServer{mapID, serverID})
 }
