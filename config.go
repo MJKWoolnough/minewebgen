@@ -11,12 +11,14 @@ type Server struct {
 	Name, Path string
 	Args       []string
 	status     string
+	Map        int
 }
 
 type Map struct {
 	ID         int
 	Name, Path string
 	Status     string
+	Server     int
 }
 
 type Config struct {

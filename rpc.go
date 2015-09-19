@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"math/rand"
 	"os"
 	"path"
@@ -148,3 +149,28 @@ func setupMapDir() (string, error) {
 		num++
 	}
 }
+
+type MapServer struct {
+	Map, Server int
+}
+
+func (c *Config) SetMapServer(ms MapServer, _ *struct{}) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	m, ok := c.Maps[ms.Map]
+	if !ok {
+		return ErrNoMap
+	}
+	s, ok := c.Servers[ms.Server]
+	if !ok {
+		return ErrNoServer
+	}
+	m.Server = ms.Server
+	s.Map = ms.Map
+	c.Maps[ms.Map] = m
+	c.Servers[ms.Server] = s
+	return c.save()
+}
+
+// Errors
+var ErrNoMap = errors.New("no map found")
