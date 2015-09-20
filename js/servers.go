@@ -258,6 +258,10 @@ func newServer(c dom.Element) func(dom.Event) {
 
 func viewServer(c, sd dom.Element, s Server) func(dom.Event) {
 	return func(dom.Event) {
+		m, err := GetMap(s.Map)
+		if err != nil {
+			return
+		}
 		d := xjs.CreateElement("div")
 		od := overlay.New(d)
 		d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Server Details"))
@@ -341,6 +345,16 @@ func viewServer(c, sd dom.Element, s Server) func(dom.Event) {
 		})
 
 		d.AppendChild(submit)
+
+		d.AppendChild(xjs.CreateElement("br"))
+		d.AppendChild(xjs.SetInnerText(xjs.CreateElement("label"), "Map"))
+		d.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), m.Name))
+		removeMap := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		removeMap.Type = "button"
+		removeMap.AddEventListener("click", false, func(dom.Event) {
+			go RemoveServerMap(s.ID)
+		})
+		d.AppendChild(removeMap)
 
 		dom.GetWindow().Document().DocumentElement().AppendChild(od)
 	}

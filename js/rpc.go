@@ -61,6 +61,19 @@ func MapList() ([]Map, error) {
 	return list, err
 }
 
+func GetMap(mapID int) (Map, error) {
+	if mapID == -1 {
+		return Map{ID: -1}, nil
+	}
+	var m Map
+	err := jrpc.Call("Server.Map", mapID, &m)
+	return m, err
+}
+
+func RemoveServerMap(serverID int) error {
+	return jrpc.Call("Server.RemoveServerMap", serverID, emptyStruct)
+}
+
 type DefaultMap struct {
 	Mode               int
 	Name               string
