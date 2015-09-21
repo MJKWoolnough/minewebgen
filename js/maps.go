@@ -244,80 +244,82 @@ func uploadMap(o overlay.Overlay) func(dom.Element) {
 
 func viewMap(m Map) func(dom.Event) {
 	return func(dom.Event) {
-		servers, err := ServerList()
-		if err != nil {
-			return
-		}
-		d := xjs.CreateElement("div")
-		od := overlay.New(d)
-		d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Map Details"))
-
-		nameLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
-		nameLabel.For = "name"
-		xjs.SetInnerText(nameLabel, "Name")
-		name := xjs.CreateElement("input").(*dom.HTMLInputElement)
-		xjs.SetInnerText(nameLabel, "Name")
-		name.SetID("name")
-		name.Value = m.Name
-		name.Type = "text"
-
-		serverLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
-		serverLabel.For = "server"
-		xjs.SetInnerText(serverLabel, "Server")
-		serverEditable := true
-		serverSet := xjs.DocumentFragment()
-		var (
-			selServer Server
-			server    dom.Element
-		)
-		if m.Server != -1 {
-			for _, s := range servers {
-				if s.ID == m.Server {
-					selServer = s
-					serverEditable = !s.IsRunning()
-					break
-				}
+		go func() {
+			servers, err := ServerList()
+			if err != nil {
+				return
 			}
-		}
-		if serverEditable {
-			sel := xjs.CreateElement("select").(*dom.HTMLSelectElement)
-			sel.SetID("server")
-			for _, s := range servers {
-				if s.Map != -1 {
-					continue
-				}
-				o := xjs.CreateElement("option").(*dom.HTMLOptionElement)
-				o.Value = strconv.Itoa(s.ID)
-				xjs.SetInnerText(o, s.Name)
-				if s.ID == m.Server {
-					o.Selected = true
-				}
-				sel.AppendChild(o)
-			}
-			if len(servers) > 0 {
-				c := xjs.CreateElement("input").(*dom.HTMLInputElement)
-				c.Value = "Set Server"
-				serverSet.AppendChild(c)
-				c.AddEventListener("click", false, func(dom.Event) {
-					err := SetMapServer(m.ID, servers[sel.SelectedIndex].ID)
-					if err != nil {
-						dom.GetWindow().Alert(err.Error())
+			d := xjs.CreateElement("div")
+			od := overlay.New(d)
+			d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Map Details"))
+
+			nameLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+			nameLabel.For = "name"
+			xjs.SetInnerText(nameLabel, "Name")
+			name := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			xjs.SetInnerText(nameLabel, "Name")
+			name.SetID("name")
+			name.Value = m.Name
+			name.Type = "text"
+
+			serverLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+			serverLabel.For = "server"
+			xjs.SetInnerText(serverLabel, "Server")
+			serverEditable := true
+			serverSet := xjs.DocumentFragment()
+			var (
+				selServer Server
+				server    dom.Element
+			)
+			if m.Server != -1 {
+				for _, s := range servers {
+					if s.ID == m.Server {
+						selServer = s
+						serverEditable = !s.IsRunning()
+						break
 					}
-				})
+				}
 			}
-			server = sel
-		} else {
-			server.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), selServer.Name))
-		}
+			if serverEditable {
+				sel := xjs.CreateElement("select").(*dom.HTMLSelectElement)
+				sel.SetID("server")
+				for _, s := range servers {
+					if s.Map != -1 {
+						continue
+					}
+					o := xjs.CreateElement("option").(*dom.HTMLOptionElement)
+					o.Value = strconv.Itoa(s.ID)
+					xjs.SetInnerText(o, s.Name)
+					if s.ID == m.Server {
+						o.Selected = true
+					}
+					sel.AppendChild(o)
+				}
+				if len(servers) > 0 {
+					c := xjs.CreateElement("input").(*dom.HTMLInputElement)
+					c.Value = "Set Server"
+					serverSet.AppendChild(c)
+					c.AddEventListener("click", false, func(dom.Event) {
+						err := SetMapServer(m.ID, servers[sel.SelectedIndex].ID)
+						if err != nil {
+							dom.GetWindow().Alert(err.Error())
+						}
+					})
+				}
+				server = sel
+			} else {
+				server.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), selServer.Name))
+			}
 
-		d.AppendChild(nameLabel)
-		d.AppendChild(name)
-		d.AppendChild(xjs.CreateElement("br"))
-		d.AppendChild(serverLabel)
-		d.AppendChild(server)
-		d.AppendChild(serverSet)
+			d.AppendChild(nameLabel)
+			d.AppendChild(name)
+			d.AppendChild(xjs.CreateElement("br"))
+			d.AppendChild(serverLabel)
+			d.AppendChild(server)
+			d.AppendChild(serverSet)
 
-		dom.GetWindow().Document().DocumentElement().AppendChild(od)
+			dom.GetWindow().Document().DocumentElement().AppendChild(od)
+		}()
 	}
 }
 
