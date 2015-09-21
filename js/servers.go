@@ -20,7 +20,7 @@ func servers(c dom.Element) {
 	xjs.RemoveChildren(c)
 	serversDiv := xjs.CreateElement("div")
 	defer c.AppendChild(serversDiv)
-	list, err := ServerList()
+	list, err := RPC.ServerList()
 	if err != nil {
 		xjs.SetInnerText(serversDiv, err.Error())
 		return
@@ -258,7 +258,7 @@ func newServer(c dom.Element) func(dom.Event) {
 
 func viewServer(c, sd dom.Element, s Server) func(dom.Event) {
 	return func(dom.Event) {
-		m, err := GetMap(s.Map)
+		m, err := RPC.GetMap(s.Map)
 		if err != nil {
 			return
 		}
@@ -326,7 +326,7 @@ func viewServer(c, sd dom.Element, s Server) func(dom.Event) {
 					args[num] = arg.TextContent()
 				}
 				n := name.Value
-				err := SaveServer(Server{
+				err := RPC.SetServer(Server{
 					ID:   s.ID,
 					Name: n,
 					Path: s.Path,
@@ -352,7 +352,7 @@ func viewServer(c, sd dom.Element, s Server) func(dom.Event) {
 		removeMap := xjs.CreateElement("input").(*dom.HTMLInputElement)
 		removeMap.Type = "button"
 		removeMap.AddEventListener("click", false, func(dom.Event) {
-			go RemoveServerMap(s.ID)
+			go RPC.RemoveServerMap(s.ID)
 		})
 		d.AppendChild(removeMap)
 

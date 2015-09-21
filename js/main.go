@@ -60,7 +60,7 @@ func main() {
 			}
 			body := dom.GetWindow().Document().(dom.HTMLDocument).Body()
 			xjs.RemoveChildren(body)
-			title, err := ServerName()
+			title, err := RPC.ServerName()
 			if err != nil {
 				dom.GetWindow().Alert(err.Error())
 				return

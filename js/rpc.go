@@ -8,22 +8,8 @@ import (
 	"github.com/gopherjs/websocket"
 )
 
-var jrpc *rpc.Client
-
-func rpcInit() error {
-	conn, err := websocket.Dial("ws://" + js.Global.Get("location").Get("host").String() + "/rpc")
-	if err != nil {
-		return err
-	}
-	closeOnExit(conn)
-	jrpc = jsonrpc.NewClient(conn)
-	return nil
-}
-
-func ServerName() (string, error) {
-	var name string
-	err := jrpc.Call("Server.Name", nil, &name)
-	return name, err
+type jrpc struct {
+	rpc *rpc.Client
 }
 
 type Server struct {
@@ -33,20 +19,8 @@ type Server struct {
 	Map        int
 }
 
-func ServerList() ([]Server, error) {
-	var list []Server
-	err := jrpc.Call("Server.List", nil, &list)
-	return list, err
-}
-
 func (s Server) IsRunning() bool {
 	return false
-}
-
-var emptyStruct = &struct{}{}
-
-func SaveServer(s Server) error {
-	return jrpc.Call("Server.Save", s, emptyStruct)
 }
 
 type Map struct {
@@ -55,23 +29,64 @@ type Map struct {
 	Server int
 }
 
-func MapList() ([]Map, error) {
-	var list []Map
-	err := jrpc.Call("Server.MapList", nil, &list)
+var (
+	RPC         jrpc
+	emptyStruct = &struct{}{}
+)
+
+func rpcInit() error {
+	conn, err := websocket.Dial("ws://" + js.Global.Get("location").Get("host").String() + "/rpc")
+	if err != nil {
+		return err
+	}
+	closeOnExit(conn)
+	RPC = jrpc{jsonrpc.NewClient(conn)}
+	return nil
+}
+
+func (j jrpc) ServerName() (string, error) {
+	var name string
+	err := j.rpc.Call("RPC.Name", nil, &name)
+	return name, err
+}
+
+func (j jrpc) ServerList() ([]Server, error) {
+	var list []Server
+	err := j.rpc.Call("RPC.ServerList", nil, &list)
 	return list, err
 }
 
-func GetMap(mapID int) (Map, error) {
-	if mapID == -1 {
+func (j jrpc) GetServer(sID int) (Server, error) {
+	var s Server
+	err := j.rpc.Call("RPC.GetServer", sID, &s)
+	return s, err
+}
+
+func (j jrpc) SetServer(s Server) error {
+	return j.rpc.Call("RPC.SetServer", s, emptyStruct)
+}
+
+func (j jrpc) MapList() ([]Map, error) {
+	var list []Map
+	err := j.rpc.Call("RPC.MapList", nil, &list)
+	return list, err
+}
+
+func (j jrpc) GetMap(mID int) (Map, error) {
+	if mID == -1 {
 		return Map{ID: -1}, nil
 	}
-	var m Map
-	err := jrpc.Call("Server.Map", mapID, &m)
+	m := Map{ID: -1}
+	err := j.rpc.Call("RPC.GetMap", mID, &m)
 	return m, err
 }
 
-func RemoveServerMap(serverID int) error {
-	return jrpc.Call("Server.RemoveServerMap", serverID, emptyStruct)
+func (j jrpc) SetMap(m Map) error {
+	return j.rpc.Call("RPC.SetMap", m, emptyStruct)
+}
+
+func (j jrpc) RemoveServerMap(serverID int) error {
+	return j.rpc.Call("RPC.RemoveServerMap", serverID, emptyStruct)
 }
 
 type DefaultMap struct {
@@ -82,15 +97,15 @@ type DefaultMap struct {
 	Structures, Cheats bool
 }
 
-func CreateDefaultMap(data DefaultMap) error {
-	return jrpc.Call("Server.CreateDefaultMap", data, emptyStruct)
+func (j jrpc) CreateDefaultMap(data DefaultMap) error {
+	return j.rpc.Call("RPC.CreateDefaultMap", data, emptyStruct)
 }
 
 type SuperFlatMap struct {
 	DefaultMap
 }
 
-func CreateSuperFlatMap(data SuperFlatMap) error {
+func (j jrpc) CreateSuperFlatMap(data SuperFlatMap) error {
 	return nil
 }
 
@@ -98,14 +113,6 @@ type CustomMap struct {
 	DefaultMap
 }
 
-func CreateCustomMap(data CustomMap) error {
+func (j jrpc) CreateCustomMap(data CustomMap) error {
 	return nil
-}
-
-type MapServer struct {
-	Map, Server int
-}
-
-func SetMapServer(mapID, serverID int) error {
-	return jrpc.Call("Server.SetMapServer", MapServer{mapID, serverID}, emptyStruct)
 }
