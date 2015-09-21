@@ -18,7 +18,7 @@ func (c *Config) Name(_ struct{}, serverName *string) error {
 	return nil
 }
 
-func (c *Config) List(_ struct{}, list *[]Server) error {
+func (c *Config) ServerList(_ struct{}, list *[]Server) error {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	*list = make([]Server, 0, len(c.Servers))
@@ -28,7 +28,18 @@ func (c *Config) List(_ struct{}, list *[]Server) error {
 	return nil
 }
 
-func (c *Config) Save(s Server, _ *struct{}) error {
+func (c *Config) GetServer(sID int, s *Server) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	ns, ok := c.Servers[sID]
+	if !ok {
+		return ErrNoServer
+	}
+	*s = ns
+	return nil
+}
+
+func (c *Config) SetServer(s Server, _ *struct{}) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	defer c.save()
@@ -50,6 +61,54 @@ func (c *Config) MapList(_ struct{}, list *[]Map) error {
 		*list = append(*list, m)
 	}
 	return nil
+}
+
+func (c *Config) GetMap(mID int, m *Map) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	nm, ok := c.Maps[sID]
+	if !ok {
+		return ErrNoMap
+	}
+	*m = nm
+	return nil
+}
+
+func (c *Config) SetMap(m Map, _ *struct{}) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	defer c.save()
+	nm, ok := c.Maps[m.ID]
+	if !ok {
+		return ErrNoMap
+	}
+	m.Path = nm.Path
+	m.Server = nm.Server
+	m.Status = nm.Status
+	c.Maps[m.ID] = m
+	return nil
+}
+
+type MapServer struct {
+	Map, Server int
+}
+
+func (c *Config) SetMapServer(ms MapServer, _ *struct{}) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	m, ok := c.Maps[ms.Map]
+	if !ok {
+		return ErrNoMap
+	}
+	s, ok := c.Servers[ms.Server]
+	if !ok {
+		return ErrNoServer
+	}
+	m.Server = ms.Server
+	s.Map = ms.Map
+	c.Maps[ms.Map] = m
+	c.Servers[ms.Server] = s
+	return c.save()
 }
 
 type DefaultMap struct {
@@ -148,28 +207,6 @@ func setupMapDir() (string, error) {
 		}
 		num++
 	}
-}
-
-type MapServer struct {
-	Map, Server int
-}
-
-func (c *Config) SetMapServer(ms MapServer, _ *struct{}) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	m, ok := c.Maps[ms.Map]
-	if !ok {
-		return ErrNoMap
-	}
-	s, ok := c.Servers[ms.Server]
-	if !ok {
-		return ErrNoServer
-	}
-	m.Server = ms.Server
-	s.Map = ms.Map
-	c.Maps[ms.Map] = m
-	c.Servers[ms.Server] = s
-	return c.save()
 }
 
 // Errors

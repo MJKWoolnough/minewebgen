@@ -28,7 +28,7 @@ func main() {
 		return
 	}
 
-	err = rpc.RegisterName("Server", config)
+	err = rpc.RegisterName("RPC", config)
 	if err != nil {
 		fmt.Println(err)
 		return
