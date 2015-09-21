@@ -57,7 +57,7 @@ func (j jrpc) ServerList() ([]Server, error) {
 }
 
 func (j jrpc) GetServer(sID int) (Server, error) {
-	if sID == -1 {
+	if sID < 0 {
 		return Server{ID: -1}, nil
 	}
 	var s Server
@@ -76,7 +76,7 @@ func (j jrpc) MapList() ([]Map, error) {
 }
 
 func (j jrpc) GetMap(mID int) (Map, error) {
-	if mID == -1 {
+	if mID < 0 {
 		return Map{ID: -1}, nil
 	}
 	m := Map{ID: -1}
