@@ -107,5 +107,5 @@ type MapServer struct {
 }
 
 func SetMapServer(mapID, serverID int) error {
-	return jrpc.Call("Server.SetMapServer", MapServer{mapID, serverID})
+	return jrpc.Call("Server.SetMapServer", MapServer{mapID, serverID}, emptyStruct)
 }
