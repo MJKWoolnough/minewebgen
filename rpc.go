@@ -66,7 +66,7 @@ func (c *Config) MapList(_ struct{}, list *[]Map) error {
 func (c *Config) GetMap(mID int, m *Map) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	nm, ok := c.Maps[sID]
+	nm, ok := c.Maps[mID]
 	if !ok {
 		return ErrNoMap
 	}
