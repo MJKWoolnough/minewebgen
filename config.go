@@ -134,7 +134,7 @@ func (c *Config) newMap(name, path string) int {
 		}
 		id++
 	}
-	c.Maps[id] = Map{ID: id, Name: name, Path: path}
+	c.Maps[id] = Map{ID: id, Name: name, Path: path, Server: -1}
 	return id
 }
 
