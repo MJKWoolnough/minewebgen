@@ -57,6 +57,9 @@ func (j jrpc) ServerList() ([]Server, error) {
 }
 
 func (j jrpc) GetServer(sID int) (Server, error) {
+	if sID == -1 {
+		return Server{ID: -1}, nil
+	}
 	var s Server
 	err := j.rpc.Call("RPC.GetServer", sID, &s)
 	return s, err
