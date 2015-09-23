@@ -5,21 +5,23 @@ import (
 	"strconv"
 
 	"github.com/MJKWoolnough/gopherjs/overlay"
+	"github.com/MJKWoolnough/gopherjs/style"
 	"github.com/MJKWoolnough/gopherjs/tabs"
 	"github.com/MJKWoolnough/gopherjs/xjs"
 	"honnef.co/go/js/dom"
 )
 
+func init() {
+	style.Add(`
+.serverUnassigned {
+	color : #f00;
+}
+	`)
+}
+
 func maps(c dom.Element) {
 	xjs.RemoveChildren(c)
 	mapsDiv := xjs.CreateElement("div")
-	defer c.AppendChild(mapsDiv)
-	list, err := MapList()
-	if err != nil {
-		xjs.SetInnerText(mapsDiv, err.Error())
-		return
-	}
-
 	newButton := xjs.CreateElement("input").(*dom.HTMLInputElement)
 	newButton.Type = "button"
 	newButton.Value = "New Map"
@@ -27,12 +29,46 @@ func maps(c dom.Element) {
 
 	mapsDiv.AppendChild(newButton)
 
-	for _, m := range list {
-		sd := xjs.CreateElement("div")
-		xjs.SetInnerText(sd, m.Name)
-		sd.AddEventListener("click", false, viewMap(m))
-		mapsDiv.AppendChild(sd)
-	}
+	mapsTable := xjs.CreateElement("table")
+	mapsHeader := xjs.CreateElement("tr")
+	mapsHeader.AppendChild(xjs.SetInnerText(xjs.CreateElement("th"), "Map Name"))
+	mapsHeader.AppendChild(xjs.SetInnerText(xjs.CreateElement("th"), "Server"))
+	mapsTable.AppendChild(mapsHeader)
+	go func() {
+		list, err := RPC.MapList()
+		if err != nil {
+			xjs.SetInnerText(mapsDiv, err.Error())
+			return
+		}
+
+		for _, m := range list {
+			mr := xjs.CreateElement("tr")
+			mn := xjs.CreateElement("td")
+			xjs.SetInnerText(mn, m.Name)
+			mn.AddEventListener("click", false, viewMap(m))
+			ms := xjs.CreateElement("td")
+			s, err := RPC.GetServer(m.Server)
+			if err != nil {
+				xjs.SetInnerText(ms, "[Error]")
+				ms.SetAttribute("class", "serverUnassigned")
+			} else {
+				xjs.SetInnerText(ms, s.Name)
+				ms.AddEventListener("click", false, assignServer(c, m, s))
+			}
+			if m.Server >= 0 {
+			} else {
+				xjs.SetInnerText(ms, "[Unassigned]")
+				ms.SetAttribute("class", "serverUnassigned")
+				ms.AddEventListener("click", false, assignServer(c, m, Server{ID: -1}))
+			}
+			if m.Server >= 0 {
+			}
+			mr.AppendChild(mn)
+			mr.AppendChild(ms)
+			mapsTable.AppendChild(mr)
+		}
+	}()
+	mapsDiv.AppendChild(mapsTable)
 	c.AppendChild(mapsDiv)
 }
 
@@ -175,7 +211,7 @@ func createMapMode(mode int, o overlay.Overlay, dataParser func() (DefaultMap, e
 			return
 		}
 		go func() {
-			err = CreateDefaultMap(data)
+			err = RPC.CreateDefaultMap(data)
 			if err != nil {
 				dom.GetWindow().Alert(err.Error())
 			}
@@ -245,10 +281,6 @@ func uploadMap(o overlay.Overlay) func(dom.Element) {
 func viewMap(m Map) func(dom.Event) {
 	return func(dom.Event) {
 		go func() {
-			servers, err := ServerList()
-			if err != nil {
-				return
-			}
 			d := xjs.CreateElement("div")
 			od := overlay.New(d)
 			d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Map Details"))
@@ -262,6 +294,42 @@ func viewMap(m Map) func(dom.Event) {
 			name.Value = m.Name
 			name.Type = "text"
 
+			submit := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			submit.Type = "button"
+			submit.Value = "Make Changes"
+			submit.AddEventListener("click", false, func(dom.Event) {
+				if name.Value == "" {
+					dom.GetWindow().Alert("Name cannot be empty")
+					return
+				}
+				m.Name = name.Value
+				go func() {
+					err := RPC.SetMap(m)
+					if err != nil {
+						dom.GetWindow().Alert(err.Error())
+					}
+				}()
+			})
+
+			d.AppendChild(nameLabel)
+			d.AppendChild(name)
+			d.AppendChild(xjs.CreateElement("br"))
+			d.AppendChild(submit)
+
+			dom.GetWindow().Document().DocumentElement().AppendChild(od)
+		}()
+	}
+}
+
+func assignServer(c dom.Element, m Map, s Server) func(dom.Event) {
+	return func(dom.Event) {
+		go func() {
+		}()
+		/*
+			servers, err := ServerList()
+			if err != nil {
+				return
+			}
 			serverLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
 			serverLabel.For = "server"
 			xjs.SetInnerText(serverLabel, "Server")
@@ -299,27 +367,12 @@ func viewMap(m Map) func(dom.Event) {
 					c := xjs.CreateElement("input").(*dom.HTMLInputElement)
 					c.Value = "Set Server"
 					serverSet.AppendChild(c)
-					c.AddEventListener("click", false, func(dom.Event) {
-						err := SetMapServer(m.ID, servers[sel.SelectedIndex].ID)
-						if err != nil {
-							dom.GetWindow().Alert(err.Error())
-						}
-					})
 				}
 				server = sel
 			} else {
 				server.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), selServer.Name))
 			}
-
-			d.AppendChild(nameLabel)
-			d.AppendChild(name)
-			d.AppendChild(xjs.CreateElement("br"))
-			d.AppendChild(serverLabel)
-			d.AppendChild(server)
-			d.AppendChild(serverSet)
-
-			dom.GetWindow().Document().DocumentElement().AppendChild(od)
-		}()
+		*/
 	}
 }
 
