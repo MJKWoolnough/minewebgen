@@ -93,6 +93,7 @@ func newServer(c dom.Element) func(dom.Event) {
 		submit.AddEventListener("click", false, func(e dom.Event) {
 			name := nameInput.Value
 			if len(name) == 0 {
+				dom.GetWindow().Alert("Name cannot be empty")
 				return
 			}
 			var file readLener
@@ -101,6 +102,7 @@ func newServer(c dom.Element) func(dom.Event) {
 				uploadType = 4
 				fs := fileInput.Files()
 				if len(fs) != 1 {
+					dom.GetWindow().Alert("File Error occurred")
 					return
 				}
 				f := files.NewFile(fs[0])
@@ -108,6 +110,7 @@ func newServer(c dom.Element) func(dom.Event) {
 			} else {
 				url := fileInput.Value
 				if len(url) == 0 {
+					dom.GetWindow().Alert("URL cannot be empty")
 					return
 				}
 				file = strings.NewReader(url)
@@ -260,6 +263,7 @@ func viewServer(c, sd dom.Element, s Server) func(dom.Event) {
 	return func(dom.Event) {
 		m, err := RPC.GetMap(s.Map)
 		if err != nil {
+			dom.GetWindow(err.Error())
 			return
 		}
 		d := xjs.CreateElement("div")

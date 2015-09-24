@@ -208,6 +208,7 @@ func createMapMode(mode int, o overlay.Overlay, dataParser func() (DefaultMap, e
 	submit.AddEventListener("click", false, func(dom.Event) {
 		data, err := dataParser()
 		if err != nil {
+			dom.GetWindow().Alert(err.Error())
 			return
 		}
 		go func() {
