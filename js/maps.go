@@ -325,8 +325,6 @@ func viewMap(m Map) func(dom.Event) {
 func assignServer(c dom.Element, m Map, s Server) func(dom.Event) {
 	return func(dom.Event) {
 		go func() {
-		}()
-		/*
 			servers, err := ServerList()
 			if err != nil {
 				return
@@ -337,17 +335,10 @@ func assignServer(c dom.Element, m Map, s Server) func(dom.Event) {
 			serverEditable := true
 			serverSet := xjs.DocumentFragment()
 			var (
-				selServer Server
-				server    dom.Element
+				server dom.Element
 			)
 			if m.Server != -1 {
-				for _, s := range servers {
-					if s.ID == m.Server {
-						selServer = s
-						serverEditable = !s.IsRunning()
-						break
-					}
-				}
+				serverEditable = !s.IsRunning()
 			}
 			if serverEditable {
 				sel := xjs.CreateElement("select").(*dom.HTMLSelectElement)
@@ -373,7 +364,7 @@ func assignServer(c dom.Element, m Map, s Server) func(dom.Event) {
 			} else {
 				server.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), selServer.Name))
 			}
-		*/
+		}()
 	}
 }
 
