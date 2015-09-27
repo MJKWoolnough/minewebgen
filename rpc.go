@@ -100,14 +100,44 @@ func (c *Config) SetMapServer(ms MapServer, _ *struct{}) error {
 	if !ok {
 		return ErrNoMap
 	}
+	if m.Server >= 0 {
+		return ErrMapAlreadyAssigned
+	}
 	s, ok := c.Servers[ms.Server]
 	if !ok {
 		return ErrNoServer
+	}
+	if s.Map >= 0 {
+		return ErrServerAlreadyAssigned
+	}
+	if s.state == 1 { //running
+		return ErrServerRunning
 	}
 	m.Server = ms.Server
 	s.Map = ms.Map
 	c.Maps[ms.Map] = m
 	c.Servers[ms.Server] = s
+	return c.save()
+}
+
+func (c *Config) RemoveMapServer(mID int, _ *struct{}) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	m, ok := c.Maps[mID]
+	if !ok {
+		return ErrNoMap
+	}
+	s, ok := c.Servers[m.Server]
+	if !ok {
+		return ErrNoServer
+	}
+	if s.state == 1 { //running!!
+		return ErrServerRunning
+	}
+	m.Server = -1
+	s.Map = -1
+	c.Maps[mID] = m
+	c.Servers[s.ID] = s
 	return c.save()
 }
 
@@ -210,4 +240,8 @@ func setupMapDir() (string, error) {
 }
 
 // Errors
-var ErrNoMap = errors.New("no map found")
+var (
+	ErrNoMap                 = errors.New("no map found")
+	ErrMapAlreadyAssigned    = errors.New("map already assigned")
+	ErrServerAlreadyAssigned = errors.New("server already assigned")
+)
