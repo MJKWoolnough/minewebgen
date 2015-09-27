@@ -369,6 +369,16 @@ func assignServer(c dom.Element, m Map, s Server) func(dom.Event) {
 							err = RPC.SetServerMap(m.ID, sID)
 							if err != nil {
 								dom.GetWindow().Alert(err.Error())
+							} else {
+								od.Close()
+								for _, ts := range servers {
+									if ts.ID == sID {
+										s = ts
+										break
+									}
+								}
+								m.Server = sID
+								assignServer(c, m, s)(nil)
 							}
 						}()
 					})
