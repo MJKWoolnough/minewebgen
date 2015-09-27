@@ -11,6 +11,7 @@ type Server struct {
 	Name, Path string
 	Args       []string
 	status     string
+	state      int
 	Map        int
 }
 
