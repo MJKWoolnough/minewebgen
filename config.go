@@ -118,7 +118,7 @@ func (c *Config) createServer(name, path string) int {
 		}
 		id++
 	}
-	c.Servers[id] = Server{ID: id, Name: name, Path: path, Args: []string{"-Xmx1024M", "-Xms1024M"}}
+	c.Servers[id] = Server{ID: id, Name: name, Path: path, Args: []string{"-Xmx1024M", "-Xms1024M"}, Map: -1}
 	return id
 }
 
