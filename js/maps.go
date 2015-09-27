@@ -325,7 +325,7 @@ func viewMap(m Map) func(dom.Event) {
 func assignServer(c dom.Element, m Map, s Server) func(dom.Event) {
 	return func(dom.Event) {
 		go func() {
-			servers, err := ServerList()
+			servers, err := RPC.ServerList()
 			if err != nil {
 				return
 			}
@@ -362,7 +362,7 @@ func assignServer(c dom.Element, m Map, s Server) func(dom.Event) {
 				}
 				server = sel
 			} else {
-				server.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), selServer.Name))
+				server.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), s.Name))
 			}
 		}()
 	}
