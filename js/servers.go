@@ -30,13 +30,51 @@ func servers(c dom.Element) {
 	newButton.SetAttribute("type", "button")
 	newButton.AddEventListener("click", false, newServer(c))
 	c.AppendChild(newButton)
+	table := xjs.CreateElement("table")
+	head := xjs.CreateElement("tr")
+	head.AppendChild(xjs.SetInnerText(xjs.CreateElement("th"), "Name"))
+	head.AppendChild(xjs.SetInnerText(xjs.CreateElement("th"), "Status"))
+	head.AppendChild(xjs.SetInnerText(xjs.CreateElement("th"), "Controls"))
+	table.AppendChild(head)
 	for _, s := range list {
-		sd := xjs.CreateElement("div")
-		xjs.SetInnerText(sd, s.Name)
-		sd.AddEventListener("click", false, viewServer(c, sd, s))
-		serversDiv.AppendChild(sd)
+		tr := xjs.CreateElement("tr")
+		name := xjs.CreateElement("td")
+		xjs.SetInnerText(name, s.Name)
+		name.AddEventListener("click", false, viewServer(c, s))
+		tr.AppendChild(name)
+		status := xjs.CreateElement("td")
+		xjs.SetInnerText(status, "")
+		tr.AppendChild(status)
+		controls := xjs.CreateElement("td")
+		tr.AppendChild(controls)
+		if s.Map >= 0 {
+			b := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			b.Type = "button"
+			if s.IsRunning() {
+				b.Value = "Stop"
+				b.AddEventListener("click", false, startServer(c, s))
+			} else {
+				b.Value = "Start"
+				b.AddEventListener("click", false, stopServer(c, s))
+			}
+			controls.AppendChild(b)
+		}
+		table.AppendChild(tr)
 	}
+	serversDiv.AppendChild(table)
 	c.AppendChild(serversDiv)
+}
+
+func startServer(c dom.Element, s Server) func(dom.Event) {
+	return func(dom.Event) {
+
+	}
+}
+
+func stopServer(c dom.Element, s Server) func(dom.Event) {
+	return func(dom.Event) {
+
+	}
 }
 
 func newServer(c dom.Element) func(dom.Event) {
@@ -259,7 +297,7 @@ func newServer(c dom.Element) func(dom.Event) {
 	}
 }
 
-func viewServer(c, sd dom.Element, s Server) func(dom.Event) {
+func viewServer(c dom.Element, s Server) func(dom.Event) {
 	return func(dom.Event) {
 		go func() {
 			m, err := RPC.GetMap(s.Map)
