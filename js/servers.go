@@ -263,7 +263,7 @@ func viewServer(c, sd dom.Element, s Server) func(dom.Event) {
 	return func(dom.Event) {
 		m, err := RPC.GetMap(s.Map)
 		if err != nil {
-			dom.GetWindow(err.Error())
+			dom.GetWindow().Alert(err.Error())
 			return
 		}
 		d := xjs.CreateElement("div")
