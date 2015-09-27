@@ -88,8 +88,16 @@ func (j jrpc) SetMap(m Map) error {
 	return j.rpc.Call("RPC.SetMap", m, emptyStruct)
 }
 
-func (j jrpc) RemoveServerMap(serverID int) error {
-	return j.rpc.Call("RPC.RemoveServerMap", serverID, emptyStruct)
+type MapServer struct {
+	Map, Server int
+}
+
+func (j jrpc) SetServerMap(sID, mID int) error {
+	return j.rpc.Call("RPC.SetMapServer", MapServer{mID, sID}, emptyStruct)
+}
+
+func (j jrpc) RemoveServerMap(mapID int) error {
+	return j.rpc.Call("RPC.RemoveMapServer", mapID, emptyStruct)
 }
 
 type DefaultMap struct {

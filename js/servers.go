@@ -261,105 +261,105 @@ func newServer(c dom.Element) func(dom.Event) {
 
 func viewServer(c, sd dom.Element, s Server) func(dom.Event) {
 	return func(dom.Event) {
-		m, err := RPC.GetMap(s.Map)
-		if err != nil {
-			dom.GetWindow().Alert(err.Error())
-			return
-		}
-		d := xjs.CreateElement("div")
-		od := overlay.New(d)
-		d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Server Details"))
-		nameLabel := xjs.CreateElement("label")
-		xjs.SetInnerText(nameLabel, "Name")
-		name := xjs.CreateElement("input").(*dom.HTMLInputElement)
-		name.Value = s.Name
-		name.Type = "text"
-
-		d.AppendChild(nameLabel)
-		d.AppendChild(name)
-		d.AppendChild(xjs.CreateElement("br"))
-
-		argsLabel := xjs.CreateElement("label")
-		xjs.SetInnerText(argsLabel, "Arguments")
-
-		d.AppendChild(argsLabel)
-
-		argSpans := make([]*dom.HTMLSpanElement, len(s.Args))
-
-		for num, arg := range s.Args {
-			a := xjs.CreateElement("span").(*dom.HTMLSpanElement)
-			a.SetAttribute("contenteditable", "true")
-			a.SetAttribute("class", "sizeableInput")
-			a.SetTextContent(arg)
-			argSpans[num] = a
-			d.AppendChild(a)
-		}
-
-		remove := xjs.CreateElement("input").(*dom.HTMLInputElement)
-		remove.Type = "button"
-		remove.Value = "-"
-		remove.AddEventListener("click", false, func(dom.Event) {
-			if len(argSpans) > 0 {
-				d.RemoveChild(argSpans[len(argSpans)-1])
-				argSpans = argSpans[:len(argSpans)-1]
+		go func() {
+			m, err := RPC.GetMap(s.Map)
+			if err != nil {
+				dom.GetWindow().Alert(err.Error())
+				return
 			}
-		})
-		add := xjs.CreateElement("input").(*dom.HTMLInputElement)
-		add.Type = "button"
-		add.Value = "+"
-		add.AddEventListener("click", false, func(dom.Event) {
-			a := xjs.CreateElement("span").(*dom.HTMLSpanElement)
-			a.SetAttribute("contenteditable", "true")
-			a.SetAttribute("class", "sizeableInput")
-			argSpans = append(argSpans, a)
-			d.InsertBefore(a, remove)
-		})
+			d := xjs.CreateElement("div")
+			od := overlay.New(d)
+			d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Server Details"))
+			nameLabel := xjs.CreateElement("label")
+			xjs.SetInnerText(nameLabel, "Name")
+			name := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			name.Value = s.Name
+			name.Type = "text"
 
-		d.AppendChild(remove)
-		d.AppendChild(add)
-		d.AppendChild(xjs.CreateElement("br"))
-		d.AppendChild(xjs.CreateElement("br"))
+			d.AppendChild(nameLabel)
+			d.AppendChild(name)
+			d.AppendChild(xjs.CreateElement("br"))
 
-		submit := xjs.CreateElement("input").(*dom.HTMLInputElement)
-		submit.Value = "Make Changes"
-		submit.SetAttribute("type", "button")
-		submit.AddEventListener("click", false, func(dom.Event) {
-			go func() {
-				args := make([]string, len(argSpans))
-				for num, arg := range argSpans {
-					args[num] = arg.TextContent()
+			argsLabel := xjs.CreateElement("label")
+			xjs.SetInnerText(argsLabel, "Arguments")
+
+			d.AppendChild(argsLabel)
+
+			argSpans := make([]*dom.HTMLSpanElement, len(s.Args))
+
+			for num, arg := range s.Args {
+				a := xjs.CreateElement("span").(*dom.HTMLSpanElement)
+				a.SetAttribute("contenteditable", "true")
+				a.SetAttribute("class", "sizeableInput")
+				a.SetTextContent(arg)
+				argSpans[num] = a
+				d.AppendChild(a)
+			}
+
+			remove := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			remove.Type = "button"
+			remove.Value = "-"
+			remove.AddEventListener("click", false, func(dom.Event) {
+				if len(argSpans) > 0 {
+					d.RemoveChild(argSpans[len(argSpans)-1])
+					argSpans = argSpans[:len(argSpans)-1]
 				}
-				n := name.Value
-				err := RPC.SetServer(Server{
-					ID:   s.ID,
-					Name: n,
-					Path: s.Path,
-					Args: args,
-				})
-				if err == nil {
-					od.Close()
-					servers(c)
-					return
-				}
-				xjs.RemoveChildren(d)
-				errDiv := xjs.CreateElement("div")
-				xjs.SetPreText(errDiv, err.Error())
-				d.AppendChild(errDiv)
-			}()
-		})
+			})
+			add := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			add.Type = "button"
+			add.Value = "+"
+			add.AddEventListener("click", false, func(dom.Event) {
+				a := xjs.CreateElement("span").(*dom.HTMLSpanElement)
+				a.SetAttribute("contenteditable", "true")
+				a.SetAttribute("class", "sizeableInput")
+				argSpans = append(argSpans, a)
+				d.InsertBefore(a, remove)
+			})
 
-		d.AppendChild(submit)
+			d.AppendChild(remove)
+			d.AppendChild(add)
+			d.AppendChild(xjs.CreateElement("br"))
+			d.AppendChild(xjs.CreateElement("br"))
 
-		d.AppendChild(xjs.CreateElement("br"))
-		d.AppendChild(xjs.SetInnerText(xjs.CreateElement("label"), "Map"))
-		d.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), m.Name))
-		removeMap := xjs.CreateElement("input").(*dom.HTMLInputElement)
-		removeMap.Type = "button"
-		removeMap.AddEventListener("click", false, func(dom.Event) {
-			go RPC.RemoveServerMap(s.ID)
-		})
-		d.AppendChild(removeMap)
+			submit := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			submit.Value = "Make Changes"
+			submit.SetAttribute("type", "button")
+			submit.AddEventListener("click", false, func(dom.Event) {
+				go func() {
+					args := make([]string, len(argSpans))
+					for num, arg := range argSpans {
+						args[num] = arg.TextContent()
+					}
+					n := name.Value
+					err := RPC.SetServer(Server{
+						ID:   s.ID,
+						Name: n,
+						Path: s.Path,
+						Args: args,
+					})
+					if err == nil {
+						od.Close()
+						servers(c)
+						return
+					}
+					xjs.RemoveChildren(d)
+					errDiv := xjs.CreateElement("div")
+					xjs.SetPreText(errDiv, err.Error())
+					d.AppendChild(errDiv)
+				}()
+			})
 
-		dom.GetWindow().Document().DocumentElement().AppendChild(od)
+			d.AppendChild(submit)
+
+			d.AppendChild(xjs.CreateElement("br"))
+			d.AppendChild(xjs.SetInnerText(xjs.CreateElement("label"), "Map"))
+			if m.ID < 0 {
+				d.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), "[Unassigned]"))
+			} else {
+				d.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), m.Name))
+			}
+
+			dom.GetWindow().Document().DocumentElement().AppendChild(od)
+		}()
 	}
 }

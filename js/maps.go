@@ -51,11 +51,9 @@ func maps(c dom.Element) {
 			if err != nil {
 				xjs.SetInnerText(ms, "[Error]")
 				ms.SetAttribute("class", "serverUnassigned")
-			} else {
+			} else if m.Server >= 0 {
 				xjs.SetInnerText(ms, s.Name)
 				ms.AddEventListener("click", false, assignServer(c, m, s))
-			}
-			if m.Server >= 0 {
 			} else {
 				xjs.SetInnerText(ms, "[Unassigned]")
 				ms.SetAttribute("class", "serverUnassigned")
@@ -329,20 +327,22 @@ func assignServer(c dom.Element, m Map, s Server) func(dom.Event) {
 			if err != nil {
 				return
 			}
+			d := xjs.CreateElement("div")
+			od := overlay.New(d)
+			d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Map Server Assignment"))
+
+			od.OnClose(func() {
+				maps(c)
+			})
+
 			serverLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
 			serverLabel.For = "server"
 			xjs.SetInnerText(serverLabel, "Server")
-			serverEditable := true
-			serverSet := xjs.DocumentFragment()
-			var (
-				server dom.Element
-			)
-			if m.Server != -1 {
-				serverEditable = !s.IsRunning()
-			}
-			if serverEditable {
+			d.AppendChild(serverLabel)
+			if m.Server < 0 {
 				sel := xjs.CreateElement("select").(*dom.HTMLSelectElement)
 				sel.SetID("server")
+				sel.AppendChild(xjs.SetInnerText(xjs.CreateElement("option"), "--"))
 				for _, s := range servers {
 					if s.Map != -1 {
 						continue
@@ -355,15 +355,48 @@ func assignServer(c dom.Element, m Map, s Server) func(dom.Event) {
 					}
 					sel.AppendChild(o)
 				}
+				d.AppendChild(sel)
 				if len(servers) > 0 {
-					c := xjs.CreateElement("input").(*dom.HTMLInputElement)
-					c.Value = "Set Server"
-					serverSet.AppendChild(c)
+					assign := xjs.CreateElement("input").(*dom.HTMLInputElement)
+					assign.Type = "button"
+					assign.Value = "Set Server"
+					assign.AddEventListener("click", false, func(dom.Event) {
+						sID, err := strconv.Atoi(sel.Value)
+						if err != nil {
+							return
+						}
+						go func() {
+							err = RPC.SetServerMap(m.ID, sID)
+							if err != nil {
+								dom.GetWindow().Alert(err.Error())
+							}
+						}()
+					})
+					d.AppendChild(assign)
 				}
-				server = sel
 			} else {
-				server.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), s.Name))
+				d.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), s.Name))
+				if !s.IsRunning() {
+					remove := xjs.CreateElement("input").(*dom.HTMLInputElement)
+					remove.Type = "button"
+					remove.Value = "X"
+					remove.AddEventListener("click", false, func(dom.Event) {
+						go func() {
+							err := RPC.RemoveServerMap(m.Server)
+							if err != nil {
+								dom.GetWindow().Alert(err.Error())
+							} else {
+								od.Close()
+								m.Server = -1
+								assignServer(c, m, Server{ID: -1})(nil)
+							}
+						}()
+					})
+					d.AppendChild(remove)
+				}
 			}
+
+			dom.GetWindow().Document().DocumentElement().AppendChild(od)
 		}()
 	}
 }
