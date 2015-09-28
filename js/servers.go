@@ -67,13 +67,13 @@ func servers(c dom.Element) {
 
 func startServer(c dom.Element, s Server) func(dom.Event) {
 	return func(dom.Event) {
-
+		RPC.ServerStart(s.ID)
 	}
 }
 
 func stopServer(c dom.Element, s Server) func(dom.Event) {
 	return func(dom.Event) {
-
+		RPC.ServerStop(s.ID)
 	}
 }
 

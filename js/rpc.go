@@ -69,6 +69,14 @@ func (j jrpc) SetServer(s Server) error {
 	return j.rpc.Call("RPC.SetServer", s, emptyStruct)
 }
 
+func (j jrpc) ServerStart(sID) error {
+	return j.rpc.Call("RPC.ServerStart", sID, emptyStruct)
+}
+
+func (j jrpc) ServerStop(sID) error {
+	return j.rpc.Call("RPC.ServerStop", sID, emptyStruct)
+}
+
 func (j jrpc) MapList() ([]Map, error) {
 	var list []Map
 	err := j.rpc.Call("RPC.MapList", nil, &list)
