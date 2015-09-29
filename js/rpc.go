@@ -69,11 +69,11 @@ func (j jrpc) SetServer(s Server) error {
 	return j.rpc.Call("RPC.SetServer", s, emptyStruct)
 }
 
-func (j jrpc) ServerStart(sID) error {
+func (j jrpc) ServerStart(sID int) error {
 	return j.rpc.Call("RPC.ServerStart", sID, emptyStruct)
 }
 
-func (j jrpc) ServerStop(sID) error {
+func (j jrpc) ServerStop(sID int) error {
 	return j.rpc.Call("RPC.ServerStop", sID, emptyStruct)
 }
 
