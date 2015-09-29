@@ -11,27 +11,31 @@ import (
 	"github.com/MJKWoolnough/minecraft"
 )
 
-func (c *Config) Name(_ struct{}, serverName *string) error {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	*serverName = c.ServerName
+type RPC struct {
+	c *Config
+}
+
+func (r RPC) Name(_ struct{}, serverName *string) error {
+	r.c.mu.RLock()
+	defer r.c.mu.RUnlock()
+	*serverName = r.c.ServerName
 	return nil
 }
 
-func (c *Config) ServerList(_ struct{}, list *[]Server) error {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	*list = make([]Server, 0, len(c.Servers))
-	for _, s := range c.Servers {
+func (r RPC) ServerList(_ struct{}, list *[]Server) error {
+	r.c.mu.RLock()
+	defer r.c.mu.RUnlock()
+	*list = make([]Server, 0, len(r.c.Servers))
+	for _, s := range r.c.Servers {
 		*list = append(*list, s)
 	}
 	return nil
 }
 
-func (c *Config) GetServer(sID int, s *Server) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	ns, ok := c.Servers[sID]
+func (r RPC) GetServer(sID int, s *Server) error {
+	r.c.mu.Lock()
+	defer r.c.mu.Unlock()
+	ns, ok := r.c.Servers[sID]
 	if !ok {
 		return ErrNoServer
 	}
@@ -39,34 +43,34 @@ func (c *Config) GetServer(sID int, s *Server) error {
 	return nil
 }
 
-func (c *Config) SetServer(s Server, _ *struct{}) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	defer c.save()
-	ns, ok := c.Servers[s.ID]
+func (r RPC) SetServer(s Server, _ *struct{}) error {
+	r.c.mu.Lock()
+	defer r.c.mu.Unlock()
+	defer r.c.save()
+	ns, ok := r.c.Servers[s.ID]
 	if !ok {
 		return ErrNoServer
 	}
 	s.Path = ns.Path
 	s.status = ns.status
-	c.Servers[s.ID] = s
+	r.c.Servers[s.ID] = s
 	return nil
 }
 
-func (c *Config) MapList(_ struct{}, list *[]Map) error {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	*list = make([]Map, 0, len(c.Maps))
-	for _, m := range c.Maps {
+func (r RPC) MapList(_ struct{}, list *[]Map) error {
+	r.c.mu.RLock()
+	defer r.c.mu.RUnlock()
+	*list = make([]Map, 0, len(r.c.Maps))
+	for _, m := range r.c.Maps {
 		*list = append(*list, m)
 	}
 	return nil
 }
 
-func (c *Config) GetMap(mID int, m *Map) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	nm, ok := c.Maps[mID]
+func (r RPC) GetMap(mID int, m *Map) error {
+	r.c.mu.Lock()
+	defer r.c.mu.Unlock()
+	nm, ok := r.c.Maps[mID]
 	if !ok {
 		return ErrNoMap
 	}
@@ -74,18 +78,18 @@ func (c *Config) GetMap(mID int, m *Map) error {
 	return nil
 }
 
-func (c *Config) SetMap(m Map, _ *struct{}) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	defer c.save()
-	nm, ok := c.Maps[m.ID]
+func (r RPC) SetMap(m Map, _ *struct{}) error {
+	r.c.mu.Lock()
+	defer r.c.mu.Unlock()
+	defer r.c.save()
+	nm, ok := r.c.Maps[m.ID]
 	if !ok {
 		return ErrNoMap
 	}
 	m.Path = nm.Path
 	m.Server = nm.Server
 	m.Status = nm.Status
-	c.Maps[m.ID] = m
+	r.c.Maps[m.ID] = m
 	return nil
 }
 
@@ -93,17 +97,17 @@ type MapServer struct {
 	Map, Server int
 }
 
-func (c *Config) SetMapServer(ms MapServer, _ *struct{}) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	m, ok := c.Maps[ms.Map]
+func (r RPC) SetMapServer(ms MapServer, _ *struct{}) error {
+	r.c.mu.Lock()
+	defer r.c.mu.Unlock()
+	m, ok := r.c.Maps[ms.Map]
 	if !ok {
 		return ErrNoMap
 	}
 	if m.Server >= 0 {
 		return ErrMapAlreadyAssigned
 	}
-	s, ok := c.Servers[ms.Server]
+	s, ok := r.c.Servers[ms.Server]
 	if !ok {
 		return ErrNoServer
 	}
@@ -115,19 +119,19 @@ func (c *Config) SetMapServer(ms MapServer, _ *struct{}) error {
 	}
 	m.Server = ms.Server
 	s.Map = ms.Map
-	c.Maps[ms.Map] = m
-	c.Servers[ms.Server] = s
-	return c.save()
+	r.c.Maps[ms.Map] = m
+	r.c.Servers[ms.Server] = s
+	return r.c.save()
 }
 
-func (c *Config) RemoveMapServer(mID int, _ *struct{}) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	m, ok := c.Maps[mID]
+func (r RPC) RemoveMapServer(mID int, _ *struct{}) error {
+	r.c.mu.Lock()
+	defer r.c.mu.Unlock()
+	m, ok := r.c.Maps[mID]
 	if !ok {
 		return ErrNoMap
 	}
-	s, ok := c.Servers[m.Server]
+	s, ok := r.c.Servers[m.Server]
 	if !ok {
 		return ErrNoServer
 	}
@@ -136,9 +140,9 @@ func (c *Config) RemoveMapServer(mID int, _ *struct{}) error {
 	}
 	m.Server = -1
 	s.Map = -1
-	c.Maps[mID] = m
-	c.Servers[s.ID] = s
-	return c.save()
+	r.c.Maps[mID] = m
+	r.c.Servers[s.ID] = s
+	return r.c.save()
 }
 
 type DefaultMap struct {
@@ -149,7 +153,7 @@ type DefaultMap struct {
 	Structures, Cheats bool
 }
 
-func (c *Config) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
+func (r RPC) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
 	if data.Seed == 0 {
 		data.Seed = rand.Int63()
 	}
@@ -183,7 +187,7 @@ func (c *Config) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
 	l.AllowCommands(data.Cheats)
 	l.MapFeatures(data.Structures)
 	l.Save()
-	c.newMap(data.Name, d)
+	r.c.newMap(data.Name, d)
 	f, err := os.Create(path.Join(d, "server.properties"))
 	if err != nil {
 		return err
