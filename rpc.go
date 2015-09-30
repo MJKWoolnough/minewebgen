@@ -114,7 +114,7 @@ func (r RPC) SetMapServer(ms MapServer, _ *struct{}) error {
 	if s.Map >= 0 {
 		return ErrServerAlreadyAssigned
 	}
-	if s.state == 1 { //running
+	if s.state != StateStopped {
 		return ErrServerRunning
 	}
 	m.Server = ms.Server
@@ -135,7 +135,7 @@ func (r RPC) RemoveMapServer(mID int, _ *struct{}) error {
 	if !ok {
 		return ErrNoServer
 	}
-	if s.state == 1 { //running!!
+	if s.state != StateStopped {
 		return ErrServerRunning
 	}
 	m.Server = -1
