@@ -9,12 +9,79 @@ import (
 	"github.com/armon/circbuf"
 )
 
+const (
+	StateStopped = iota
+	StateLoading
+	StateRunning
+	StateShuttingDown
+)
+
+const BufferSize = 1024 * 512
+
+var (
+	saveCmd = []byte{'\r', '\n', 's', 'a', 'v', 'e', 'a', 'l', 'l', ' ', '\r', '\n'}
+	stopCmd = []byte{'\r', '\n', 's', 't', 'o', 'p', ' ', '\r', '\n'}
+)
+
+type controller struct {
+	c       *Config
+	running map[int]running
+}
+
+func (c *controller) Start(sID int) error {
+	c.c.mu.Lock()
+	defer c.c.mu.Unlock()
+	s, ok := c.c.Servers[sID]
+	if !ok {
+		return ErrNoServer
+	}
+	if s.state != StateStopped {
+		return ErrServerRunning
+	}
+	if s.Map == -1 {
+		return ErrNoMap
+	}
+	s.state = StateLoading
+	c.c.Servers[sID] = s
+	go c.run(s)
+	return nil
+}
+
+func (c *controller) Stop(sID int) {
+	c.c.mu.RLock()
+	defer c.c.mu.RUnlock()
+	r, ok := c.running[sID]
+	if !ok {
+		return ErrServerNotRunning
+	}
+	close(r.shutdown)
+	delete(c.running, sID)
+	return nil
+}
+
+// runs in its own goroutine
+func (c *controller) run(s Server) {
+	r := running{
+		shutdown: make(chan struct{}),
+	}
+	c.c.mu.Lock()
+	c.running[s.ID] = r
+	c.c.mu.Unlock()
+	cmd := exec.Command(path.Join(s.Path, "server.jar"), s.Args...)
+	cmd.Dir = s.Path
+	r.cb = circbuf.NewBuffer(BufferSize)
+	cmd.Stdout = r.cb
+	wp, _ := cmd.StdoutPipe()
+	r.w.io.MultiWriter(r.cb, wp)
+}
+
+// 2015-09-27 15:33:41 [INFO] [Minecraft-Server] Done (3.959s)! For help, type "help" or "?"
+
 type running struct {
-	id    int
-	cmd   *exec.Cmd
-	cb    *circbuf.Buffer
-	stdin io.Writer
-	w     io.Writer
+	shutdown chan struct{}
+	cb       *circbuf.Buffer
+	stdin    io.Writer
+	w        io.Writer
 }
 
 func (r *running) Write(p []byte) (int, error) {
@@ -22,56 +89,6 @@ func (r *running) Write(p []byte) (int, error) {
 		return 0, ErrServerNotRunning
 	}
 	return r.w.Write(p)
-}
-
-var serverRunning = &running{id: -1}
-
-func stopServer() error {
-	if serverRunning.id < 0 {
-		return ErrServerNotRunning
-	}
-	serverRunning.stdin.Write(stopCmd)
-	err := serverRunning.cmd.Wait()
-	serverRunning = &running{id: -1}
-	return err
-}
-
-func saveServer() error {
-	if serverRunning.id < 0 {
-		return ErrServerNotRunning
-	}
-	_, err := serverRunning.stdin.Write(saveCmd)
-	return err
-}
-
-var (
-	saveCmd = []byte{'\r', '\n', 's', 'a', 'v', 'e', 'a', 'l', 'l', ' ', '\r', '\n'}
-	stopCmd = []byte{'\r', '\n', 's', 't', 'o', 'p', ' ', '\r', '\n'}
-)
-
-func (c *Config) startServer(id int) error {
-	if serverRunning.id < 0 {
-		return ErrServerRunning
-	}
-	r := &running{id: id}
-	s := c.Servers[id]
-	d, e := path.Split(s.Path)
-	r.cmd = exec.Command(e, s.Args...)
-	r.cmd.Dir = d
-	stdin, err := r.cmd.StdinPipe()
-	if err != nil {
-		return nil
-	}
-	r.cb, err = circbuf.NewBuffer(1024 * 1024)
-	if err != nil {
-		return nil
-	}
-	r.stdin = stdin
-	r.w = io.MultiWriter(stdin, r.cb)
-	r.cmd.Stdout = r.cb
-	r.cmd.Stderr = r.cb
-	serverRunning = r
-	return serverRunning.cmd.Start()
 }
 
 // Errors
