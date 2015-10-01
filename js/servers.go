@@ -1,13 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
+	"io"
 	"strconv"
 	"strings"
 
 	"github.com/MJKWoolnough/byteio"
 	"github.com/MJKWoolnough/gopherjs/files"
 	"github.com/MJKWoolnough/gopherjs/progress"
+	"github.com/MJKWoolnough/gopherjs/tabs"
 	"github.com/MJKWoolnough/gopherjs/xjs"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/websocket"
@@ -299,15 +302,32 @@ func newServer(c dom.Element) func(dom.Event) {
 
 func viewServer(c dom.Element, s Server) func(dom.Event) {
 	return func(dom.Event) {
+		d := xjs.CreateElement("div")
+		od := overlay.New(d)
+		d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Server Details"))
+
+		cTabs := []tabs.Tab{
+			{"Details", serverDetails(c, od, s)},
+		}
+		if s.IsRunning() {
+			cTabs = append(cTabs, tabs.Tab{"Console", serverConsole(s.ID)})
+		}
+
+		d.AppendChild(tabs.MakeTabs(cTabs))
+
+		dom.GetWindow().Document().DocumentElement().AppendChild(od)
+	}
+}
+
+func serverDetails(c dom.Element, od io.Closer, s Server) func(dom.Element) {
+	return func(d dom.Element) {
 		go func() {
 			m, err := RPC.GetMap(s.Map)
 			if err != nil {
 				dom.GetWindow().Alert(err.Error())
 				return
 			}
-			d := xjs.CreateElement("div")
-			od := overlay.New(d)
-			d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Server Details"))
+
 			nameLabel := xjs.CreateElement("label")
 			xjs.SetInnerText(nameLabel, "Name")
 			name := xjs.CreateElement("input").(*dom.HTMLInputElement)
@@ -397,7 +417,12 @@ func viewServer(c dom.Element, s Server) func(dom.Event) {
 				d.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), m.Name))
 			}
 
-			dom.GetWindow().Document().DocumentElement().AppendChild(od)
 		}()
+	}
+}
+
+func serverConsole(sID int) func(dom.Element) {
+	return func(c dom.Element) {
+		xjs.SetInnerText(c, fmt.Sprintf("%d", sID))
 	}
 }
