@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 	"io"
 	"strconv"
@@ -423,6 +422,16 @@ func serverDetails(c dom.Element, od io.Closer, s Server) func(dom.Element) {
 
 func serverConsole(sID int) func(dom.Element) {
 	return func(c dom.Element) {
-		xjs.SetInnerText(c, fmt.Sprintf("%d", sID))
+		c.AppendChild(xjs.CreateElement("textarea"))
+		input := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		input.Type = "text"
+		input.AddEventListener("keypress", false, func(e dom.Event) {
+			ev := e.(*dom.KeyboardEvent)
+			if ev.Key == "Enter" {
+				dom.GetWindow().Alert(input.Value)
+				input.Value = ""
+			}
+		})
+		c.AppendChild(input)
 	}
 }
