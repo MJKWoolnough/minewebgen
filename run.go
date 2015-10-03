@@ -5,6 +5,7 @@ import (
 	"io"
 	"os/exec"
 	"path"
+	"regexp"
 
 	"github.com/armon/circbuf"
 )
@@ -22,6 +23,9 @@ var (
 	saveCmd = []byte{'\r', '\n', 's', 'a', 'v', 'e', 'a', 'l', 'l', ' ', '\r', '\n'}
 	stopCmd = []byte{'\r', '\n', 's', 't', 'o', 'p', ' ', '\r', '\n'}
 )
+
+// 2015-09-27 15:33:41 [INFO] [Minecraft-Server] Done (3.959s)! For help, type "help" or "?"
+var doneRegex = regexp.MustCompile("^[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9}{2} \\[Info\\] \\[Minecraft-Server\\] Done ")
 
 type controller struct {
 	c       *Config
@@ -74,8 +78,6 @@ func (c *controller) run(s Server) {
 	wp, _ := cmd.StdoutPipe()
 	r.w.io.MultiWriter(r.cb, wp)
 }
-
-// 2015-09-27 15:33:41 [INFO] [Minecraft-Server] Done (3.959s)! For help, type "help" or "?"
 
 type running struct {
 	shutdown chan struct{}
