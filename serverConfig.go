@@ -8,58 +8,70 @@ import (
 
 type ServerProperties map[string]string
 
-var defaultSettings = ServerProperties{
-	"allow-flight":                 "false",
-	"allow-nether":                 "true",
-	"announce-player-achievements": "true",
-	"difficulty":                   "1",
-	"enable-query":                 "false",
-	"enable-rcon":                  "false",
-	"enable-command-block":         "false",
-	"force-gamemode":               "false",
-	"gamemode":                     "0",
-	"generate-structures":          "true",
-	"generator-settings":           "",
-	"hardcore":                     "false",
-	"level-name":                   "world",
-	"level-seed":                   "",
-	"level-type":                   "DEFAULT",
-	"max-build-height":             "256",
-	"max-players":                  "20",
-	"max-tick-time":                "60000",
-	"max-world-size":               "29999984",
-	"motd":                         "A MineWebGen Server",
-	"network-compression-threshold": "256",
-	"online-mode":                   "false",
-	"op-permission-level":           "4",
-	"player-idle-timeout":           "0",
-	"pvp":                  "true",
-	"query.port":           "25565",
-	"rcon.password":        "",
-	"rcon.port":            "25575",
-	"resource-pack":        "",
-	"resource-pack-hash":   "",
-	"server-ip":            "",
-	"server-port":          "25565",
-	"snooper-enabled":      "false",
-	"spawn-animals":        "true",
-	"spawn-monsters":       "true",
-	"spawn-npcs":           "true",
-	"spawn-protection":     "16",
-	"use-native-transport": "true",
-	"view-distance":        "10",
-	"white-list":           "false",
-	"verify-names":         "true",
-	"admin-slot":           "false",
-	"public":               "true",
-	"server-name":          "",
-	"max-connections":      "3",
-	"grow-trees":           "true",
+var (
+	defaultMapSettings = ServerProperties{
+		"allow-flight":                 "false",
+		"allow-nether":                 "true",
+		"announce-player-achievements": "true",
+		"difficulty":                   "1",
+		"enable-command-block":         "false",
+		"force-gamemode":               "false",
+		"gamemode":                     "0",
+		"generate-structures":          "true",
+		"generator-settings":           "",
+		"hardcore":                     "false",
+		"level-name":                   "world",
+		"level-seed":                   "",
+		"level-type":                   "DEFAULT",
+		"max-build-height":             "256",
+		"max-world-size":               "29999984",
+		"motd":                         "A MineWebGen Server",
+		"player-idle-timeout":          "0",
+		"pvp":                  "true",
+		"resource-pack":        "",
+		"resource-pack-hash":   "",
+		"spawn-animals":        "true",
+		"spawn-monsters":       "true",
+		"spawn-npcs":           "true",
+		"spawn-protection":     "16",
+		"use-native-transport": "true",
+		"view-distance":        "10",
+		"grow-trees":           "true",
+	}
+	defaultServerSettings = ServerProperties{
+		"enable-query":                  "false",
+		"enable-rcon":                   "false",
+		"max-players":                   "20",
+		"max-tick-time":                 "60000",
+		"network-compression-threshold": "256",
+		"online-mode":                   "false",
+		"op-permission-level":           "4",
+		"query.port":                    "25565",
+		"rcon.password":                 "",
+		"rcon.port":                     "25575",
+		"server-ip":                     "",
+		"server-port":                   "25565",
+		"snooper-enabled":               "false",
+		"white-list":                    "false",
+		"verify-names":                  "true",
+		"admin-slot":                    "false",
+		"public":                        "true",
+		"server-name":                   "",
+		"max-connections":               "3",
+	}
+)
+
+func DefaultMapSettings() ServerProperties {
+	return defaultMapSettings.Clone()
 }
 
-func DefaultSettings() ServerProperties {
+func DefaultServerSettings() ServerProperties {
+	return defaultServerSettings.Clone()
+}
+
+func (s ServerProperties) Clone() ServerProperties {
 	m := make(ServerProperties)
-	for k, v := range defaultSettings {
+	for k, v := range s {
 		m[k] = v
 	}
 	return m

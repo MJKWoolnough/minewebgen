@@ -193,7 +193,7 @@ func (r RPC) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
 		return err
 	}
 	defer f.Close()
-	m := DefaultSettings()
+	m := DefaultMapSettings()
 	m["gamemode"] = strconv.Itoa(data.GameMode)
 	if !data.Structures {
 		m["generate-structures"] = "false"
