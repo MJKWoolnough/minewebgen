@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"io"
+	"os"
 	"os/exec"
 	"path"
 	"regexp"
@@ -73,10 +74,14 @@ func (c *controller) run(s Server) {
 	c.c.mu.Unlock()
 	cmd := exec.Command(path.Join(s.Path, "server.jar"), s.Args...)
 	cmd.Dir = s.Path
-	r.cb = circbuf.NewBuffer(BufferSize)
+	/*r.cb = circbuf.NewBuffer(BufferSize)
 	cmd.Stdout = r.cb
 	wp, _ := cmd.StdoutPipe()
 	r.w.io.MultiWriter(r.cb, wp)
+	*/
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 }
 
 type running struct {
