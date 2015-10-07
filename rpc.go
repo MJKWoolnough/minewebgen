@@ -57,6 +57,14 @@ func (r RPC) SetServer(s Server, _ *struct{}) error {
 	return nil
 }
 
+func (r RPC) StartServer(sID int, _ *struct{}) error {
+	return nil
+}
+
+func (r RPC) StopServer(sID int, _ *struct{}) error {
+	return nil
+}
+
 func (r RPC) MapList(_ struct{}, list *[]Map) error {
 	r.c.mu.RLock()
 	defer r.c.mu.RUnlock()
