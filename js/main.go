@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/MJKWoolnough/gopherjs/style"
 	"github.com/MJKWoolnough/gopherjs/tabs"
+	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xjs"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/websocket"
@@ -65,7 +66,7 @@ func main() {
 				dom.GetWindow().Alert(err.Error())
 				return
 			}
-			body.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), title+" Server"))
+			body.AppendChild(xjs.SetInnerText(xdom.H1(), title+" Server"))
 			tDoc, ok := dom.GetWindow().Document().(dom.HTMLDocument)
 			if ok {
 				tDoc.SetTitle(title + " Server")

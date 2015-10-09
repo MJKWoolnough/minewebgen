@@ -7,31 +7,32 @@ import (
 	"github.com/MJKWoolnough/byteio"
 	"github.com/MJKWoolnough/gopherjs/files"
 	"github.com/MJKWoolnough/gopherjs/progress"
+	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xjs"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/websocket"
 	"honnef.co/go/js/dom"
 )
 
-var gDiv = xjs.CreateElement("div")
+var gDiv = xdom.Div()
 
 func generate(c dom.Element) {
 	if !gDiv.HasChildNodes() {
-		nameLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+		nameLabel := xdom.Label()
 		nameLabel.For = "name"
 		xjs.SetInnerText(nameLabel, "Level Name")
-		name := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		name := xdom.Input()
 		name.Type = "name"
 		name.SetID("name")
 
-		uploadLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+		uploadLabel := xdom.Label()
 		uploadLabel.For = "file"
 		xjs.SetInnerText(uploadLabel, "Input File")
-		upload := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		upload := xdom.Input()
 		upload.Type = "file"
 		upload.SetID("file")
 
-		submit := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		submit := xdom.Input()
 		submit.Type = "button"
 		submit.Value = "Generate"
 		submit.AddEventListener("click", false, func(dom.Event) {
@@ -47,14 +48,14 @@ func generate(c dom.Element) {
 			length := file.Len()
 			pb := progress.New(color.RGBA{255, 0, 0, 0}, color.RGBA{0, 0, 255, 0}, 400, 50)
 			gDiv.RemoveChild(upload)
-			status := xjs.CreateElement("div")
+			status := xdom.Div()
 			xjs.SetInnerText(status, "Uploading...")
 			gDiv.AppendChild(status)
 			gDiv.AppendChild(pb)
 			addRestart := func() {
-				reset := xjs.CreateElement("input")
-				reset.SetAttribute("type", "button")
-				reset.SetAttribute("value", "Restart")
+				reset := xdom.Input()
+				reset.Type = "button"
+				reset.Value = "Restart"
 				reset.AddEventListener("click", false, func(dom.Event) {
 					xjs.RemoveChildren(gDiv)
 					generate(c)
@@ -104,9 +105,9 @@ func generate(c dom.Element) {
 					return
 				}
 				xjs.SetInnerText(status, strconv.FormatInt(int64(width), 10)+"x"+strconv.FormatInt(int64(height), 10))
-				canvas := xjs.CreateElement("canvas").(*dom.HTMLCanvasElement)
-				canvas.SetAttribute("width", strconv.FormatInt(int64(width), 10))
-				canvas.SetAttribute("height", strconv.FormatInt(int64(height), 10))
+				canvas := xdom.Canvas()
+				canvas.Width = int(width)
+				canvas.Height = int(height)
 				canvas.Style().Set("width", strconv.FormatInt(int64(width*4), 10)+"px")
 				canvas.Style().Set("height", strconv.FormatInt(int64(width*4), 10)+"px")
 				ctx := canvas.GetContext2d()
@@ -156,11 +157,11 @@ func generate(c dom.Element) {
 		})
 		gDiv.AppendChild(nameLabel)
 		gDiv.AppendChild(name)
-		gDiv.AppendChild(xjs.CreateElement("br"))
+		gDiv.AppendChild(xdom.Br())
 		gDiv.AppendChild(uploadLabel)
 		gDiv.AppendChild(upload)
-		gDiv.AppendChild(xjs.CreateElement("br"))
-		gDiv.AppendChild(xjs.CreateElement("br"))
+		gDiv.AppendChild(xdom.Br())
+		gDiv.AppendChild(xdom.Br())
 		gDiv.AppendChild(submit)
 	}
 	c.AppendChild(gDiv)

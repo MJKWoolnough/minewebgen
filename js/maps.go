@@ -7,6 +7,7 @@ import (
 	"github.com/MJKWoolnough/gopherjs/overlay"
 	"github.com/MJKWoolnough/gopherjs/style"
 	"github.com/MJKWoolnough/gopherjs/tabs"
+	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xjs"
 	"honnef.co/go/js/dom"
 )
@@ -21,18 +22,18 @@ func init() {
 
 func maps(c dom.Element) {
 	xjs.RemoveChildren(c)
-	mapsDiv := xjs.CreateElement("div")
-	newButton := xjs.CreateElement("input").(*dom.HTMLInputElement)
+	mapsDiv := xdom.Div()
+	newButton := xdom.Input()
 	newButton.Type = "button"
 	newButton.Value = "New Map"
 	newButton.AddEventListener("click", false, newMap(c))
 
 	mapsDiv.AppendChild(newButton)
 
-	mapsTable := xjs.CreateElement("table")
-	mapsHeader := xjs.CreateElement("tr")
-	mapsHeader.AppendChild(xjs.SetInnerText(xjs.CreateElement("th"), "Map Name"))
-	mapsHeader.AppendChild(xjs.SetInnerText(xjs.CreateElement("th"), "Server"))
+	mapsTable := xdom.Table()
+	mapsHeader := xdom.Tr()
+	mapsHeader.AppendChild(xjs.SetInnerText(xdom.Th(), "Map Name"))
+	mapsHeader.AppendChild(xjs.SetInnerText(xdom.Th(), "Server"))
 	mapsTable.AppendChild(mapsHeader)
 	go func() {
 		list, err := RPC.MapList()
@@ -42,21 +43,21 @@ func maps(c dom.Element) {
 		}
 
 		for _, m := range list {
-			mr := xjs.CreateElement("tr")
-			mn := xjs.CreateElement("td")
+			mr := xdom.Tr()
+			mn := xdom.Td()
 			xjs.SetInnerText(mn, m.Name)
 			mn.AddEventListener("click", false, viewMap(m))
-			ms := xjs.CreateElement("td")
+			ms := xdom.Td()
 			s, err := RPC.GetServer(m.Server)
 			if err != nil {
 				xjs.SetInnerText(ms, "[Error]")
-				ms.SetAttribute("class", "serverUnassigned")
+				ms.SetClass("serverUnassigned")
 			} else if m.Server >= 0 {
 				xjs.SetInnerText(ms, s.Name)
 				ms.AddEventListener("click", false, assignServer(c, m, s))
 			} else {
 				xjs.SetInnerText(ms, "[Unassigned]")
-				ms.SetAttribute("class", "serverUnassigned")
+				ms.SetClass("serverUnassigned")
 				ms.AddEventListener("click", false, assignServer(c, m, Server{ID: -1}))
 			}
 			if m.Server >= 0 {
@@ -72,9 +73,9 @@ func maps(c dom.Element) {
 
 func newMap(c dom.Element) func(dom.Event) {
 	return func(dom.Event) {
-		f := xjs.CreateElement("div")
+		f := xdom.Div()
 		o := overlay.New(f)
-		f.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "New Map"))
+		f.AppendChild(xjs.SetInnerText(xdom.H1(), "New Map"))
 		f.AppendChild(tabs.MakeTabs([]tabs.Tab{
 			{"Create", createMap(o)},
 			{"Upload/Download", uploadMap(o)},
@@ -90,70 +91,70 @@ func newMap(c dom.Element) func(dom.Event) {
 var gameModes = [...]string{"Survival", "Creative", "Adventure", "Hardcore", "Spectator"}
 
 func createMap(o overlay.Overlay) func(dom.Element) {
-	c := xjs.CreateElement("div")
-	nameLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+	c := xdom.Div()
+	nameLabel := xdom.Label()
 	nameLabel.For = "name"
 	xjs.SetInnerText(nameLabel, "Level Name")
 
-	name := xjs.CreateElement("input").(*dom.HTMLInputElement)
+	name := xdom.Input()
 	name.Type = "text"
 	name.SetID("name")
 
-	gameModeLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+	gameModeLabel := xdom.Label()
 	gameModeLabel.For = "gameMode"
 	xjs.SetInnerText(gameModeLabel, "Game Mode")
 
-	gameMode := xjs.CreateElement("select").(*dom.HTMLSelectElement)
+	gameMode := xdom.Select()
 	for k, v := range gameModes {
-		o := xjs.CreateElement("option").(*dom.HTMLOptionElement)
+		o := xdom.Option()
 		o.Value = strconv.Itoa(k)
 		xjs.SetInnerText(o, v)
 		gameMode.AppendChild(o)
 	}
 
-	seedLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+	seedLabel := xdom.Label()
 	seedLabel.For = "seed"
 	xjs.SetInnerText(seedLabel, "Level Seed")
 
-	seed := xjs.CreateElement("input").(*dom.HTMLInputElement)
+	seed := xdom.Input()
 	seed.Type = "text"
 	seed.SetID("seed")
 	seed.Value = ""
 
-	structuresLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+	structuresLabel := xdom.Label()
 	structuresLabel.For = "structures"
 	xjs.SetInnerText(structuresLabel, "Generate Structures")
 
-	structures := xjs.CreateElement("input").(*dom.HTMLInputElement)
+	structures := xdom.Input()
 	structures.Type = "checkbox"
 	structures.Checked = true
 	structures.SetID("structures")
 
-	cheatsLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+	cheatsLabel := xdom.Label()
 	cheatsLabel.For = "cheats"
 	xjs.SetInnerText(cheatsLabel, "Allow Cheats")
 
-	cheats := xjs.CreateElement("input").(*dom.HTMLInputElement)
+	cheats := xdom.Input()
 	cheats.Type = "checkbox"
 	cheats.Checked = false
 	cheats.SetID("cheats")
 
 	c.AppendChild(nameLabel)
 	c.AppendChild(name)
-	c.AppendChild(xjs.CreateElement("br"))
+	c.AppendChild(xdom.Br())
 	c.AppendChild(gameModeLabel)
 	c.AppendChild(gameMode)
-	c.AppendChild(xjs.CreateElement("br"))
+	c.AppendChild(xdom.Br())
 	c.AppendChild(seedLabel)
 	c.AppendChild(seed)
-	c.AppendChild(xjs.CreateElement("br"))
+	c.AppendChild(xdom.Br())
 	c.AppendChild(structuresLabel)
 	c.AppendChild(structures)
-	c.AppendChild(xjs.CreateElement("br"))
+	c.AppendChild(xdom.Br())
 	c.AppendChild(cheatsLabel)
 	c.AppendChild(cheats)
-	c.AppendChild(xjs.CreateElement("br"))
-	c.AppendChild(xjs.CreateElement("br"))
+	c.AppendChild(xdom.Br())
+	c.AppendChild(xdom.Br())
 
 	dataParser := func(mode int) func() (DefaultMap, error) {
 		return func() (DefaultMap, error) {
@@ -200,7 +201,7 @@ var worldTypes = [...]string{
 }
 
 func createMapMode(mode int, o overlay.Overlay, dataParser func() (DefaultMap, error)) func(dom.Element) {
-	submit := xjs.CreateElement("input").(*dom.HTMLInputElement)
+	submit := xdom.Input()
 	submit.Type = "button"
 	submit.Value = "Create Map"
 	submit.AddEventListener("click", false, func(dom.Event) {
@@ -218,23 +219,23 @@ func createMapMode(mode int, o overlay.Overlay, dataParser func() (DefaultMap, e
 		}()
 	})
 	return func(c dom.Element) {
-		d := xjs.CreateElement("div")
+		d := xdom.Div()
 		xjs.SetPreText(d, worldTypes[mode])
 		c.AppendChild(d)
-		c.AppendChild(xjs.CreateElement("br"))
+		c.AppendChild(xdom.Br())
 		c.AppendChild(submit)
 	}
 }
 
 func createSuperFlatMap(o overlay.Overlay, dataParser func() (DefaultMap, error)) func(dom.Element) {
-	d := xjs.CreateElement("div")
+	d := xdom.Div()
 	return func(c dom.Element) {
 		c.AppendChild(d)
 	}
 }
 
 func createCustomisedMap(o overlay.Overlay, dataParser func() (DefaultMap, error)) func(dom.Element) {
-	d := xjs.CreateElement("div")
+	d := xdom.Div()
 	return func(c dom.Element) {
 		c.AppendChild(d)
 	}
@@ -280,20 +281,20 @@ func uploadMap(o overlay.Overlay) func(dom.Element) {
 func viewMap(m Map) func(dom.Event) {
 	return func(dom.Event) {
 		go func() {
-			d := xjs.CreateElement("div")
+			d := xdom.Div()
 			od := overlay.New(d)
-			d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Map Details"))
+			d.AppendChild(xjs.SetInnerText(xdom.H1(), "Map Details"))
 
-			nameLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+			nameLabel := xdom.Label()
 			nameLabel.For = "name"
 			xjs.SetInnerText(nameLabel, "Name")
-			name := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			name := xdom.Input()
 			xjs.SetInnerText(nameLabel, "Name")
 			name.SetID("name")
 			name.Value = m.Name
 			name.Type = "text"
 
-			submit := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			submit := xdom.Input()
 			submit.Type = "button"
 			submit.Value = "Make Changes"
 			submit.AddEventListener("click", false, func(dom.Event) {
@@ -312,7 +313,7 @@ func viewMap(m Map) func(dom.Event) {
 
 			d.AppendChild(nameLabel)
 			d.AppendChild(name)
-			d.AppendChild(xjs.CreateElement("br"))
+			d.AppendChild(xdom.Br())
 			d.AppendChild(submit)
 
 			dom.GetWindow().Document().DocumentElement().AppendChild(od)
@@ -327,27 +328,27 @@ func assignServer(c dom.Element, m Map, s Server) func(dom.Event) {
 			if err != nil {
 				return
 			}
-			d := xjs.CreateElement("div")
+			d := xdom.Div()
 			od := overlay.New(d)
-			d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Map Server Assignment"))
+			d.AppendChild(xjs.SetInnerText(xdom.H1(), "Map Server Assignment"))
 
 			od.OnClose(func() {
 				maps(c)
 			})
 
-			serverLabel := xjs.CreateElement("label").(*dom.HTMLLabelElement)
+			serverLabel := xdom.Label()
 			serverLabel.For = "server"
 			xjs.SetInnerText(serverLabel, "Server")
 			d.AppendChild(serverLabel)
 			if m.Server < 0 {
-				sel := xjs.CreateElement("select").(*dom.HTMLSelectElement)
+				sel := xdom.Select()
 				sel.SetID("server")
-				sel.AppendChild(xjs.SetInnerText(xjs.CreateElement("option"), "--"))
+				sel.AppendChild(xjs.SetInnerText(xdom.Option(), "--"))
 				for _, s := range servers {
 					if s.Map != -1 {
 						continue
 					}
-					o := xjs.CreateElement("option").(*dom.HTMLOptionElement)
+					o := xdom.Option()
 					o.Value = strconv.Itoa(s.ID)
 					xjs.SetInnerText(o, s.Name)
 					if s.ID == m.Server {
@@ -357,7 +358,7 @@ func assignServer(c dom.Element, m Map, s Server) func(dom.Event) {
 				}
 				d.AppendChild(sel)
 				if len(servers) > 0 {
-					assign := xjs.CreateElement("input").(*dom.HTMLInputElement)
+					assign := xdom.Input()
 					assign.Type = "button"
 					assign.Value = "Set Server"
 					assign.AddEventListener("click", false, func(dom.Event) {
@@ -385,9 +386,9 @@ func assignServer(c dom.Element, m Map, s Server) func(dom.Event) {
 					d.AppendChild(assign)
 				}
 			} else {
-				d.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), s.Name))
+				d.AppendChild(xjs.SetInnerText(xdom.Div(), s.Name))
 				if !s.IsRunning() {
-					remove := xjs.CreateElement("input").(*dom.HTMLInputElement)
+					remove := xdom.Input()
 					remove.Type = "button"
 					remove.Value = "X"
 					remove.AddEventListener("click", false, func(dom.Event) {

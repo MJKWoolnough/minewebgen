@@ -10,6 +10,7 @@ import (
 	"github.com/MJKWoolnough/gopherjs/files"
 	"github.com/MJKWoolnough/gopherjs/progress"
 	"github.com/MJKWoolnough/gopherjs/tabs"
+	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xjs"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/websocket"
@@ -20,37 +21,37 @@ import (
 
 func servers(c dom.Element) {
 	xjs.RemoveChildren(c)
-	serversDiv := xjs.CreateElement("div")
+	serversDiv := xdom.Div()
 	defer c.AppendChild(serversDiv)
 	list, err := RPC.ServerList()
 	if err != nil {
 		xjs.SetInnerText(serversDiv, err.Error())
 		return
 	}
-	newButton := xjs.CreateElement("input")
-	newButton.SetAttribute("value", "New Server")
-	newButton.SetAttribute("type", "button")
+	newButton := xdom.Input()
+	newButton.Value = "New Server"
+	newButton.Type = "button"
 	newButton.AddEventListener("click", false, newServer(c))
 	c.AppendChild(newButton)
-	table := xjs.CreateElement("table")
-	head := xjs.CreateElement("tr")
-	head.AppendChild(xjs.SetInnerText(xjs.CreateElement("th"), "Name"))
-	head.AppendChild(xjs.SetInnerText(xjs.CreateElement("th"), "Status"))
-	head.AppendChild(xjs.SetInnerText(xjs.CreateElement("th"), "Controls"))
+	table := xdom.Table()
+	head := xdom.Tr()
+	head.AppendChild(xjs.SetInnerText(xdom.Th(), "Name"))
+	head.AppendChild(xjs.SetInnerText(xdom.Th(), "Status"))
+	head.AppendChild(xjs.SetInnerText(xdom.Th(), "Controls"))
 	table.AppendChild(head)
 	for _, s := range list {
-		tr := xjs.CreateElement("tr")
-		name := xjs.CreateElement("td")
+		tr := xdom.Tr()
+		name := xdom.Td()
 		xjs.SetInnerText(name, s.Name)
 		name.AddEventListener("click", false, viewServer(c, s))
 		tr.AppendChild(name)
-		status := xjs.CreateElement("td")
+		status := xdom.Tr()
 		xjs.SetInnerText(status, "")
 		tr.AppendChild(status)
-		controls := xjs.CreateElement("td")
+		controls := xdom.Td()
 		tr.AppendChild(controls)
 		if s.Map >= 0 {
-			b := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			b := xdom.Input()
 			b.Type = "button"
 			if s.IsRunning() {
 				b.Value = "Stop"
@@ -81,54 +82,54 @@ func stopServer(c dom.Element, s Server) func(dom.Event) {
 
 func newServer(c dom.Element) func(dom.Event) {
 	return func(dom.Event) {
-		f := xjs.CreateElement("div")
+		f := xdom.Div()
 		o := overlay.New(f)
-		f.SetAttribute("id", "serverUpload")
+		f.SetID("serverUpload")
 
-		f.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "New Server"))
+		f.AppendChild(xjs.SetInnerText(xdom.H1(), "New Server"))
 
-		nameLabel := xjs.CreateElement("label")
-		nameLabel.SetAttribute("for", "name")
+		nameLabel := xdom.Label()
+		nameLabel.For = "name"
 		xjs.SetInnerText(nameLabel, "Level Name")
-		nameInput := xjs.CreateElement("input").(*dom.HTMLInputElement)
-		nameInput.SetAttribute("type", "text")
+		nameInput := xdom.Input()
+		nameInput.Type = "text"
 		nameInput.SetID("name")
 
-		urlLabel := xjs.CreateElement("label")
-		urlLabel.SetAttribute("for", "url")
+		urlLabel := xdom.Label()
+		urlLabel.For = "url"
 		xjs.SetInnerText(urlLabel, "URL")
-		urlInput := xjs.CreateElement("input")
-		urlInput.SetAttribute("type", "radio")
-		urlInput.SetAttribute("name", "type")
+		urlInput := xdom.Input()
+		urlInput.Type = "radio"
+		urlInput.Name = "type"
 		urlInput.SetID("url")
-		urlInput.SetAttribute("checked", "true")
+		urlInput.Checked = true
 
-		uploadLabel := xjs.CreateElement("label")
-		uploadLabel.SetAttribute("for", "upload")
+		uploadLabel := xdom.Label()
+		uploadLabel.For = "upload"
 		xjs.SetInnerText(uploadLabel, "Upload")
-		uploadInput := xjs.CreateElement("input")
-		uploadInput.SetAttribute("type", "radio")
-		uploadInput.SetAttribute("name", "type")
+		uploadInput := xdom.Input()
+		uploadInput.Type = "radio"
+		uploadInput.Name = "type"
 		uploadInput.SetID("upload")
 
-		fileLabel := xjs.CreateElement("label")
-		fileLabel.SetAttribute("for", "file")
+		fileLabel := xdom.Label()
+		fileLabel.For = "file"
 		xjs.SetInnerText(fileLabel, "File")
-		fileInput := xjs.CreateElement("input").(*dom.HTMLInputElement)
-		fileInput.SetAttribute("type", "text")
+		fileInput := xdom.Input()
+		fileInput.Type = "text"
 		fileInput.SetID("file")
 
 		urlInput.AddEventListener("click", false, func(dom.Event) {
-			fileInput.SetAttribute("type", "text")
+			fileInput.Type = "text"
 		})
 
 		uploadInput.AddEventListener("click", false, func(dom.Event) {
-			fileInput.SetAttribute("type", "file")
+			fileInput.Type = "file"
 		})
 
-		submit := xjs.CreateElement("input")
-		submit.SetAttribute("value", "Submit")
-		submit.SetAttribute("type", "button")
+		submit := xdom.Input()
+		submit.Value = "Submit"
+		submit.Type = "button"
 
 		submit.AddEventListener("click", false, func(e dom.Event) {
 			name := nameInput.Value
@@ -138,7 +139,7 @@ func newServer(c dom.Element) func(dom.Event) {
 			}
 			var file readLener
 			uploadType := uint8(3)
-			if fileInput.GetAttribute("type") == "file" {
+			if fileInput.Type == "file" {
 				uploadType = 4
 				fs := fileInput.Files()
 				if len(fs) != 1 {
@@ -156,7 +157,7 @@ func newServer(c dom.Element) func(dom.Event) {
 				file = strings.NewReader(url)
 			}
 			length := file.Len()
-			status := xjs.CreateElement("div")
+			status := xdom.Div()
 			pb := progress.New(color.RGBA{255, 0, 0, 0}, color.RGBA{0, 0, 255, 0}, 400, 50)
 			xjs.RemoveChildren(f)
 			f.AppendChild(status)
@@ -206,7 +207,7 @@ func newServer(c dom.Element) func(dom.Event) {
 
 						c := make(chan int16, 1)
 
-						jarSelect := xjs.CreateElement("div")
+						jarSelect := xdom.Div()
 						jso := overlay.New(jarSelect)
 						selected := false
 						jso.OnClose(func() {
@@ -216,33 +217,33 @@ func newServer(c dom.Element) func(dom.Event) {
 							}
 						})
 
-						jarSelect.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Select Server JAR"))
+						jarSelect.AppendChild(xjs.SetInnerText(xdom.H1(), "Select Server JAR"))
 						radios := make([]*dom.HTMLInputElement, numJars)
 
 						for num, name := range jars {
-							r := xjs.CreateElement("input").(*dom.HTMLInputElement)
-							r.SetAttribute("type", "radio")
-							r.SetAttribute("name", "jarChoose")
+							r := xdom.Input()
+							r.Type = "radio"
+							r.Name = "jarChoose"
 							v := strconv.Itoa(num)
-							r.SetAttribute("value", v)
+							r.Value = v
 							r.SetID("jarChoose_" + v)
 							if num == 0 {
 								r.DefaultChecked = true
 							}
 
-							l := xjs.CreateElement("label")
+							l := xdom.Label()
 							xjs.SetInnerText(l, name)
-							l.SetAttribute("for", "jarChoose_"+v)
+							l.For = "jarChoose_" + v
 
 							jarSelect.AppendChild(r)
 							jarSelect.AppendChild(l)
-							jarSelect.AppendChild(xjs.CreateElement("br"))
+							jarSelect.AppendChild(xdom.Br())
 							radios[num] = r
 						}
 
-						choose := xjs.CreateElement("input")
-						choose.SetAttribute("type", "button")
-						choose.SetAttribute("value", "Select")
+						choose := xdom.Input()
+						choose.Type = "button"
+						choose.Value = "Select"
 						choose.AddEventListener("click", false, func(dom.Event) {
 							if !selected {
 								selected = true
@@ -279,19 +280,19 @@ func newServer(c dom.Element) func(dom.Event) {
 
 		f.AppendChild(nameLabel)
 		f.AppendChild(nameInput)
-		f.AppendChild(xjs.CreateElement("br"))
+		f.AppendChild(xdom.Br())
 
 		f.AppendChild(urlLabel)
 		f.AppendChild(urlInput)
-		f.AppendChild(xjs.CreateElement("br"))
+		f.AppendChild(xdom.Br())
 
 		f.AppendChild(uploadLabel)
 		f.AppendChild(uploadInput)
-		f.AppendChild(xjs.CreateElement("br"))
+		f.AppendChild(xdom.Br())
 
 		f.AppendChild(fileLabel)
 		f.AppendChild(fileInput)
-		f.AppendChild(xjs.CreateElement("br"))
+		f.AppendChild(xdom.Br())
 
 		f.AppendChild(submit)
 
@@ -301,9 +302,9 @@ func newServer(c dom.Element) func(dom.Event) {
 
 func viewServer(c dom.Element, s Server) func(dom.Event) {
 	return func(dom.Event) {
-		d := xjs.CreateElement("div")
+		d := xdom.Div()
 		od := overlay.New(d)
-		d.AppendChild(xjs.SetInnerText(xjs.CreateElement("h1"), "Server Details"))
+		d.AppendChild(xjs.SetInnerText(xdom.H1(), "Server Details"))
 
 		cTabs := []tabs.Tab{
 			{"Details", serverDetails(c, od, s)},
@@ -327,17 +328,17 @@ func serverDetails(c dom.Element, od io.Closer, s Server) func(dom.Element) {
 				return
 			}
 
-			nameLabel := xjs.CreateElement("label")
+			nameLabel := xdom.Label()
 			xjs.SetInnerText(nameLabel, "Name")
-			name := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			name := xdom.Input()
 			name.Value = s.Name
 			name.Type = "text"
 
 			d.AppendChild(nameLabel)
 			d.AppendChild(name)
-			d.AppendChild(xjs.CreateElement("br"))
+			d.AppendChild(xdom.Br())
 
-			argsLabel := xjs.CreateElement("label")
+			argsLabel := xdom.Label()
 			xjs.SetInnerText(argsLabel, "Arguments")
 
 			d.AppendChild(argsLabel)
@@ -345,15 +346,15 @@ func serverDetails(c dom.Element, od io.Closer, s Server) func(dom.Element) {
 			argSpans := make([]*dom.HTMLSpanElement, len(s.Args))
 
 			for num, arg := range s.Args {
-				a := xjs.CreateElement("span").(*dom.HTMLSpanElement)
+				a := xdom.Span()
 				a.SetAttribute("contenteditable", "true")
-				a.SetAttribute("class", "sizeableInput")
+				a.SetClass("sizeableInput")
 				a.SetTextContent(arg)
 				argSpans[num] = a
 				d.AppendChild(a)
 			}
 
-			remove := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			remove := xdom.Input()
 			remove.Type = "button"
 			remove.Value = "-"
 			remove.AddEventListener("click", false, func(dom.Event) {
@@ -362,25 +363,25 @@ func serverDetails(c dom.Element, od io.Closer, s Server) func(dom.Element) {
 					argSpans = argSpans[:len(argSpans)-1]
 				}
 			})
-			add := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			add := xdom.Input()
 			add.Type = "button"
 			add.Value = "+"
 			add.AddEventListener("click", false, func(dom.Event) {
-				a := xjs.CreateElement("span").(*dom.HTMLSpanElement)
+				a := xdom.Span()
 				a.SetAttribute("contenteditable", "true")
-				a.SetAttribute("class", "sizeableInput")
+				a.SetClass("sizeableInput")
 				argSpans = append(argSpans, a)
 				d.InsertBefore(a, remove)
 			})
 
 			d.AppendChild(remove)
 			d.AppendChild(add)
-			d.AppendChild(xjs.CreateElement("br"))
-			d.AppendChild(xjs.CreateElement("br"))
+			d.AppendChild(xdom.Br())
+			d.AppendChild(xdom.Br())
 
-			submit := xjs.CreateElement("input").(*dom.HTMLInputElement)
+			submit := xdom.Input()
 			submit.Value = "Make Changes"
-			submit.SetAttribute("type", "button")
+			submit.Type = "button"
 			submit.AddEventListener("click", false, func(dom.Event) {
 				go func() {
 					args := make([]string, len(argSpans))
@@ -400,7 +401,7 @@ func serverDetails(c dom.Element, od io.Closer, s Server) func(dom.Element) {
 						return
 					}
 					xjs.RemoveChildren(d)
-					errDiv := xjs.CreateElement("div")
+					errDiv := xdom.Div()
 					xjs.SetPreText(errDiv, err.Error())
 					d.AppendChild(errDiv)
 				}()
@@ -408,12 +409,12 @@ func serverDetails(c dom.Element, od io.Closer, s Server) func(dom.Element) {
 
 			d.AppendChild(submit)
 
-			d.AppendChild(xjs.CreateElement("br"))
-			d.AppendChild(xjs.SetInnerText(xjs.CreateElement("label"), "Map"))
+			d.AppendChild(xdom.Br())
+			d.AppendChild(xjs.SetInnerText(xdom.Label(), "Map"))
 			if m.ID < 0 {
-				d.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), "[Unassigned]"))
+				d.AppendChild(xjs.SetInnerText(xdom.Div(), "[Unassigned]"))
 			} else {
-				d.AppendChild(xjs.SetInnerText(xjs.CreateElement("div"), m.Name))
+				d.AppendChild(xjs.SetInnerText(xdom.Div(), m.Name))
 			}
 
 		}()
@@ -422,8 +423,8 @@ func serverDetails(c dom.Element, od io.Closer, s Server) func(dom.Element) {
 
 func serverConsole(sID int) func(dom.Element) {
 	return func(c dom.Element) {
-		c.AppendChild(xjs.CreateElement("textarea"))
-		input := xjs.CreateElement("input").(*dom.HTMLInputElement)
+		c.AppendChild(xdom.Textarea())
+		input := xdom.Input()
 		input.Type = "text"
 		input.AddEventListener("keypress", false, func(e dom.Event) {
 			ev := e.(*dom.KeyboardEvent)
