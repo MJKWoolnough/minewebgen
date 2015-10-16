@@ -28,12 +28,12 @@ var (
 // 2015-09-27 15:33:41 [INFO] [Minecraft-Server] Done (3.959s)! For help, type "help" or "?"
 var doneRegex = regexp.MustCompile("^[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9}{2} \\[Info\\] \\[Minecraft-Server\\] Done ")
 
-type controller struct {
+type Controller struct {
 	c       *Config
 	running map[int]running
 }
 
-func (c *controller) Start(sID int) error {
+func (c *Controller) Start(sID int) error {
 	c.c.mu.Lock()
 	defer c.c.mu.Unlock()
 	s, ok := c.c.Servers[sID]
@@ -46,13 +46,14 @@ func (c *controller) Start(sID int) error {
 	if s.Map == -1 {
 		return ErrNoMap
 	}
+	// generate full server.properties
 	s.state = StateLoading
 	c.c.Servers[sID] = s
 	go c.run(s)
 	return nil
 }
 
-func (c *controller) Stop(sID int) {
+func (c *Controller) Stop(sID int) error {
 	c.c.mu.RLock()
 	defer c.c.mu.RUnlock()
 	r, ok := c.running[sID]
@@ -65,7 +66,7 @@ func (c *controller) Stop(sID int) {
 }
 
 // runs in its own goroutine
-func (c *controller) run(s Server) {
+func (c *Controller) run(s Server) {
 	r := running{
 		shutdown: make(chan struct{}),
 	}
@@ -92,9 +93,9 @@ type running struct {
 }
 
 func (r *running) Write(p []byte) (int, error) {
-	if r.id < 0 {
+	/*if r.id < 0 {
 		return 0, ErrServerNotRunning
-	}
+	}*/
 	return r.w.Write(p)
 }
 
