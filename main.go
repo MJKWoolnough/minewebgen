@@ -15,7 +15,10 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-var config *Config
+var (
+	config     *Config
+	controller *Controller
+)
 
 func main() {
 	configFile := flag.String("-c", "config.json", "config file")
@@ -28,6 +31,10 @@ func main() {
 		return
 	}
 
+	controller = &Controller{
+		config,
+		make(map[int]running),
+	}
 	err = rpc.RegisterName("RPC", RPC{config})
 	if err != nil {
 		fmt.Println(err)
