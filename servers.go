@@ -59,6 +59,17 @@ func setupServer(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) err
 		os.RemoveAll(d)
 		return err
 	}
+	serverProperties := DefaultServerSettings()
+	f, err := os.Create(path.Join(d, "properties.server"))
+	if err != nil {
+		os.RemoveAll(d)
+		return err
+	}
+	_, err = serverProperties.WriteTo(f)
+	if err != nil {
+		os.RemoveAll(d)
+		return err
+	}
 	config.createServer(string(name), d)
 	return nil
 }
