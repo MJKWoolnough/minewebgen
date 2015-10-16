@@ -57,12 +57,12 @@ func (r RPC) SetServer(s Server, _ *struct{}) error {
 	return nil
 }
 
-func (r RPC) StartServer(sID int, _ *struct{}) error {
-	return nil
+func (r RPC) ServerStart(sID int, _ *struct{}) error {
+	controller.Start(sID)
 }
 
-func (r RPC) StopServer(sID int, _ *struct{}) error {
-	return nil
+func (r RPC) ServerStop(sID int, _ *struct{}) error {
+	return controller.Stop(sID)
 }
 
 func (r RPC) MapList(_ struct{}, list *[]Map) error {
@@ -196,7 +196,7 @@ func (r RPC) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
 	l.MapFeatures(data.Structures)
 	l.Save()
 	r.c.newMap(data.Name, d)
-	f, err := os.Create(path.Join(d, "server.properties"))
+	f, err := os.Create(path.Join(d, "properties.map"))
 	if err != nil {
 		return err
 	}
