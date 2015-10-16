@@ -46,7 +46,34 @@ func (c *Controller) Start(sID int) error {
 	if s.Map == -1 {
 		return ErrNoMap
 	}
-	// generate full server.properties
+	m, ok := c.c.Maps[s.Map]
+	if !ok {
+		return ErrNoMap // Shouldn't happen, different error?
+	}
+	ps, err := os.Open(path.Join(c.c.ServersDir, s.Path, "properties.server"))
+	if err != nil {
+		return err
+	}
+	defer ps.Close()
+	pm, err := os.Open(path.Join(c.c.MapsDir, m.Path, "properties.map"))
+	if err != nil {
+		return err
+	}
+	defer pm.Close()
+	f, err := os.Create(path.Joing(c.c.ServersDir, s.Path, "server.properties"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = io.Copy(f, ps)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(f, pm)
+	if err != nil {
+		return err
+	}
+
 	s.state = StateLoading
 	c.c.Servers[sID] = s
 	go c.run(s)
