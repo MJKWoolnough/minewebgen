@@ -58,7 +58,7 @@ func (r RPC) SetServer(s Server, _ *struct{}) error {
 }
 
 func (r RPC) ServerStart(sID int, _ *struct{}) error {
-	controller.Start(sID)
+	return controller.Start(sID)
 }
 
 func (r RPC) ServerStop(sID int, _ *struct{}) error {
