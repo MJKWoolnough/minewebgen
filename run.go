@@ -60,7 +60,7 @@ func (c *Controller) Start(sID int) error {
 		return err
 	}
 	defer pm.Close()
-	f, err := os.Create(path.Joing(c.c.ServersDir, s.Path, "server.properties"))
+	f, err := os.Create(path.Join(c.c.ServersDir, s.Path, "server.properties"))
 	if err != nil {
 		return err
 	}
@@ -76,13 +76,15 @@ func (c *Controller) Start(sID int) error {
 
 	s.state = StateLoading
 	c.c.Servers[sID] = s
-	go c.run(s)
+	sc := make(chan struct{})
+	c.running[s.ID] = running{shutdown: sc}
+	go c.run(s, sc)
 	return nil
 }
 
 func (c *Controller) Stop(sID int) error {
-	c.c.mu.RLock()
-	defer c.c.mu.RUnlock()
+	c.c.mu.Lock()
+	defer c.c.mu.Unlock()
 	r, ok := c.running[sID]
 	if !ok {
 		return ErrServerNotRunning
@@ -93,13 +95,7 @@ func (c *Controller) Stop(sID int) error {
 }
 
 // runs in its own goroutine
-func (c *Controller) run(s Server) {
-	r := running{
-		shutdown: make(chan struct{}),
-	}
-	c.c.mu.Lock()
-	c.running[s.ID] = r
-	c.c.mu.Unlock()
+func (c *Controller) run(s Server, shutdown chan struct{}) {
 	cmd := exec.Command(path.Join(s.Path, "server.jar"), s.Args...)
 	cmd.Dir = s.Path
 	/*r.cb = circbuf.NewBuffer(BufferSize)
@@ -110,6 +106,38 @@ func (c *Controller) run(s Server) {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
+	died := make(chan struct{})
+	go func() {
+		select {
+		case <-shutdown:
+			// write stopCmd to stdin
+			s.state = StateShuttingDown
+			c.c.mu.Lock()
+			c.c.Servers[s.ID] = s
+			c.c.mu.Unlock()
+		case <-died:
+			c.c.mu.Lock()
+			delete(c.running, s.ID)
+			c.c.mu.Unlock()
+		}
+	}()
+
+	cmd.Start()
+
+	s.state = StateRunning
+	c.c.mu.Lock()
+	c.c.Servers[s.ID] = s
+	c.c.mu.Unlock()
+	cmd.Wait()
+	shutdown = nil
+
+	close(died)
+
+	s.state = StateStopped
+	c.c.mu.Lock()
+	c.c.Servers[s.ID] = s
+	c.c.mu.Unlock()
 }
 
 type running struct {
