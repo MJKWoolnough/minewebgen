@@ -55,10 +55,10 @@ func servers(c dom.Element) {
 			b.Type = "button"
 			if s.IsRunning() {
 				b.Value = "Stop"
-				b.AddEventListener("click", false, startServer(c, s))
+				b.AddEventListener("click", false, stopServer(c, s))
 			} else {
 				b.Value = "Start"
-				b.AddEventListener("click", false, stopServer(c, s))
+				b.AddEventListener("click", false, startServer(c, s))
 			}
 			controls.AppendChild(b)
 		}
@@ -70,13 +70,23 @@ func servers(c dom.Element) {
 
 func startServer(c dom.Element, s Server) func(dom.Event) {
 	return func(dom.Event) {
-		RPC.ServerStart(s.ID)
+		go func() {
+			err := RPC.ServerStart(s.ID)
+			if err != nil {
+				xjs.Alert("%s", err)
+			}
+		}()
 	}
 }
 
 func stopServer(c dom.Element, s Server) func(dom.Event) {
 	return func(dom.Event) {
-		RPC.ServerStop(s.ID)
+		go func() {
+			err := RPC.ServerStop(s.ID)
+			if err != nil {
+				xjs.Alert("%s", err)
+			}
+		}()
 	}
 }
 
