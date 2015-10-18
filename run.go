@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -25,8 +26,8 @@ var (
 	stopCmd = []byte{'\r', '\n', 's', 't', 'o', 'p', ' ', '\r', '\n'}
 )
 
-// 2015-09-27 15:33:41 [INFO] [Minecraft-Server] Done (3.959s)! For help, type "help" or "?"
-var doneRegex = regexp.MustCompile("^[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9}{2} \\[Info\\] \\[Minecraft-Server\\] Done ")
+// .*INFO.* Done ([0-9]+.[0-9]{3}s)! For help, type "help" or "?"
+var doneRegex = regexp.MustCompile("Info.* Done \\([0-9]+\\.[0-9]{3}s\\)!")
 
 type Controller struct {
 	c       *Config
@@ -50,17 +51,21 @@ func (c *Controller) Start(sID int) error {
 	if !ok {
 		return ErrNoMap // Shouldn't happen, different error?
 	}
-	ps, err := os.Open(path.Join(c.c.ServersDir, s.Path, "properties.server"))
+	err := os.Link(path.Join(s.Path, m.Name), m.Path)
+	if err != nil {
+		return err
+	}
+	ps, err := os.Open(path.Join(s.Path, "properties.server"))
 	if err != nil {
 		return err
 	}
 	defer ps.Close()
-	pm, err := os.Open(path.Join(c.c.MapsDir, m.Path, "properties.map"))
+	pm, err := os.Open(path.Join(m.Path, "properties.map"))
 	if err != nil {
 		return err
 	}
 	defer pm.Close()
-	f, err := os.Create(path.Join(c.c.ServersDir, s.Path, "server.properties"))
+	f, err := os.Create(path.Join(s.Path, "server.properties"))
 	if err != nil {
 		return err
 	}
@@ -96,7 +101,7 @@ func (c *Controller) Stop(sID int) error {
 
 // runs in its own goroutine
 func (c *Controller) run(s Server, shutdown chan struct{}) {
-	cmd := exec.Command(path.Join(s.Path, "server.jar"), s.Args...)
+	cmd := exec.Command("java", append(s.Args, "-jar", "server.jar", "nogui")...)
 	cmd.Dir = s.Path
 	/*r.cb = circbuf.NewBuffer(BufferSize)
 	cmd.Stdout = r.cb
@@ -107,33 +112,37 @@ func (c *Controller) run(s Server, shutdown chan struct{}) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	died := make(chan struct{})
-	go func() {
-		select {
-		case <-shutdown:
-			// write stopCmd to stdin
-			s.state = StateShuttingDown
-			c.c.mu.Lock()
-			c.c.Servers[s.ID] = s
-			c.c.mu.Unlock()
-		case <-died:
-			c.c.mu.Lock()
-			delete(c.running, s.ID)
-			c.c.mu.Unlock()
-		}
-	}()
+	err := cmd.Start()
+	if err != nil {
+		fmt.Println(err)
+		// Write to Stderr
+	} else {
 
-	cmd.Start()
+		s.state = StateRunning
+		c.c.mu.Lock()
+		c.c.Servers[s.ID] = s
+		c.c.mu.Unlock()
 
-	s.state = StateRunning
-	c.c.mu.Lock()
-	c.c.Servers[s.ID] = s
-	c.c.mu.Unlock()
-	cmd.Wait()
-	shutdown = nil
+		died := make(chan struct{})
+		go func() {
+			select {
+			case <-shutdown:
+				// write stopCmd to stdin
+				s.state = StateShuttingDown
+				c.c.mu.Lock()
+				c.c.Servers[s.ID] = s
+				c.c.mu.Unlock()
+			case <-died:
+				c.c.mu.Lock()
+				delete(c.running, s.ID)
+				c.c.mu.Unlock()
+			}
+		}()
 
-	close(died)
-
+		cmd.Wait()
+		shutdown = nil
+		close(died)
+	}
 	s.state = StateStopped
 	c.c.mu.Lock()
 	c.c.Servers[s.ID] = s
