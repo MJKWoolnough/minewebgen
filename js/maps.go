@@ -90,7 +90,7 @@ func newMap(c dom.Element) func(dom.Event) {
 
 var gameModes = [...]string{"Survival", "Creative", "Adventure", "Hardcore", "Spectator"}
 
-func createMap(o overlay.Overlay) func(dom.Element) {
+func createMap(o *overlay.Overlay) func(dom.Element) {
 	c := xdom.Div()
 	nameLabel := xdom.Label()
 	nameLabel.For = "name"
@@ -200,7 +200,7 @@ var worldTypes = [...]string{
 	"A completely customiseable generator.",
 }
 
-func createMapMode(mode int, o overlay.Overlay, dataParser func() (DefaultMap, error)) func(dom.Element) {
+func createMapMode(mode int, o *overlay.Overlay, dataParser func() (DefaultMap, error)) func(dom.Element) {
 	submit := xdom.Input()
 	submit.Type = "button"
 	submit.Value = "Create Map"
@@ -227,14 +227,14 @@ func createMapMode(mode int, o overlay.Overlay, dataParser func() (DefaultMap, e
 	}
 }
 
-func createSuperFlatMap(o overlay.Overlay, dataParser func() (DefaultMap, error)) func(dom.Element) {
+func createSuperFlatMap(o *overlay.Overlay, dataParser func() (DefaultMap, error)) func(dom.Element) {
 	d := xdom.Div()
 	return func(c dom.Element) {
 		c.AppendChild(d)
 	}
 }
 
-func createCustomisedMap(o overlay.Overlay, dataParser func() (DefaultMap, error)) func(dom.Element) {
+func createCustomisedMap(o *overlay.Overlay, dataParser func() (DefaultMap, error)) func(dom.Element) {
 	d := xdom.Div()
 	return func(c dom.Element) {
 		c.AppendChild(d)
@@ -273,7 +273,7 @@ func createCustomisedMap(o overlay.Overlay, dataParser func() (DefaultMap, error
 
 }
 
-func uploadMap(o overlay.Overlay) func(dom.Element) {
+func uploadMap(o *overlay.Overlay) func(dom.Element) {
 	return func(c dom.Element) {
 	}
 }
