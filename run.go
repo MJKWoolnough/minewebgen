@@ -41,7 +41,7 @@ func (c *Controller) Start(sID int) error {
 	if !ok {
 		return ErrNoServer
 	}
-	if s.state != StateStopped {
+	if s.State != StateStopped {
 		return ErrServerRunning
 	}
 	if s.Map == -1 {
@@ -79,7 +79,7 @@ func (c *Controller) Start(sID int) error {
 		return err
 	}
 
-	s.state = StateLoading
+	s.State = StateLoading
 	c.c.Servers[sID] = s
 	sc := make(chan struct{})
 	c.running[s.ID] = running{shutdown: sc}
@@ -118,7 +118,7 @@ func (c *Controller) run(s Server, shutdown chan struct{}) {
 		// Write to Stderr
 	} else {
 
-		s.state = StateRunning
+		s.State = StateRunning
 		c.c.mu.Lock()
 		c.c.Servers[s.ID] = s
 		c.c.mu.Unlock()
@@ -128,7 +128,7 @@ func (c *Controller) run(s Server, shutdown chan struct{}) {
 			select {
 			case <-shutdown:
 				// write stopCmd to stdin
-				s.state = StateShuttingDown
+				s.State = StateShuttingDown
 				c.c.mu.Lock()
 				c.c.Servers[s.ID] = s
 				c.c.mu.Unlock()
@@ -143,7 +143,7 @@ func (c *Controller) run(s Server, shutdown chan struct{}) {
 		shutdown = nil
 		close(died)
 	}
-	s.state = StateStopped
+	s.State = StateStopped
 	c.c.mu.Lock()
 	c.c.Servers[s.ID] = s
 	c.c.mu.Unlock()

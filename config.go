@@ -11,7 +11,7 @@ type Server struct {
 	Name, Path string
 	Args       []string
 	status     string
-	state      int
+	State      int `json:",omitempty"`
 	Map        int
 }
 
@@ -39,6 +39,7 @@ type serverMap map[int]Server
 func (m serverMap) MarshalJSON() ([]byte, error) {
 	s := make([]Server, 0, len(m))
 	for _, v := range m {
+		v.State = 0
 		s = append(s, v)
 	}
 	return json.Marshal(s)

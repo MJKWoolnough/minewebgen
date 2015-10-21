@@ -17,10 +17,11 @@ type Server struct {
 	Name, Path string
 	Args       []string
 	Map        int
+	State      int
 }
 
 func (s Server) IsRunning() bool {
-	return false
+	return s.State != 0
 }
 
 type Map struct {
