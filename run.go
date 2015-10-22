@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path"
 	"regexp"
+	"time"
 
 	"github.com/armon/circbuf"
 )
@@ -103,16 +104,9 @@ func (c *Controller) Stop(sID int) error {
 func (c *Controller) run(s Server, shutdown chan struct{}) {
 	cmd := exec.Command("java", append(s.Args, "-jar", "server.jar", "nogui")...)
 	cmd.Dir = s.Path
-	/*r.cb = circbuf.NewBuffer(BufferSize)
-	cmd.Stdout = r.cb
-	wp, _ := cmd.StdoutPipe()
-	r.w.io.MultiWriter(r.cb, wp)
-	*/
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	w, _ := cmd.StdinPipe()
 
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		fmt.Println(err)
 		// Write to Stderr
@@ -127,11 +121,20 @@ func (c *Controller) run(s Server, shutdown chan struct{}) {
 		go func() {
 			select {
 			case <-shutdown:
-				// write stopCmd to stdin
 				s.State = StateShuttingDown
 				c.c.mu.Lock()
 				c.c.Servers[s.ID] = s
 				c.c.mu.Unlock()
+				t := time.NewTimer(time.Second * 10)
+				defer t.Stop()
+				for {
+					w.Write(stopCmd)
+					select {
+					case <-died:
+						return
+					case <-t.C:
+					}
+				}
 			case <-died:
 				c.c.mu.Lock()
 				delete(c.running, s.ID)
