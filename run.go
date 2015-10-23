@@ -106,7 +106,7 @@ func (c *Controller) run(s *Server, shutdown chan struct{}) {
 	cmd.Dir = s.Path
 	w, _ := cmd.StdinPipe()
 
-	err = cmd.Start()
+	err := cmd.Start()
 	if err != nil {
 		fmt.Println(err)
 		// Write to Stderr
