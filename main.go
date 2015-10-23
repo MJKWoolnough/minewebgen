@@ -33,7 +33,7 @@ func main() {
 
 	controller = &Controller{
 		config,
-		make(map[int]running),
+		make(map[int]*running),
 	}
 	err = rpc.RegisterName("RPC", RPC{config})
 	if err != nil {

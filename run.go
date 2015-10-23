@@ -32,7 +32,7 @@ var doneRegex = regexp.MustCompile("Info.* Done \\([0-9]+\\.[0-9]{3}s\\)!")
 
 type Controller struct {
 	c       *Config
-	running map[int]running
+	running map[int]*running
 }
 
 func (c *Controller) Start(sID int) error {
@@ -81,9 +81,9 @@ func (c *Controller) Start(sID int) error {
 	}
 
 	s.State = StateLoading
-	c.c.Servers[sID] = s
+	//c.c.Servers[sID] = s
 	sc := make(chan struct{})
-	c.running[s.ID] = running{shutdown: sc}
+	c.running[s.ID] = &running{shutdown: sc}
 	go c.run(s, sc)
 	return nil
 }
@@ -101,7 +101,7 @@ func (c *Controller) Stop(sID int) error {
 }
 
 // runs in its own goroutine
-func (c *Controller) run(s Server, shutdown chan struct{}) {
+func (c *Controller) run(s *Server, shutdown chan struct{}) {
 	cmd := exec.Command("java", append(s.Args, "-jar", "server.jar", "nogui")...)
 	cmd.Dir = s.Path
 	w, _ := cmd.StdinPipe()
@@ -112,18 +112,18 @@ func (c *Controller) run(s Server, shutdown chan struct{}) {
 		// Write to Stderr
 	} else {
 
-		s.State = StateRunning
 		c.c.mu.Lock()
-		c.c.Servers[s.ID] = s
+		s.State = StateRunning
+		//c.c.Servers[s.ID] = s
 		c.c.mu.Unlock()
 
 		died := make(chan struct{})
 		go func() {
 			select {
 			case <-shutdown:
-				s.State = StateShuttingDown
 				c.c.mu.Lock()
-				c.c.Servers[s.ID] = s
+				s.State = StateShuttingDown
+				//c.c.Servers[s.ID] = s
 				c.c.mu.Unlock()
 				t := time.NewTimer(time.Second * 10)
 				defer t.Stop()
@@ -146,9 +146,9 @@ func (c *Controller) run(s Server, shutdown chan struct{}) {
 		shutdown = nil
 		close(died)
 	}
-	s.State = StateStopped
 	c.c.mu.Lock()
-	c.c.Servers[s.ID] = s
+	s.State = StateStopped
+	//c.c.Servers[s.ID] = s
 	c.c.mu.Unlock()
 }
 

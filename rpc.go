@@ -27,7 +27,7 @@ func (r RPC) ServerList(_ struct{}, list *[]Server) error {
 	defer r.c.mu.RUnlock()
 	*list = make([]Server, 0, len(r.c.Servers))
 	for _, s := range r.c.Servers {
-		*list = append(*list, s)
+		*list = append(*list, *s)
 	}
 	return nil
 }
@@ -39,7 +39,7 @@ func (r RPC) GetServer(sID int, s *Server) error {
 	if !ok {
 		return ErrNoServer
 	}
-	*s = ns
+	s = ns
 	return nil
 }
 
@@ -53,7 +53,7 @@ func (r RPC) SetServer(s Server, _ *struct{}) error {
 	}
 	s.Path = ns.Path
 	s.status = ns.status
-	r.c.Servers[s.ID] = s
+	//r.c.Servers[s.ID] = s
 	return nil
 }
 
@@ -70,7 +70,7 @@ func (r RPC) MapList(_ struct{}, list *[]Map) error {
 	defer r.c.mu.RUnlock()
 	*list = make([]Map, 0, len(r.c.Maps))
 	for _, m := range r.c.Maps {
-		*list = append(*list, m)
+		*list = append(*list, *m)
 	}
 	return nil
 }
@@ -82,7 +82,7 @@ func (r RPC) GetMap(mID int, m *Map) error {
 	if !ok {
 		return ErrNoMap
 	}
-	*m = nm
+	m = nm
 	return nil
 }
 
@@ -97,7 +97,7 @@ func (r RPC) SetMap(m Map, _ *struct{}) error {
 	m.Path = nm.Path
 	m.Server = nm.Server
 	m.Status = nm.Status
-	r.c.Maps[m.ID] = m
+	//r.c.Maps[m.ID] = m
 	return nil
 }
 
@@ -127,8 +127,8 @@ func (r RPC) SetMapServer(ms MapServer, _ *struct{}) error {
 	}
 	m.Server = ms.Server
 	s.Map = ms.Map
-	r.c.Maps[ms.Map] = m
-	r.c.Servers[ms.Server] = s
+	//r.c.Maps[ms.Map] = m
+	//r.c.Servers[ms.Server] = s
 	return r.c.save()
 }
 
@@ -148,8 +148,8 @@ func (r RPC) RemoveMapServer(mID int, _ *struct{}) error {
 	}
 	m.Server = -1
 	s.Map = -1
-	r.c.Maps[mID] = m
-	r.c.Servers[s.ID] = s
+	//r.c.Maps[mID] = m
+	//r.c.Servers[s.ID] = s
 	return r.c.save()
 }
 

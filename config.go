@@ -34,10 +34,10 @@ type Config struct {
 	selected   int
 }
 
-type serverMap map[int]Server
+type serverMap map[int]*Server
 
 func (m serverMap) MarshalJSON() ([]byte, error) {
-	s := make([]Server, 0, len(m))
+	s := make([]*Server, 0, len(m))
 	for _, v := range m {
 		v.State = 0
 		s = append(s, v)
@@ -46,7 +46,7 @@ func (m serverMap) MarshalJSON() ([]byte, error) {
 }
 
 func (m serverMap) UnmarshalJSON(b []byte) error {
-	var s []Server
+	var s []*Server
 	err := json.Unmarshal(b, &s)
 	if err != nil {
 		return err
@@ -57,10 +57,10 @@ func (m serverMap) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-type mapMap map[int]Map
+type mapMap map[int]*Map
 
 func (m mapMap) MarshalJSON() ([]byte, error) {
-	s := make([]Map, 0, len(m))
+	s := make([]*Map, 0, len(m))
 	for _, v := range m {
 		s = append(s, v)
 	}
@@ -68,7 +68,7 @@ func (m mapMap) MarshalJSON() ([]byte, error) {
 }
 
 func (m mapMap) UnmarshalJSON(b []byte) error {
-	var s []Map
+	var s []*Map
 	err := json.Unmarshal(b, &s)
 	if err != nil {
 		return err
@@ -120,7 +120,7 @@ func (c *Config) createServer(name, path string) int {
 		}
 		id++
 	}
-	c.Servers[id] = Server{ID: id, Name: name, Path: path, Args: []string{"-Xmx1024M", "-Xms1024M"}, Map: -1}
+	c.Servers[id] = &Server{ID: id, Name: name, Path: path, Args: []string{"-Xmx1024M", "-Xms1024M"}, Map: -1}
 	return id
 }
 
@@ -136,7 +136,7 @@ func (c *Config) newMap(name, path string) int {
 		}
 		id++
 	}
-	c.Maps[id] = Map{ID: id, Name: name, Path: path, Server: -1}
+	c.Maps[id] = &Map{ID: id, Name: name, Path: path, Server: -1}
 	return id
 }
 
@@ -148,5 +148,5 @@ func (c *Config) serverStatus(id int, status string) {
 		return
 	}
 	s.status = status
-	c.Servers[id] = s
+	//c.Servers[id] = s
 }
