@@ -9,8 +9,6 @@ import (
 	"path"
 	"regexp"
 	"time"
-
-	"github.com/armon/circbuf"
 )
 
 const (
@@ -83,8 +81,9 @@ func (c *Controller) Start(sID int) error {
 	s.State = StateLoading
 	//c.c.Servers[sID] = s
 	sc := make(chan struct{})
-	c.running[s.ID] = &running{shutdown: sc}
-	go c.run(s, sc)
+	r := &running{shutdown: sc}
+	c.running[s.ID] = r
+	go c.run(s, r)
 	return nil
 }
 
@@ -101,10 +100,10 @@ func (c *Controller) Stop(sID int) error {
 }
 
 // runs in its own goroutine
-func (c *Controller) run(s *Server, shutdown chan struct{}) {
+func (c *Controller) run(s *Server, r *running) {
 	cmd := exec.Command("java", append(s.Args, "-jar", "server.jar", "nogui")...)
 	cmd.Dir = s.Path
-	w, _ := cmd.StdinPipe()
+	r.Writer, _ = cmd.StdinPipe()
 
 	err := cmd.Start()
 	if err != nil {
@@ -120,7 +119,7 @@ func (c *Controller) run(s *Server, shutdown chan struct{}) {
 		died := make(chan struct{})
 		go func() {
 			select {
-			case <-shutdown:
+			case <-r.shutdown:
 				c.c.mu.Lock()
 				s.State = StateShuttingDown
 				//c.c.Servers[s.ID] = s
@@ -128,7 +127,7 @@ func (c *Controller) run(s *Server, shutdown chan struct{}) {
 				t := time.NewTimer(time.Second * 10)
 				defer t.Stop()
 				for {
-					w.Write(stopCmd)
+					r.Write(stopCmd)
 					select {
 					case <-died:
 						return
@@ -143,7 +142,7 @@ func (c *Controller) run(s *Server, shutdown chan struct{}) {
 		}()
 
 		cmd.Wait()
-		shutdown = nil
+		r.shutdown = nil
 		close(died)
 	}
 	c.c.mu.Lock()
@@ -152,18 +151,15 @@ func (c *Controller) run(s *Server, shutdown chan struct{}) {
 	c.c.mu.Unlock()
 }
 
-type running struct {
-	shutdown chan struct{}
-	cb       *circbuf.Buffer
-	stdin    io.Writer
-	w        io.Writer
+func (c *Controller) CmdWriter(sID int) io.Writer {
+	c.c.mu.Lock()
+	defer c.c.mu.Unlock()
+	return c.running[sID]
 }
 
-func (r *running) Write(p []byte) (int, error) {
-	/*if r.id < 0 {
-		return 0, ErrServerNotRunning
-	}*/
-	return r.w.Write(p)
+type running struct {
+	shutdown chan struct{}
+	io.Writer
 }
 
 // Errors
