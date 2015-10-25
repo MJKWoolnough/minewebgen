@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"image/draw"
 	"os"
+	"path"
 
 	"github.com/MJKWoolnough/byteio"
 	"github.com/MJKWoolnough/minecraft"
@@ -18,6 +19,7 @@ type paint struct {
 }
 
 func generate(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) error {
+	nameStr := readString(r)
 	s, err := f.Stat()
 	if err != nil {
 		return err
@@ -41,32 +43,34 @@ func generate(f *os.File, r *byteio.StickyReader, w *byteio.StickyWriter) error 
 	}
 	c := make(chan paint, 1024)
 	m := make(chan string, 4)
-	e := make(chan error, 1)
-	go buildMap(o, c, m, e)
-Loop:
-	for {
-		select {
-		case p := <-c:
-			w.WriteUint8(1)
-			w.WriteInt32(p.X)
-			w.WriteInt32(p.Y)
-			r, g, b, a := p.RGBA()
-			w.WriteUint8(uint8(r >> 8))
-			w.WriteUint8(uint8(g >> 8))
-			w.WriteUint8(uint8(b >> 8))
-			w.WriteUint8(uint8(a >> 8))
-		case message := <-m:
-			w.WriteUint8(2)
-			w.WriteUint16(uint16(len(message)))
-			w.Write([]byte(message))
-		case err := <-e:
-			if err == nil {
-				break Loop
+	e := make(chan struct{}, 0)
+
+	defer close(e)
+
+	go func() {
+		defer close(c)
+		defer close(m)
+		for {
+			select {
+			case p := <-c:
+				w.WriteUint8(1)
+				w.WriteInt32(p.X)
+				w.WriteInt32(p.Y)
+				r, g, b, a := p.RGBA()
+				w.WriteUint8(uint8(r >> 8))
+				w.WriteUint8(uint8(g >> 8))
+				w.WriteUint8(uint8(b >> 8))
+				w.WriteUint8(uint8(a >> 8))
+			case message := <-m:
+				w.WriteUint8(2)
+				writeString(w, message)
+			case <-e:
+				return
 			}
-			return err
 		}
-	}
-	return nil
+	}()
+
+	return buildMap(nameStr, o, c, m)
 }
 
 type layerError struct {
@@ -192,46 +196,62 @@ func (c *chunkCache) getFromCache(x, z int32, terrain uint8, height int32) nbt.T
 	return chunk
 }
 
-func buildMap(o *ora.ORA, c chan paint, m chan string, e chan error) {
-	defer close(e)
+func buildMap(name string, o *ora.ORA, c chan paint, m chan string) error {
 	terrain := o.Layer("terrain")
 	height := o.Layer("height")
 	sTerrain := image.NewPaletted(o.Bounds(), terrainColours)
 	terrainI, err := terrain.Image()
 	if err != nil {
-		e <- err
-		return
+		return err
 	}
 	draw.Draw(sTerrain, image.Rect(terrain.X, terrain.Y, sTerrain.Bounds().Max.X, sTerrain.Bounds().Max.Y), terrainI, image.Point{}, draw.Src)
 	terrainI = nil
 	sHeight := image.NewGray(o.Bounds())
 	heightI, err := height.Image()
 	if err != nil {
-		e <- err
-		return
+		return err
 	}
 	draw.Draw(sHeight, image.Rect(height.X, height.Y, sTerrain.Bounds().Max.X, sTerrain.Bounds().Max.Y), heightI, image.Point{}, draw.Src)
 	heightI = nil
-	p, err := minecraft.NewFilePath("./test/")
+	mapPath, err := setupMapDir()
 	if err != nil {
-		e <- err
-		return
+		return err
+	}
+
+	ms := DefaultMapSettings()
+	ms["level-type"] = minecraft.FlatGenerator
+	ms["level-name"] = name
+
+	f, err := os.Create(path.Join(mapPath, "properties.map"))
+	if err != nil {
+		return err
+	}
+
+	if err = ms.WriteTo(f); err != nil {
+		return err
+	}
+	f.Close()
+
+	p, err := minecraft.NewFilePath(mapPath)
+	if err != nil {
+		return err
 	}
 
 	m <- "Building Terrain"
-	if !buildTerrain(p, sTerrain, sHeight, c, e) {
-		return
+	if err := buildTerrain(p, sTerrain, sHeight, c); err != nil {
+		return err
 	}
 	level, err := minecraft.NewLevel(p)
 	if err != nil {
-		e <- err
-		return
+		return err
 	}
+	level.LevelName(name)
+
 	m <- "Building Height Map"
-	if !shapeTerrain(level, sTerrain, sHeight, c, e) {
-		return
+	if err := shapeTerrain(level, sTerrain, sHeight, c); err != nil {
+		return err
 	}
-	level.LevelName("Test Generation")
+	level.LevelName(name)
 	level.MobSpawning(false)
 	level.KeepInventory(true)
 	level.FireTick(false)
@@ -242,12 +262,17 @@ func buildMap(o *ora.ORA, c chan paint, m chan string, e chan error) {
 	level.GeneratorOptions("0")
 	level.GameMode(minecraft.Creative)
 	level.AllowCommands(true)
+
 	m <- "Exporting"
 	level.Save()
 	level.Close()
+
+	config.newMap(name, mapPath)
+
+	return nil
 }
 
-func buildTerrain(mpath minecraft.Path, terrain *image.Paletted, height *image.Gray, c chan paint, e chan error) bool {
+func buildTerrain(mpath minecraft.Path, terrain *image.Paletted, height *image.Gray, c chan paint) error {
 	cc := newCache()
 	b := terrain.Bounds()
 	for j := 0; j < b.Max.Y; j += 16 {
@@ -260,8 +285,7 @@ func buildTerrain(mpath minecraft.Path, terrain *image.Paletted, height *image.G
 			h := int32(meanHeight(g))
 			err := mpath.SetChunk(cc.getFromCache(chunkX, chunkZ, t, h))
 			if err != nil {
-				e <- err
-				return false
+				return err
 			}
 			c <- paint{
 				terrainColours[t],
@@ -269,10 +293,10 @@ func buildTerrain(mpath minecraft.Path, terrain *image.Paletted, height *image.G
 			}
 		}
 	}
-	return true
+	return nil
 }
 
-func shapeTerrain(level *minecraft.Level, terrain *image.Paletted, height *image.Gray, c chan paint, e chan error) bool {
+func shapeTerrain(level *minecraft.Level, terrain *image.Paletted, height *image.Gray, c chan paint) error {
 	b := terrain.Bounds()
 	for j := 0; j < b.Max.Y; j += 16 {
 		chunkZ := int32(j >> 4)
@@ -285,8 +309,7 @@ func shapeTerrain(level *minecraft.Level, terrain *image.Paletted, height *image
 					totalHeight += h
 					ch, err := level.GetHeight(x, z)
 					if err != nil {
-						e <- err
-						return false
+						return err
 					}
 					for y := ch - 1; y > h; y-- {
 						level.SetBlock(x, y, z, minecraft.Block{})
@@ -306,5 +329,5 @@ func shapeTerrain(level *minecraft.Level, terrain *image.Paletted, height *image
 			}
 		}
 	}
-	return true
+	return nil
 }
