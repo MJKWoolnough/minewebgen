@@ -209,7 +209,6 @@ func (r RPC) CreateDefaultMap(data DefaultMap, _ *struct{}) error {
 	if data.GameMode == 3 {
 		m["hardcore"] = "true"
 	}
-	m["level-name"] = data.Name
 	m["level-seed"] = strconv.FormatInt(data.Seed, 10)
 	switch data.Mode {
 	case 0:

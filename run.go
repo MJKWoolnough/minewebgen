@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"regexp"
 	"time"
 )
 
@@ -24,9 +23,6 @@ var (
 	saveCmd = []byte{'\r', '\n', 's', 'a', 'v', 'e', 'a', 'l', 'l', ' ', '\r', '\n'}
 	stopCmd = []byte{'\r', '\n', 's', 't', 'o', 'p', ' ', '\r', '\n'}
 )
-
-// .*INFO.* Done ([0-9]+.[0-9]{3}s)! For help, type "help" or "?"
-var doneRegex = regexp.MustCompile("Info.* Done \\([0-9]+\\.[0-9]{3}s\\)!")
 
 type Controller struct {
 	c       *Config
@@ -50,7 +46,16 @@ func (c *Controller) Start(sID int) error {
 	if !ok {
 		return ErrNoMap // Shouldn't happen, different error?
 	}
-	err := os.Link(path.Join(s.Path, m.Name), m.Path)
+	mapPath := path.Join(s.Path, "world")
+	if !path.IsAbs(mapPath) {
+		pwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		mapPath = path.Join(pwd, mapPath)
+	}
+	os.Remove(mapPath)
+	err := os.Symlink(mapPath, path.Join(s.Path, "world"))
 	if err != nil {
 		return err
 	}
