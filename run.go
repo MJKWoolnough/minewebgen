@@ -46,7 +46,7 @@ func (c *Controller) Start(sID int) error {
 	if !ok {
 		return ErrNoMap // Shouldn't happen, different error?
 	}
-	mapPath := path.Join(s.Path, "world")
+	mapPath := m.Path
 	if !path.IsAbs(mapPath) {
 		pwd, err := os.Getwd()
 		if err != nil {
@@ -54,9 +54,11 @@ func (c *Controller) Start(sID int) error {
 		}
 		mapPath = path.Join(pwd, mapPath)
 	}
-	os.Remove(mapPath)
-	err := os.Symlink(mapPath, path.Join(s.Path, "world"))
-	if err != nil {
+	serverMapPath := path.Join(s.Path, "world")
+	if err := os.Remove(serverMapPath); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	if err := os.Symlink(mapPath, serverMapPath); err != nil {
 		return err
 	}
 	ps, err := os.Open(path.Join(s.Path, "properties.server"))
