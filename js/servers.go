@@ -74,6 +74,8 @@ func startServer(c dom.Element, s Server) func(dom.Event) {
 			err := RPC.ServerStart(s.ID)
 			if err != nil {
 				xjs.Alert("%s", err)
+			} else {
+				servers(c)
 			}
 		}()
 	}
@@ -85,6 +87,8 @@ func stopServer(c dom.Element, s Server) func(dom.Event) {
 			err := RPC.ServerStop(s.ID)
 			if err != nil {
 				xjs.Alert("%s", err)
+			} else {
+				servers(c)
 			}
 		}()
 	}
