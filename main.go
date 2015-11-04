@@ -43,7 +43,7 @@ func main() {
 
 	http.Handle("/upload", websocket.Handler(uploadHandler))
 	http.Handle("/rpc", websocket.Handler(func(conn *websocket.Conn) { jsonrpc.ServeConn(conn) }))
-	http.Handle("/", http.FileServer(dir))
+	http.Handle("/", http.FileServer(hdir))
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Port))
 	if err != nil {
 		log.Println(err)
