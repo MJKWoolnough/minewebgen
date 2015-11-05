@@ -21,7 +21,7 @@ var (
 )
 
 func main() {
-	configFile := flag.String("-c", "config.json", "config file")
+	configFile := flag.String("c", "config.json", "config file")
 	flag.Parse()
 
 	var err error
@@ -43,7 +43,7 @@ func main() {
 
 	http.Handle("/upload", websocket.Handler(uploadHandler))
 	http.Handle("/rpc", websocket.Handler(func(conn *websocket.Conn) { jsonrpc.ServeConn(conn) }))
-	http.Handle("/", http.FileServer(hdir))
+	http.Handle("/", http.FileServer(dir))
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Port))
 	if err != nil {
 		log.Println(err)
