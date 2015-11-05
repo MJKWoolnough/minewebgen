@@ -104,7 +104,7 @@ func newServer(c dom.Element) func(dom.Event) {
 
 		nameLabel := xdom.Label()
 		nameLabel.For = "name"
-		xjs.SetInnerText(nameLabel, "Level Name")
+		xjs.SetInnerText(nameLabel, "Server Name")
 		nameInput := xdom.Input()
 		nameInput.Type = "text"
 		nameInput.SetID("name")
