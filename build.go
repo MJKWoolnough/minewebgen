@@ -220,7 +220,6 @@ func buildMap(name string, o *ora.ORA, c chan paint, m chan string) error {
 
 	ms := DefaultMapSettings()
 	ms["level-type"] = minecraft.FlatGenerator
-	ms["level-name"] = name
 
 	f, err := os.Create(path.Join(mapPath, "properties.map"))
 	if err != nil {
