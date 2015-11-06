@@ -22,6 +22,7 @@ func (r RPC) Settings(_ struct{}, settings *data.ServerSettings) error {
 
 func (r RPC) SetSettings(settings data.ServerSettings, _ *struct{}) error {
 	r.c.SetSettings(settings)
+	go r.c.Save()
 	return nil
 }
 
@@ -78,6 +79,7 @@ func (r RPC) SetServer(s data.Server, _ *struct{}) error {
 	defer ser.Unlock()
 	ser.Name = s.Name
 	ser.Args = s.Args
+	go r.c.Save()
 	return nil
 }
 
@@ -89,6 +91,7 @@ func (r RPC) SetMap(m data.Map, _ *struct{}) error {
 	mp.Lock()
 	defer mp.Unlock()
 	mp.Name = m.Name
+	go r.c.Save()
 	return nil
 }
 
@@ -118,6 +121,7 @@ func (r RPC) SetServerMap(ids [2]int, _ *struct{}) error {
 		m.Unlock()
 	}
 	ser.Map = ids[1]
+	go r.c.Save()
 	return nil
 }
 
@@ -173,6 +177,7 @@ func (r RPC) RemoveServer(id int, _ *struct{}) error {
 	}
 	s.ID = -1
 	r.c.RemoveServer(id)
+	go r.c.Save()
 	return nil
 }
 
@@ -194,6 +199,7 @@ func (r RPC) RemoveMap(id int, _ *struct{}) error {
 	}
 	m.ID = -1
 	r.c.RemoveMap(id)
+	go r.c.Save()
 	return nil
 }
 
@@ -269,6 +275,7 @@ func (r RPC) CreateDefaultMap(data data.DefaultMap, _ *struct{}) error {
 	if err := ms.WriteTo(f); err != nil {
 		return err
 	}
+	go r.c.Save()
 	return nil
 }
 
