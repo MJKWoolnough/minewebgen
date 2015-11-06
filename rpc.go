@@ -262,6 +262,14 @@ func (r RPC) CreateDefaultMap(data data.DefaultMap, _ *struct{}) error {
 	return nil
 }
 
+func (r RPC) CreateSuperflatMap(data data.SuperFlatMap, _ *struct{}) error {
+	return errors.New("unimplemented")
+}
+
+func (r RPC) CreateCustomMap(data data.CustomMap, _ *struct{}) error {
+	return errors.New("unimplemented")
+}
+
 // Errors
 
 var (
