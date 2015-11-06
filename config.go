@@ -64,6 +64,21 @@ func (s *Servers) New(path string) *config.Server {
 	return ser
 }
 
+func (s *Servers) Remove(id int) *config.Server {
+	s.mu.Lock()
+	s.mu.Unlock()
+	for n, ser := range s.List {
+		if ser.ID == id {
+			l := len(s.List)
+			if l != n {
+				s.List[n], s.List[l] = s.List[l], s.List[n]
+			}
+			s.List = s.List[:l-1]
+			return ser
+		}
+	}
+}
+
 type Maps struct {
 	mu   sync.RWMutex
 	List []*config.Map
@@ -76,6 +91,21 @@ func (m *Maps) Get(id int) *config.Map {
 		}
 	}
 	return nil
+}
+
+func (m *Maps) Remove(id int) *config.Map {
+	s.mu.Lock()
+	s.mu.Unlock()
+	for n, mp := range m.List {
+		if mp.ID == id {
+			l := len(m.List)
+			if l != n {
+				m.List[n], m.List[l] = m.List[l], m.List[n]
+			}
+			m.List = m.List[:l-1]
+			return mp
+		}
+	}
 }
 
 func (m *Maps) New(path string) *config.Map {
@@ -161,6 +191,14 @@ func (c *Config) NewServer() *config.Server {
 func (c *Config) NewMap() *config.Map {
 	p := c.Settings().DirMaps
 	return c.Maps.New(p)
+}
+
+func (c *Config) RemoveServer(id int) {
+	return c.Servers.Remove(id)
+}
+
+func (c *Config) RemoveMap(id int) {
+	return c.Maps.Remove(id)
 }
 
 func (c *Config) Settings() config.ServerSettings {
