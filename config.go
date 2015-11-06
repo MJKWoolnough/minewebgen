@@ -193,11 +193,11 @@ func (c *Config) NewMap() *config.Map {
 	return c.Maps.New(p)
 }
 
-func (c *Config) RemoveServer(id int) {
+func (c *Config) RemoveServer(id int) *config.Server {
 	return c.Servers.Remove(id)
 }
 
-func (c *Config) RemoveMap(id int) {
+func (c *Config) RemoveMap(id int) *config.Map {
 	return c.Maps.Remove(id)
 }
 
