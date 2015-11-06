@@ -94,8 +94,8 @@ func (m *Maps) Get(id int) *data.Map {
 }
 
 func (m *Maps) Remove(id int) {
-	s.mu.Lock()
-	s.mu.Unlock()
+	m.mu.Lock()
+	m.mu.Unlock()
 	for n, mp := range m.List {
 		if mp.ID == id {
 			l := len(m.List)
