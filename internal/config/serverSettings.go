@@ -35,18 +35,18 @@ type Server struct {
 	ID   int
 	Path string
 
-	mu    sync.RWMutex
-	Name  string
-	Args  []string
-	Map   int
-	State State `json:",omitempty"`
+	sync.RWMutex `json:"-"`
+	Name         string
+	Args         []string
+	Map          int
+	State        State `json:",omitempty"`
 }
 
 type Map struct {
 	ID   int
 	Path string
 
-	mu     sync.RWMutex
-	Name   string
-	Server int
+	sync.RWMutex `json:"-"`
+	Name         string
+	Server       int
 }
