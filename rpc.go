@@ -15,6 +15,16 @@ type RPC struct {
 	c *Config
 }
 
+func (r RPC) Settings(_ struct{}, settings *data.ServerSettings) error {
+	*settings = r.c.Settings()
+	return nil
+}
+
+func (r RPC) SetSettings(settings data.ServerSettings, _ *struct{}) error {
+	r.c.SetSettings(settings)
+	return nil
+}
+
 func (r RPC) ServerName(_ struct{}, serverName *string) error {
 	*serverName = r.c.Settings().ServerName
 	return nil

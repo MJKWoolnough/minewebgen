@@ -35,6 +35,16 @@ var (
 	es  = &struct{}{}
 )
 
+func (j jRPC) Settings() (data.ServerSettings, error) {
+	var s data.ServerSettings
+	err := j.rpc.Call("RPC.ServerSettings", nil, &s)
+	return s, err
+}
+
+func (j jRPC) SetSettings(settings data.ServerSettings) error {
+	return j.rpc.Call("RPC.SetSettings", settings, es)
+}
+
 func (j jRPC) ServerName() (string, error) {
 	var name string
 	err := j.rpc.Call("RPC.Name", nil, &name)
