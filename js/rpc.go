@@ -93,10 +93,18 @@ func (j jRPC) ServerProperties(id int) (map[string]string, error) {
 	return sp, err
 }
 
+func (j jRPC) SetServerProperties(id int, properties map[string]string) error {
+	return j.rpc.Call("RPC.SetServerProperties", data.ServerProperties{id, properties}, es)
+}
+
 func (j jRPC) MapProperties(id int) (map[string]string, error) {
 	mp := make(map[string]string)
 	err := j.rpc.Call("RPC.MapProperties", id, &mp)
 	return mp, err
+}
+
+func (j jRPC) SetMapProperties(id int, properties map[string]string) error {
+	return j.rpc.Call("RPC.SetMapProperties", data.ServerProperties{id, properties}, es)
 }
 
 func (j jRPC) RemoveServer(id int) error {

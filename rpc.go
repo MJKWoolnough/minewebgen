@@ -142,6 +142,22 @@ func (r RPC) ServerProperties(id int, sp *ServerProperties) error {
 	return sp.ReadFrom(f)
 }
 
+func (r RPC) SetServerProperties(sp data.ServerProperties, _ *struct{}) error {
+	s := r.c.Server(sp.ID)
+	if s == nil {
+		return ErrUnknownServer
+	}
+	s.RLock()
+	p := s.Path
+	s.RUnlock()
+	f, err := os.Create(path.Join(p, "properties.server"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return ServerProperties(sp.Properties).WriteTo(f)
+}
+
 func (r RPC) MapProperties(id int, mp *ServerProperties) error {
 	m := r.c.Map(id)
 	if m == nil {
@@ -157,6 +173,22 @@ func (r RPC) MapProperties(id int, mp *ServerProperties) error {
 	defer f.Close()
 	*mp = make(ServerProperties)
 	return mp.ReadFrom(f)
+}
+
+func (r RPC) SetMapProperties(sp data.ServerProperties, _ *struct{}) error {
+	m := r.c.Map(sp.ID)
+	if m == nil {
+		return ErrUnknownMap
+	}
+	m.RLock()
+	p := m.Path
+	m.RUnlock()
+	f, err := os.Create(path.Join(p, "properties.map"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return ServerProperties(sp.Properties).WriteTo(f)
 }
 
 func (r RPC) RemoveServer(id int, _ *struct{}) error {

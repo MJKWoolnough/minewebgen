@@ -1,5 +1,10 @@
 package data
 
+type ServerProperties struct {
+	ID         int
+	Properties map[string]string
+}
+
 type DefaultMap struct {
 	Mode               int
 	Name               string
