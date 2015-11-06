@@ -64,7 +64,7 @@ func (s *Servers) New(path string) *config.Server {
 	return ser
 }
 
-func (s *Servers) Remove(id int) *config.Server {
+func (s *Servers) Remove(id int) {
 	s.mu.Lock()
 	s.mu.Unlock()
 	for n, ser := range s.List {
@@ -74,7 +74,7 @@ func (s *Servers) Remove(id int) *config.Server {
 				s.List[n], s.List[l] = s.List[l], s.List[n]
 			}
 			s.List = s.List[:l-1]
-			return ser
+			break
 		}
 	}
 }
@@ -93,7 +93,7 @@ func (m *Maps) Get(id int) *config.Map {
 	return nil
 }
 
-func (m *Maps) Remove(id int) *config.Map {
+func (m *Maps) Remove(id int) {
 	s.mu.Lock()
 	s.mu.Unlock()
 	for n, mp := range m.List {
@@ -103,7 +103,7 @@ func (m *Maps) Remove(id int) *config.Map {
 				m.List[n], m.List[l] = m.List[l], m.List[n]
 			}
 			m.List = m.List[:l-1]
-			return mp
+			break
 		}
 	}
 }
@@ -199,12 +199,12 @@ func (c *Config) NewMap() *config.Map {
 	return c.Maps.New(p)
 }
 
-func (c *Config) RemoveServer(id int) *config.Server {
-	return c.Servers.Remove(id)
+func (c *Config) RemoveServer(id int) {
+	c.Servers.Remove(id)
 }
 
-func (c *Config) RemoveMap(id int) *config.Map {
-	return c.Maps.Remove(id)
+func (c *Config) RemoveMap(id int) {
+	c.Maps.Remove(id)
 }
 
 func (c *Config) Settings() config.ServerSettings {
