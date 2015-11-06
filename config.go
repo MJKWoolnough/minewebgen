@@ -7,15 +7,15 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/MJKWoolnough/minewebgen/internal/config"
+	"github.com/MJKWoolnough/minewebgen/internal/data"
 )
 
 type Servers struct {
 	mu   sync.RWMutex
-	List []*config.Server
+	List []*data.Server
 }
 
-func (s *Servers) Get(id int) *config.Server {
+func (s *Servers) Get(id int) *data.Server {
 	for _, ser := range s.List {
 		if ser.ID == id {
 			return ser
@@ -40,7 +40,7 @@ func freePath(p string) string {
 	return ""
 }
 
-func (s *Servers) New(path string) *config.Server {
+func (s *Servers) New(path string) *data.Server {
 	sPath := freePath(path)
 	if sPath == "" {
 		return nil
@@ -53,7 +53,7 @@ func (s *Servers) New(path string) *config.Server {
 			id = ser.ID + 1
 		}
 	}
-	ser := &config.Server{
+	ser := &data.Server{
 		ID:   id,
 		Path: sPath,
 		Name: "New Server",
@@ -81,10 +81,10 @@ func (s *Servers) Remove(id int) {
 
 type Maps struct {
 	mu   sync.RWMutex
-	List []*config.Map
+	List []*data.Map
 }
 
-func (m *Maps) Get(id int) *config.Map {
+func (m *Maps) Get(id int) *data.Map {
 	for _, maps := range m.List {
 		if maps.ID == id {
 			return maps
@@ -108,7 +108,7 @@ func (m *Maps) Remove(id int) {
 	}
 }
 
-func (m *Maps) New(path string) *config.Map {
+func (m *Maps) New(path string) *data.Map {
 	mPath := freePath(path)
 	if mPath == "" {
 		return nil
@@ -121,7 +121,7 @@ func (m *Maps) New(path string) *config.Map {
 			id = mp.ID + 1
 		}
 	}
-	mp := &config.Map{
+	mp := &data.Map{
 		ID:     id,
 		Path:   mPath,
 		Name:   "New Map",
@@ -133,7 +133,7 @@ func (m *Maps) New(path string) *config.Map {
 
 type Config struct {
 	mu             sync.RWMutex
-	ServerSettings config.ServerSettings
+	ServerSettings data.ServerSettings
 
 	Servers Servers
 	Maps    Maps
@@ -175,26 +175,26 @@ func (c *Config) Save() error {
 	return json.NewEncoder(f).Encode(f)
 }
 
-func (c *Config) Server(id int) *config.Server {
+func (c *Config) Server(id int) *data.Server {
 	if id < 0 {
 		return nil
 	}
 	return c.Servers.Get(id)
 }
 
-func (c *Config) Map(id int) *config.Map {
+func (c *Config) Map(id int) *data.Map {
 	if id < 0 {
 		return nil
 	}
 	return c.Maps.Get(id)
 }
 
-func (c *Config) NewServer() *config.Server {
+func (c *Config) NewServer() *data.Server {
 	p := c.Settings().DirServers
 	return c.Servers.New(p)
 }
 
-func (c *Config) NewMap() *config.Map {
+func (c *Config) NewMap() *data.Map {
 	p := c.Settings().DirMaps
 	return c.Maps.New(p)
 }
@@ -207,13 +207,13 @@ func (c *Config) RemoveMap(id int) {
 	c.Maps.Remove(id)
 }
 
-func (c *Config) Settings() config.ServerSettings {
+func (c *Config) Settings() data.ServerSettings {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.ServerSettings
 }
 
-func (c *Config) SetSettings(s config.ServerSettings) {
+func (c *Config) SetSettings(s data.ServerSettings) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.ServerSettings = s
