@@ -1,0 +1,110 @@
+package main
+
+import (
+	"net/rpc"
+	"net/rpc/jsonrpc"
+
+	"honnef.co/go/js/dom"
+
+	"github.com/MJKWoolnough/minewebgen/internal/data"
+	"github.com/gopherjs/gopherjs/js"
+	"github.com/gopherjs/websocket"
+)
+
+type jRPC struct {
+	rpc *rpc.Client
+}
+
+func rpcInit() error {
+	conn, err := websocket.Dial("ws://" + js.Global.Get("location").Get("host").String() + "/rpc")
+	if err != nil {
+		return err
+	}
+	dom.GetWindow().AddEventListener("beforeunload", false, func(dom.Event) {
+		switch conn.ReadyState {
+		case websocket.Connecting, websocket.Open:
+			conn.Close()
+		}
+	})
+	RPC = jRPC{jsonrpc.NewClient(conn)}
+	return nil
+}
+
+var (
+	RPC jRPC
+	es  = &struct{}{}
+)
+
+func (j jRPC) ServerName() (string, error) {
+	var name string
+	err := j.rpc.Call("RPC.Name", nil, &name)
+	return name, err
+}
+
+func (j jRPC) ServerList() ([]data.Server, error) {
+	var list []data.Server
+	err := j.rpc.Call("RPC.ServerList", nil, &list)
+	return list, err
+}
+
+func (j jRPC) MapList() ([]data.Map, error) {
+	var list []data.Map
+	err := j.rpc.Call("RPC.MapList", nil, &list)
+	return list, err
+}
+
+func (j jRPC) Server(id int) (data.Server, error) {
+	var s data.Server
+	err := j.rpc.Call("RPC.Server", id, &s)
+	return s, err
+}
+
+func (j jRPC) Map(id int) (data.Map, error) {
+	var m data.Map
+	err := j.rpc.Call("RPC.Map", id, &m)
+	return m, err
+}
+
+func (j jRPC) SetServer(s data.Server) error {
+	return j.rpc.Call("RPC.SetServer", s, es)
+}
+
+func (j jRPC) SetMap(m data.Map) error {
+	return j.rpc.Call("RPC.SetMap", m, es)
+}
+
+func (j jRPC) SetServerMap(serverID, mapID int) error {
+	return j.rpc.Call("RPC.SetServerMap", [2]int{serverID, mapID}, es)
+}
+
+func (j jRPC) ServerProperties(id int) (map[string]string, error) {
+	sp := make(map[string]string)
+	err := j.rpc.Call("RPC.ServerProperties", id, &sp)
+	return sp, err
+}
+
+func (j jRPC) MapProperties(id int) (map[string]string, error) {
+	mp := make(map[string]string)
+	err := j.rpc.Call("RPC.MapProperties", id, &mp)
+	return mp, err
+}
+
+func (j jRPC) RemoveServer(id int) error {
+	return j.rpc.Call("RPC.RemoveServer", id, es)
+}
+
+func (j jRPC) RemoveMap(id int) error {
+	return j.rpc.Call("RPC.RemoveMap", id, es)
+}
+
+func (j jRPC) CreateDefaultMap(d data.DefaultMap) error {
+	return j.rpc.Call("RPC.CreateDefaultMap", d, es)
+}
+
+func (j jRPC) CreateSuperflatMap(d data.SuperFlatMap) error {
+	return j.rpc.Call("RPC.CreateSuperflatMap", d, es)
+}
+
+func (j jRPC) CreateCustomMap(d data.CustomMap) error {
+	return j.rpc.Call("RPC.CreateCustomMap", d, es)
+}
