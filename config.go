@@ -176,10 +176,16 @@ func (c *Config) Save() error {
 }
 
 func (c *Config) Server(id int) *config.Server {
+	if id < 0 {
+		return nil
+	}
 	return c.Servers.Get(id)
 }
 
 func (c *Config) Map(id int) *config.Map {
+	if id < 0 {
+		return nil
+	}
 	return c.Maps.Get(id)
 }
 
