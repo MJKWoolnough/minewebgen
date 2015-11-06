@@ -39,7 +39,7 @@ type Server struct {
 	Name         string
 	Args         []string
 	Map          int
-	State        State `json:",omitempty"`
+	State        State `json:"-"`
 }
 
 type Map struct {
