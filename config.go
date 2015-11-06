@@ -154,16 +154,12 @@ func (c *Config) Map(id int) *config.Map {
 }
 
 func (c *Config) NewServer() *config.Server {
-	c.mu.RLock()
-	p := c.Settings.DirServers
-	c.mu.RUnlock()
+	p := c.Settings().DirServers
 	return c.Servers.New(p)
 }
 
 func (c *Config) NewMap() *config.Map {
-	c.mu.RLock()
-	p := c.Settings.DirMaps
-	c.mu.RUnlock()
+	p := c.Settings().DirMaps
 	return c.Maps.New(p)
 }
 
