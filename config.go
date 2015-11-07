@@ -142,20 +142,21 @@ type Config struct {
 }
 
 func LoadConfig(filename string) (*Config, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
 	c := new(Config)
 	c.ServerSettings.ServerName = "MineWebGen Server"
 	c.ServerSettings.ListenAddr = ":8080"
 	c.ServerSettings.DirServers = "servers"
 	c.ServerSettings.DirMaps = "maps"
 	c.filename = filename
-	err = json.NewDecoder(f).Decode(c)
+	f, err := os.Open(filename)
+	if err == nil {
+		defer f.Close()
+		err = json.NewDecoder(f).Decode(c)
+	}
 	if err != nil {
-		return nil, err
+		if !os.IsNotExist(err) {
+			return nil, err
+		}
 	}
 	return c, nil
 }
