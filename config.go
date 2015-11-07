@@ -143,7 +143,7 @@ type Config struct {
 
 func LoadConfig(filename string) (*Config, error) {
 	c := new(Config)
-	c.ServerSettings.ServerName = "MineWebGen Server"
+	c.ServerSettings.ServerName = "MineWebGen"
 	c.ServerSettings.ListenAddr = ":8080"
 	c.ServerSettings.DirServers = "servers"
 	c.ServerSettings.DirMaps = "maps"
