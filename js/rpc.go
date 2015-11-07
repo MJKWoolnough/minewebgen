@@ -120,6 +120,14 @@ func (j jRPC) RemoveMap(id int) error {
 	return j.rpc.Call("RPC.RemoveMap", id, es)
 }
 
+func (j jRPC) StartServer(id int) error {
+	return j.rpc.Call("RPC.StartServer", id, es)
+}
+
+func (j jRPC) StopServer(id int) error {
+	return j.rpc.Call("RPC.StopServer", id, es)
+}
+
 func (j jRPC) CreateDefaultMap(d data.DefaultMap) error {
 	return j.rpc.Call("RPC.CreateDefaultMap", d, es)
 }
