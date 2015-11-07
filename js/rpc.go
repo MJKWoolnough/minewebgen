@@ -6,6 +6,8 @@ import (
 
 	"honnef.co/go/js/dom"
 
+	"github.com/MJKWoolnough/gopherjs/xdom"
+	"github.com/MJKWoolnough/gopherjs/xjs"
 	"github.com/MJKWoolnough/minewebgen/internal/data"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/websocket"
@@ -20,6 +22,9 @@ func rpcInit() error {
 	if err != nil {
 		return err
 	}
+	conn.WebSocket.AddEventListener("close", false, func(dom.Event) {
+		xjs.RemoveChildren(dom.GetWindow().Document().(dom.HTMLDocument).Body()).AppendChild(xjs.SetInnerText(xdom.H1(), "Connection Lost"))
+	})
 	dom.GetWindow().AddEventListener("beforeunload", false, func(dom.Event) {
 		switch conn.ReadyState {
 		case websocket.Connecting, websocket.Open:
