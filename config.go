@@ -173,7 +173,7 @@ func (c *Config) Save() error {
 		return err
 	}
 	defer f.Close()
-	return json.NewEncoder(f).Encode(f)
+	return json.NewEncoder(f).Encode(c)
 }
 
 func (c *Config) Server(id int) *data.Server {
