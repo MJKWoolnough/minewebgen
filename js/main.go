@@ -7,6 +7,15 @@ import (
 	"honnef.co/go/js/dom"
 )
 
+func SetTitle(title string) {
+	title += " Server"
+	xjs.SetInnerText(dom.GetWindow().Document().(dom.HTMLDocument).Body().ChildNodes()[0], title)
+	tDoc, ok := dom.GetWindow().Document().(dom.HTMLDocument)
+	if ok {
+		tDoc.SetTitle(title + " Server")
+	}
+}
+
 func main() {
 	dom.GetWindow().AddEventListener("load", false, func(dom.Event) {
 		go func() {
@@ -21,11 +30,8 @@ func main() {
 			}
 			body := dom.GetWindow().Document().(dom.HTMLDocument).Body()
 			xjs.RemoveChildren(body)
-			body.AppendChild(xjs.SetInnerText(xdom.H1(), title+" Server"))
-			tDoc, ok := dom.GetWindow().Document().(dom.HTMLDocument)
-			if ok {
-				tDoc.SetTitle(title + " Server")
-			}
+			body.AppendChild(xdom.H1())
+			SetTitle(title)
 			body.AppendChild(tabs.MakeTabs([]tabs.Tab{
 				{"Servers", serversTab},
 				{"Maps", mapsTab},
