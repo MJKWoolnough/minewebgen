@@ -42,7 +42,7 @@ var (
 
 func (j jRPC) Settings() (data.ServerSettings, error) {
 	var s data.ServerSettings
-	err := j.rpc.Call("RPC.ServerSettings", nil, &s)
+	err := j.rpc.Call("RPC.Settings", nil, &s)
 	return s, err
 }
 
@@ -52,7 +52,7 @@ func (j jRPC) SetSettings(settings data.ServerSettings) error {
 
 func (j jRPC) ServerName() (string, error) {
 	var name string
-	err := j.rpc.Call("RPC.Name", nil, &name)
+	err := j.rpc.Call("RPC.ServerName", nil, &name)
 	return name, err
 }
 
