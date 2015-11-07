@@ -22,9 +22,9 @@ func rpcInit() error {
 	if err != nil {
 		return err
 	}
-	conn.WebSocket.AddEventListener("close", false, func(dom.Event) {
+	conn.WebSocket.Call("addEventListener", "close", func(*js.Object) {
 		xjs.RemoveChildren(dom.GetWindow().Document().(dom.HTMLDocument).Body()).AppendChild(xjs.SetInnerText(xdom.H1(), "Connection Lost"))
-	})
+	}, false)
 	dom.GetWindow().AddEventListener("beforeunload", false, func(dom.Event) {
 		switch conn.ReadyState {
 		case websocket.Connecting, websocket.Open:
