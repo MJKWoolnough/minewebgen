@@ -12,7 +12,7 @@ func SetTitle(title string) {
 	xjs.SetInnerText(dom.GetWindow().Document().(dom.HTMLDocument).Body().ChildNodes()[0], title)
 	tDoc, ok := dom.GetWindow().Document().(dom.HTMLDocument)
 	if ok {
-		tDoc.SetTitle(title + " Server")
+		tDoc.SetTitle(title)
 	}
 }
 
