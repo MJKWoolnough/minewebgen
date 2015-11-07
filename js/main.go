@@ -32,7 +32,7 @@ func main() {
 			xjs.RemoveChildren(body)
 			body.AppendChild(xdom.H1())
 			SetTitle(title)
-			body.AppendChild(tabs.MakeTabs([]tabs.Tab{
+			body.AppendChild(tabs.New([]tabs.Tab{
 				{"Servers", serversTab},
 				{"Maps", mapsTab},
 				{"Settings", settingsTab},
