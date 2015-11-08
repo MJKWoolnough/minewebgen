@@ -71,7 +71,7 @@ func (s *Servers) Remove(id int) {
 		if ser.ID == id {
 			l := len(s.List)
 			if l != n {
-				s.List[n], s.List[l] = s.List[l], s.List[n]
+				s.List[n], s.List[l-1] = s.List[l-1], s.List[n]
 			}
 			s.List = s.List[:l-1]
 			os.RemoveAll(ser.Path)
@@ -101,7 +101,7 @@ func (m *Maps) Remove(id int) {
 		if mp.ID == id {
 			l := len(m.List)
 			if l != n {
-				m.List[n], m.List[l] = m.List[l], m.List[n]
+				m.List[n], m.List[l-1] = m.List[l-1], m.List[n]
 			}
 			m.List = m.List[:l-1]
 			os.RemoveAll(mp.Path)
