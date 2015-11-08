@@ -180,13 +180,13 @@ func newServer(c ...dom.Element) {
 					}
 					j := xform.SelectBox("jars", jars...)
 					sel := xjs.SetInnerText(xdom.Button(), "Select")
-					jo := overlay.New(xjs.AppendChildren(xdom.Fieldset(),
+					jo := overlay.New(xjs.AppendChildren(xdom.Div(), xjs.AppendChildren(xdom.Fieldset(),
 						xjs.SetInnerText(xdom.Legend(), "Please select the server jar"),
 						xform.Label("Jar File", "jars"),
 						j,
 						xdom.Br(),
 						sel,
-					))
+					)))
 					c := make(chan int16, 0)
 					done := false
 					jo.OnClose(func() {
@@ -206,7 +206,7 @@ func newServer(c ...dom.Element) {
 							jo.Close()
 						}
 					})
-					xdom.Body().AppendChild(jo)
+					xjs.Body().AppendChild(jo)
 					w.WriteInt16(<-c)
 					close(c)
 				case 255:
