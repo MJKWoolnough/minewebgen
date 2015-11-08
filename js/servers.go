@@ -269,12 +269,12 @@ func serverGeneral(s data.Server) func(dom.Element) {
 				n := m.Name
 				if m.Server != -1 {
 					if m.ID == s.Map {
-						n += "* - " + n
+						n = "* - " + n
 					} else {
 						n = "! - " + n
 					}
 				} else {
-					n = "   " + n
+					n = "    " + n
 				}
 				opts = append(opts, xform.Option{
 					Label:    n,
