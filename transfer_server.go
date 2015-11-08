@@ -73,5 +73,6 @@ func (t Transfer) server(r *byteio.StickyReader, w *byteio.StickyWriter, f *os.F
 		t.c.RemoveServer(s.ID)
 		return err
 	}
+	go t.c.Save()
 	return nil
 }
