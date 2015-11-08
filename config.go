@@ -49,7 +49,7 @@ func (s *Servers) New(path string) *data.Server {
 	defer s.mu.Unlock()
 	id := 0
 	for _, ser := range s.List {
-		if ser.ID > id {
+		if ser.ID >= id {
 			id = ser.ID + 1
 		}
 	}
@@ -119,7 +119,7 @@ func (m *Maps) New(path string) *data.Map {
 	defer m.mu.Unlock()
 	id := 0
 	for _, mp := range m.List {
-		if mp.ID > id {
+		if mp.ID >= id {
 			id = mp.ID + 1
 		}
 	}
