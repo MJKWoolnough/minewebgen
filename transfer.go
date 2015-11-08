@@ -65,7 +65,7 @@ func (t Transfer) handle(r *byteio.StickyReader, w *byteio.StickyWriter) error {
 		if err != nil {
 			return err
 		}
-		w.WriteInt64(resp.ContentLength)
+		w.WriteInt32(int32(resp.ContentLength))
 		_, err = io.Copy(f, downloadProgress{resp.Body, w})
 		resp.Body.Close()
 		if err != nil {
