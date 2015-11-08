@@ -15,7 +15,7 @@ func WrapEvent(f func(...dom.Element), c ...dom.Element) func(dom.Event) {
 }
 
 func ReadError(r *byteio.StickyReader) error {
-	s := readString(r)
+	s := ReadString(r)
 	if r.Err != nil {
 		return r.Err
 	}
@@ -23,7 +23,7 @@ func ReadError(r *byteio.StickyReader) error {
 }
 
 func WriteString(w *byteio.StickyWriter, s string) {
-	w.WriteUInt16(uint16(len(s)))
+	w.WriteUint16(uint16(len(s)))
 	w.Write([]byte(s))
 }
 
