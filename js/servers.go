@@ -9,50 +9,38 @@ import (
 )
 
 func serversTab(c dom.Element) {
+	xjs.RemoveChildren(c)
 	c.AppendChild(xjs.SetInnerText(xdom.H2(), "Servers"))
 	ns := xdom.Button()
 	c.AppendChild(xjs.SetInnerText(ns, "New Server"))
-	c.AddEventListener("click", false, WrapEvent(newServer, c))
+	ns.AddEventListener("click", false, WrapEvent(newServer, c))
 }
 
 func newServer(c ...dom.Element) {
-	d := xdom.Div()
-	o := overlay.New(d)
-	o.OnClose(func() {
-		xjs.RemoveChildren(c[0])
-		go serversTab(c[0])
-	})
-	d.AppendChild(xjs.SetInnerText(xdom.H1(), "New Server"))
-
-	d.AppendChild(xform.Label("Server Name", "serverName"))
 	sn := xform.InputText("serverName", "")
-	d.AppendChild(sn)
-	d.AppendChild(xdom.Br())
-
-	d.AppendChild(xform.Label("URL", "url"))
 	url := xform.InputRadio("url", "switch", true)
-	d.AppendChild(url)
-	d.AppendChild(xdom.Br())
-
-	d.AppendChild(xform.Label("Upload", "upload"))
 	upload := xform.InputRadio("upload", "switch", false)
-	d.AppendChild(upload)
-	d.AppendChild(xdom.Br())
-
-	d.AppendChild(xform.Label("File", ""))
 	fileI := xform.InputUpload("")
 	urlI := xform.InputText("", "")
+	s := xform.InputSubmit("Create")
 
-	d.AppendChild(fileI)
-	d.AppendChild(urlI)
+	sn.Required = true
 
 	typeFunc := func(dom.Event) {
 		if url.Checked {
 			urlI.Style().RemoveProperty("display")
 			fileI.Style().SetProperty("display", "none", "")
+			urlI.Required = true
+			fileI.Required = false
+			fileI.SetID("")
+			urlI.SetID("file")
 		} else {
 			fileI.Style().RemoveProperty("display")
 			urlI.Style().SetProperty("display", "none", "")
+			fileI.Required = true
+			urlI.Required = false
+			urlI.SetID("")
+			fileI.SetID("file")
 		}
 	}
 
@@ -61,13 +49,55 @@ func newServer(c ...dom.Element) {
 	url.AddEventListener("change", false, typeFunc)
 	upload.AddEventListener("change", false, typeFunc)
 
-	d.AppendChild(xdom.Br())
+	o := overlay.New(xjs.AppendChildren(xdom.Form(), xjs.AppendChildren(xdom.Fieldset(),
+		xjs.SetInnerText(xdom.Legend(), "New Server"),
+		xform.Label("Server Name", "serverName"),
+		sn,
+		xdom.Br(),
 
-	s := xdom.Button()
-	d.AppendChild(xjs.SetInnerText(s, "Create"))
-	s.AddEventListener("click", false, func(dom.Event) {
-		s.Disabled = true
+		xform.Label("URL", "url"),
+		url,
+		xdom.Br(),
+
+		xform.Label("Upload", "upload"),
+		upload,
+		xdom.Br(),
+
+		xform.Label("File", "file"),
+
+		fileI,
+		urlI,
+
+		xdom.Br(),
+		s,
+	)))
+	o.OnClose(func() {
+		go serversTab(c[0])
 	})
 
-	dom.GetWindow().Document().(dom.HTMLDocument).Body().AppendChild(o)
+	s.AddEventListener("click", false, func(e dom.Event) {
+		if sn.Value == "" {
+			return
+		}
+		if url.Checked {
+			if urlI.Value == "" {
+				return
+			}
+		} else if len(fileI.Files()) != 1 {
+			return
+
+		}
+		s.Disabled = true
+		sn.Disabled = true
+		url.Disabled = true
+		upload.Disabled = true
+		fileI.Disabled = true
+		urlI.Disabled = true
+		e.PreventDefault()
+		go func() {
+
+		}()
+	})
+
+	xjs.Body().AppendChild(o)
 }
