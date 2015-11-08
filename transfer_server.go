@@ -27,6 +27,12 @@ func (t Transfer) server(r *byteio.StickyReader, w *byteio.StickyWriter, f *os.F
 		}
 	}
 	s := t.c.NewServer()
+	done := false
+	defer func() {
+		if !done {
+			t.c.RemoveServer(s.ID)
+		}
+	}()
 	if s == nil {
 		return errors.New("error creating server")
 	}
@@ -43,9 +49,15 @@ func (t Transfer) server(r *byteio.StickyReader, w *byteio.StickyWriter, f *os.F
 			for _, jar := range jars {
 				writeString(w, jar.Name)
 			}
+			if w.Err != nil {
+				return w.Err
+			}
 			p := r.ReadInt16()
+			if r.Err != nil {
+				return r.Err
+			}
 			if int(p) >= len(jars) || p < 0 {
-				err = errors.New("error selecting server jar")
+				return errors.New("error selecting server jar")
 			} else {
 				jars[0] = jars[p]
 			}
@@ -58,21 +70,19 @@ func (t Transfer) server(r *byteio.StickyReader, w *byteio.StickyWriter, f *os.F
 		}
 	}
 	if err != nil {
-		t.c.RemoveServer(s.ID)
 		return err
 	}
 	serverProperties := DefaultServerSettings()
 	ps, err := os.OpenFile(path.Join(d, "properties.server"), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
-		t.c.RemoveServer(s.ID)
 		return err
 	}
 	defer ps.Close()
 	err = serverProperties.WriteTo(ps)
 	if err != nil {
-		t.c.RemoveServer(s.ID)
 		return err
 	}
 	go t.c.Save()
+	done = true
 	return nil
 }
