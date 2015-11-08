@@ -4,14 +4,17 @@ import (
 	"image/color"
 	"io"
 	"strconv"
+	"time"
 
 	"github.com/MJKWoolnough/byteio"
 	"github.com/MJKWoolnough/gopherjs/files"
 	"github.com/MJKWoolnough/gopherjs/overlay"
 	"github.com/MJKWoolnough/gopherjs/progress"
+	"github.com/MJKWoolnough/gopherjs/tabs"
 	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xform"
 	"github.com/MJKWoolnough/gopherjs/xjs"
+	"github.com/MJKWoolnough/minewebgen/internal/data"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/websocket"
 	"honnef.co/go/js/dom"
@@ -28,9 +31,33 @@ func serversTab(c dom.Element) {
 		c.AppendChild(xjs.SetInnerText(xdom.Div(), err.Error()))
 		return
 	}
-	for _, serv := range s {
-		c.AppendChild(xjs.SetInnerText(xdom.Div(), serv.Name))
+	if len(s) == 0 {
+		c.AppendChild(xjs.SetInnerText(xdom.Div(), "No Servers"))
+		return
 	}
+	t := xjs.AppendChildren(xdom.Table(), xjs.AppendChildren(xdom.Thead(), xjs.AppendChildren(xdom.Tr(),
+		xjs.SetInnerText(xdom.Th(), "Server Name"),
+	)))
+
+	for _, serv := range s {
+		name := xjs.SetInnerText(xdom.Td(), serv.Name)
+		name.AddEventListener("click", false, func() func(dom.Event) {
+			s := serv
+			return func(dom.Event) {
+				o := overlay.New(xjs.AppendChildren(xdom.Div(), tabs.New([]tabs.Tab{
+					{"General", serverGeneral(s)},
+					{"Properties", serverProperties(s)},
+					{"Console", serverConsole(s)},
+				})))
+				o.OnClose(func() {
+					go serversTab(c)
+				})
+				xjs.Body().AppendChild(o)
+			}
+		}())
+		t.AppendChild(xjs.AppendChildren(xdom.Td(), name))
+	}
+	c.AppendChild(t)
 }
 
 func newServer(c ...dom.Element) {
@@ -219,4 +246,103 @@ func newServer(c ...dom.Element) {
 	})
 
 	xjs.Body().AppendChild(o)
+}
+
+func serverGeneral(s data.Server) func(dom.Element) {
+	return func(c dom.Element) {
+		go func() {
+			maps, err := RPC.MapList()
+			if err != nil {
+				c.AppendChild(xjs.SetInnerText(xdom.Div(), "Error getting map list: "+err.Error()))
+				return
+			}
+			name := xform.InputText("name", s.Name)
+			name.Required = true
+			opts := make([]xform.Option, 1, len(maps)+1)
+			opts[0] = xform.Option{
+				Label:    "-- None -- ",
+				Value:    "-1",
+				Selected: s.Map == -1,
+			}
+			for i, m := range maps {
+				n := m.Name
+				if m.Server != -1 {
+					if m.ID == s.Map {
+						n += "* - " + n
+					} else {
+						n = "! - " + n
+					}
+				} else {
+					n = "   " + n
+				}
+				opts = append(opts, xform.Option{
+					Label:    n,
+					Value:    strconv.Itoa(i),
+					Selected: m.ID == s.Map,
+				})
+			}
+			args := xform.InputSizeableList(s.Args...)
+			sel := xform.SelectBox("map", opts...)
+			submit := xform.InputSubmit("Set")
+			submit.AddEventListener("click", false, func(e dom.Event) {
+				if name.Value == "" {
+					return
+				}
+				sID, err := strconv.Atoi(sel.Value)
+				if err != nil || sID < -1 || sID >= len(maps) {
+					return
+				}
+				submit.Disabled = true
+				e.PreventDefault()
+				if sID >= 0 {
+					m := maps[sID]
+					sID = m.ID
+				}
+				go func() {
+					err = RPC.SetServerMap(s.ID, sID)
+					if err != nil {
+						xjs.Alert("Error setting server map: %s", err)
+						return
+					}
+					s.Name = name.Value
+					s.Args = args.Values()
+					err = RPC.SetServer(s)
+					if err != nil {
+						xjs.Alert("Error setting server data: %s", err)
+						return
+					}
+					span := xdom.Span()
+					span.Style().Set("color", "#f00")
+					c.AppendChild(xjs.SetInnerText(span, "Saved!"))
+					time.Sleep(5 * time.Second)
+					c.RemoveChild(span)
+					submit.Disabled = false
+				}()
+			})
+			xjs.AppendChildren(c, xjs.AppendChildren(xdom.Form(),
+				xform.Label("Server Name", "name"),
+				name,
+				xdom.Br(),
+				xform.Label("Arguments", "args"),
+				args,
+				xdom.Br(),
+				xform.Label("Map Name", "map"),
+				sel,
+				xdom.Br(),
+				submit,
+			))
+		}()
+	}
+}
+
+func serverProperties(s data.Server) func(dom.Element) {
+	return func(c dom.Element) {
+		c.AppendChild(xjs.SetInnerText(xdom.Div(), "Properties"))
+	}
+}
+
+func serverConsole(s data.Server) func(dom.Element) {
+	return func(c dom.Element) {
+		c.AppendChild(xjs.SetInnerText(xdom.Div(), "Console"))
+	}
 }
