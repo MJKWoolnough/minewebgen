@@ -21,6 +21,11 @@ func (r RPC) Settings(_ struct{}, settings *data.ServerSettings) error {
 }
 
 func (r RPC) SetSettings(settings data.ServerSettings, _ *struct{}) error {
+	settings.DirMaps = path.Clean(settings.DirMaps)
+	settings.DirServers = path.Clean(settings.DirServers)
+	if settings.DirMaps == settings.DirServers {
+		return errors.New("map and server paths cannot be the same")
+	}
 	r.c.SetSettings(settings)
 	go r.c.Save()
 	return nil
