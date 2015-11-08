@@ -19,7 +19,6 @@ func (t Transfer) server(r *byteio.StickyReader, w *byteio.StickyWriter, f *os.F
 	if err != nil {
 		return err
 	}
-	w.WriteUint8(1)
 	name := readString(r)
 	jars := make([]*zip.File, 0, 16)
 	for _, file := range zr.File {
