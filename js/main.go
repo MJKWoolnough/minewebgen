@@ -29,6 +29,7 @@ func main() {
 				return
 			}
 			body := dom.GetWindow().Document().(dom.HTMLDocument).Body()
+			body.Underlying().Set("spellcheck", "false")
 			xjs.RemoveChildren(body)
 			body.AppendChild(xdom.H1())
 			SetTitle(title)
