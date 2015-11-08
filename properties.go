@@ -78,7 +78,6 @@ func (s ServerProperties) Clone() ServerProperties {
 
 func (s ServerProperties) ReadFrom(r io.Reader) error {
 	br := bufio.NewReader(r)
-	data := make(map[string]string)
 	for {
 		l, err := br.ReadString('\n')
 		if err != nil {
@@ -97,7 +96,7 @@ func (s ServerProperties) ReadFrom(r io.Reader) error {
 		if len(parts) != 2 {
 			continue
 		}
-		data[parts[0]] = parts[1]
+		s[parts[0]] = parts[1]
 	}
 }
 
