@@ -74,6 +74,7 @@ func (s *Servers) Remove(id int) {
 				s.List[n], s.List[l] = s.List[l], s.List[n]
 			}
 			s.List = s.List[:l-1]
+			os.RemoveAll(ser.Path)
 			break
 		}
 	}
@@ -103,6 +104,7 @@ func (m *Maps) Remove(id int) {
 				m.List[n], m.List[l] = m.List[l], m.List[n]
 			}
 			m.List = m.List[:l-1]
+			os.RemoveAll(mp.Path)
 			break
 		}
 	}
