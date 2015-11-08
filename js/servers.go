@@ -3,6 +3,7 @@ package main
 import (
 	"image/color"
 	"io"
+	"sort"
 	"strconv"
 	"time"
 
@@ -55,7 +56,7 @@ func serversTab(c dom.Element) {
 				xjs.Body().AppendChild(o)
 			}
 		}())
-		t.AppendChild(xjs.AppendChildren(xdom.Td(), name))
+		t.AppendChild(xjs.AppendChildren(xdom.Tr(), name))
 	}
 	c.AppendChild(t)
 }
@@ -335,9 +336,117 @@ func serverGeneral(s data.Server) func(dom.Element) {
 	}
 }
 
+type PropertyList [][2]string
+
+func (p PropertyList) Len() int {
+	return len(p)
+}
+
+func (p PropertyList) Less(i, j int) bool {
+	return p[i][0] < p[j][0]
+}
+
+func (p PropertyList) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+
 func serverProperties(s data.Server) func(dom.Element) {
 	return func(c dom.Element) {
-		c.AppendChild(xjs.SetInnerText(xdom.Div(), "Properties"))
+		go func() {
+			sp, err := RPC.ServerProperties(s.ID)
+			if err != nil {
+				c.AppendChild(xjs.SetInnerText(xdom.Div(), "Failed to get server properties: "+err.Error()))
+				return
+			}
+			props := make(PropertyList, 0, len(sp))
+			for k, v := range sp {
+				props = append(props, [2]string{k, v})
+			}
+			sort.Sort(props)
+			propE := make([][2]*dom.HTMLSpanElement, len(props))
+			df := xjs.DocumentFragment()
+
+			toggleFunc := func(k, v *dom.HTMLSpanElement, toggle *dom.HTMLInputElement) func(dom.Event) {
+				return func(dom.Event) {
+					if toggle.Value == "-" {
+						k.SetContentEditable("false")
+						v.SetContentEditable("false")
+						k.Style().SetProperty("background-color", "#888", "")
+						v.Style().SetProperty("background-color", "#888", "")
+						toggle.Value = "+"
+					} else {
+						k.SetContentEditable("true")
+						v.SetContentEditable("true")
+						k.Style().RemoveProperty("background-color")
+						v.Style().RemoveProperty("background-color")
+						toggle.Value = "-"
+					}
+				}
+			}
+
+			for i, prop := range props {
+				k := xform.InputSizeable("", prop[0])
+				v := xform.InputSizeable("", prop[1])
+				toggle := xform.InputButton("-")
+				toggle.AddEventListener("click", false, toggleFunc(k, v, toggle))
+				propE[i][0] = k
+				propE[i][1] = v
+				xjs.AppendChildren(df,
+					toggle,
+					k,
+					xjs.SetInnerText(xdom.Span(), "="),
+					v,
+					xdom.Br(),
+				)
+			}
+
+			add := xform.InputButton("Add")
+			submit := xform.InputButton("Save")
+			fs := xjs.AppendChildren(xdom.Fieldset(), xjs.AppendChildren(
+				df,
+				xjs.SetInnerText(xdom.Legend(), "Server Properties"),
+				add,
+				submit,
+			))
+
+			add.AddEventListener("click", false, func(dom.Event) {
+				k := xform.InputSizeable("", "")
+				v := xform.InputSizeable("", "")
+				toggle := xform.InputButton("-")
+				toggle.AddEventListener("click", false, toggleFunc(k, v, toggle))
+				propE = append(propE, [2]*dom.HTMLSpanElement{k, v})
+				fs.InsertBefore(toggle, add)
+				fs.InsertBefore(k, add)
+				fs.InsertBefore(xjs.SetInnerText(xdom.Span(), "="), add)
+				fs.InsertBefore(v, add)
+				fs.InsertBefore(xdom.Br(), add)
+			})
+
+			submit.AddEventListener("click", false, func(dom.Event) {
+				submit.Disabled = true
+				props := make(map[string]string, len(propE))
+				for _, spans := range propE {
+					if spans[0].IsContentEditable() {
+						props[spans[0].TextContent()] = spans[1].TextContent()
+					}
+				}
+				go func() {
+					err := RPC.SetServerProperties(s.ID, props)
+					if err != nil {
+						xjs.Alert("Error setting server properties: %s", err)
+						return
+					}
+					span := xdom.Span()
+					span.Style().Set("color", "#f00")
+					fs.AppendChild(xjs.SetInnerText(span, "Saved!"))
+					time.Sleep(5 * time.Second)
+					fs.RemoveChild(span)
+					submit.Disabled = false
+				}()
+			})
+
+			xjs.AppendChildren(c, xjs.AppendChildren(xdom.Form(), fs))
+		}()
 	}
 }
 
