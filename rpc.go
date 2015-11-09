@@ -95,6 +95,20 @@ func (r RPC) SetMap(m data.Map, _ *struct{}) error {
 	if mp == nil {
 		return ErrUnknownMap
 	}
+	mp.RLock()
+	sID := mp.Server
+	mp.RUnlock()
+	if mp.Server != -1 {
+		ser := r.c.Server(mp.Server)
+		if ser != nil {
+			ser.RLock()
+			s := ser.State
+			ser.RUnlock()
+			if s != StateStopped {
+				return ErrServerRunning
+			}
+		}
+	}
 	mp.Lock()
 	defer mp.Unlock()
 	mp.Name = m.Name
