@@ -129,10 +129,10 @@ func (r RPC) SetServerMap(ids [2]int, _ *struct{}) error {
 		if s != data.StateStopped {
 			return ErrServerRunning
 		}
-		if mID == ids[1] {
-			return nil
-		}
 		if mID != -1 {
+			if mID == ids[1] {
+				return nil
+			}
 			mp := r.c.Map(mID)
 			if mp != nil {
 				mp.Lock()
