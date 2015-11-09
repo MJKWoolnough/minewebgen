@@ -1,11 +1,26 @@
 package main
 
 import (
+	"github.com/MJKWoolnough/gopherjs/style"
 	"github.com/MJKWoolnough/gopherjs/tabs"
 	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xjs"
 	"honnef.co/go/js/dom"
 )
+
+func init() {
+	style.Add(`fieldset {
+	padding-left : 0;
+	padding-right : 0;
+	border : 1px solid #000;
+}
+fieldset legend {
+	border : 1px solid #000;
+	margin-left : auto;
+	margin-right : auto;
+}
+`)
+}
 
 func SetTitle(title string) {
 	title += " Server"
