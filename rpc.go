@@ -124,7 +124,11 @@ func (r RPC) SetServerMap(ids [2]int, _ *struct{}) error {
 		}
 		serv.RLock()
 		mID := serv.Map
+		s := serv.State
 		serv.RUnlock()
+		if s != data.StateStopped {
+			return ErrServerRunning
+		}
 		if mID == ids[1] {
 			return nil
 		}
@@ -151,6 +155,12 @@ func (r RPC) SetServerMap(ids [2]int, _ *struct{}) error {
 		if sID != -1 {
 			serv := r.c.Server(sID)
 			if serv != nil {
+				serv.RLock()
+				s := serv.State
+				serv.RUnlock()
+				if s != data.StateStopped {
+					return ErrServerRunning
+				}
 				serv.Lock()
 				serv.Map = -1
 				serv.Unlock()
