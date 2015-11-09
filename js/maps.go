@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/MJKWoolnough/gopherjs/overlay"
+	"github.com/MJKWoolnough/gopherjs/style"
 	"github.com/MJKWoolnough/gopherjs/tabs"
 	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xform"
@@ -182,6 +183,7 @@ func createSuperFlatMap(o *overlay.Overlay, dataParser func() (data.DefaultMap, 
 	// create better UI here
 	d := xdom.Div()
 	gs := xform.InputText("settings", "0")
+	gs.Required = true
 	submit := xform.InputSubmit("Create Map")
 	xjs.AppendChildren(d,
 		xjs.SetPreText(xdom.Div(), worldTypes[1]),
@@ -215,8 +217,290 @@ func createSuperFlatMap(o *overlay.Overlay, dataParser func() (data.DefaultMap, 
 	}
 }
 
+func rangeWatch(r *dom.HTMLInputElement) dom.Element {
+	s := xdom.Span()
+	xjs.SetInnerText(s, r.Value)
+	r.AddEventListener("input", false, func(dom.Event) {
+		xjs.SetInnerText(s, r.Value)
+	})
+	return s
+}
+
+func enabler(c, r *dom.HTMLInputElement) {
+	c.AddEventListener("click", false, func(dom.Event) {
+		r.Disabled = !c.Checked
+	})
+}
+
+var biomes = []xform.Option{
+	{"All", "-1", false},
+	{"Ocean", "0", false},
+	{"Plains", "1", false},
+	{"Desert", "2", false},
+	{"Extreme Hills", "3", false},
+	{"Forest", "4", false},
+	{"Taiga", "5", false},
+	{"Swampland", "6", false},
+	{"River", "7", false},
+	{"Frozen Ocean", "10", false},
+	{"Frozen River", "11", false},
+	{"Ice Plains", "12", false},
+	{"Ice Mountains", "13", false},
+	{"Mushroom Island", "14", false},
+	{"Mushroom Island Shore", "15", false},
+	{"Beach", "16", false},
+	{"Desert Hills", "17", false},
+	{"Forest Hills", "18", false},
+	{"Taiga Hills", "19", false},
+	{"Extreme Hills Edge", "20", false},
+	{"Jungle", "21", false},
+	{"Jungle Hills", "22", false},
+	{"Jungle Edge", "23", false},
+	{"Deep Ocean", "24", false},
+	{"Stone Beach", "25", false},
+	{"Cold Beach", "26", false},
+	{"Birch Forest", "27", false},
+	{"Birch Forest Hills", "28", false},
+	{"Roofed Forest", "29", false},
+	{"Cold Taiga", "30", false},
+	{"Cold Taiga Hills", "31", false},
+	{"Mega Taiga", "32", false},
+	{"Mega Taiga Hills", "33", false},
+	{"Extreme Hills+", "34", false},
+	{"Savanna", "35", false},
+	{"Savanna Plateau", "36", false},
+	{"Mesa", "37", false},
+	{"Mesa Plateau F", "38", false},
+	{"Mesa Plateau", "39", false},
+}
+
+func init() {
+	style.Add(`.brClear br {
+	clear : left;
+}
+`)
+}
+
 func createCustomisedMap(o *overlay.Overlay, dataParser func() (data.DefaultMap, error)) func(dom.Element) {
 	d := xdom.Div()
+	d.Class().SetString("brClear")
+	seaLevel := xform.InputRange("sea", 0, 255, 1, 63)
+	caves := xform.InputCheckbox("caves", true)
+	strongholds := xform.InputCheckbox("strongholds", true)
+	villages := xform.InputCheckbox("villages", true)
+	mineshafts := xform.InputCheckbox("mineshafts", true)
+	temples := xform.InputCheckbox("templaes", true)
+	oceanMonuments := xform.InputCheckbox("oceanMonuments", true)
+	ravines := xform.InputCheckbox("ravines", true)
+	dungeons := xform.InputCheckbox("dungeons", true)
+	dungeonCount := xform.InputRange("dungeonCount", 1, 100, 1, 7)
+	waterLakes := xform.InputCheckbox("waterLakes", true)
+	waterLakeRarity := xform.InputRange("waterLakeRarity", 1, 100, 1, 4)
+	lavaLakes := xform.InputCheckbox("lavaLakes", true)
+	lavaLakeRarity := xform.InputRange("lavaLakeRarity", 1, 100, 1, 80)
+	biome := xform.SelectBox("biomes", biomes...)
+	biomeSize := xform.InputRange("biomeSize", 1, 8, 1, 4)
+	riverSize := xform.InputRange("riverSize", 1, 5, 1, 4)
+
+	dirtSpawnSize := xform.InputRange("dirtSpawnSize", 1, 50, 1, 33)
+	dirtSpawnTries := xform.InputRange("dirtSpawnTries", 0, 40, 1, 10)
+	dirtMinHeight := xform.InputRange("dirtMinHeight", 0, 255, 1, 0)
+	dirtMaxHeight := xform.InputRange("dirtMaxHeight", 0, 255, 1, 256)
+
+	gravelSpawnSize := xform.InputRange("gravelSpawnSize", 1, 50, 1, 33)
+	gravelSpawnTries := xform.InputRange("gravelSpawnTries", 0, 40, 1, 8)
+	gravelMinHeight := xform.InputRange("gravelMinHeight", 0, 255, 1, 0)
+	gravelMaxHeight := xform.InputRange("gravelMaxHeight", 0, 255, 1, 256)
+
+	graniteSpawnSize := xform.InputRange("graniteSpawnSize", 1, 50, 1, 33)
+	graniteSpawnTries := xform.InputRange("graniteSpawnTries", 0, 40, 1, 10)
+	graniteMinHeight := xform.InputRange("graniteMinHeight", 0, 255, 1, 0)
+	graniteMaxHeight := xform.InputRange("graniteMaxHeight", 0, 255, 1, 80)
+
+	dioriteSpawnSize := xform.InputRange("dioriteSpawnSize", 1, 50, 1, 33)
+	dioriteSpawnTries := xform.InputRange("dioriteSpawnTries", 0, 40, 1, 10)
+	dioriteMinHeight := xform.InputRange("dioriteMinHeight", 0, 255, 1, 0)
+	dioriteMaxHeight := xform.InputRange("dioriteMaxHeight", 0, 255, 1, 80)
+
+	andesiteSpawnSize := xform.InputRange("andesiteSpawnSize", 1, 50, 1, 33)
+	andesiteSpawnTries := xform.InputRange("andesiteSpawnTries", 0, 40, 1, 10)
+	andesiteMinHeight := xform.InputRange("andesiteMinHeight", 0, 255, 1, 0)
+	andesiteMaxHeight := xform.InputRange("andesiteMaxHeight", 0, 255, 1, 80)
+
+	coalOreSpawnSize := xform.InputRange("coalOreSpawnSize", 1, 50, 1, 17)
+	coalOreSpawnTries := xform.InputRange("coalOreSpawnTries", 0, 40, 1, 20)
+	coalOreMinHeight := xform.InputRange("coalOreMinHeight", 0, 255, 1, 0)
+	coalOreMaxHeight := xform.InputRange("coalOreMaxHeight", 0, 255, 1, 128)
+
+	ironOreSpawnSize := xform.InputRange("ironOreSpawnSize", 1, 50, 1, 9)
+	ironOreSpawnTries := xform.InputRange("ironOreSpawnTries", 0, 40, 1, 20)
+	ironOreMinHeight := xform.InputRange("ironOreMinHeight", 0, 255, 1, 0)
+	ironOreMaxHeight := xform.InputRange("ironOreMaxHeight", 0, 255, 1, 64)
+
+	goldOreSpawnSize := xform.InputRange("goldOreSpawnSize", 1, 50, 1, 9)
+	goldOreSpawnTries := xform.InputRange("goldOreSpawnTries", 0, 40, 1, 2)
+	goldOreMinHeight := xform.InputRange("goldOreMinHeight", 0, 255, 1, 0)
+	goldOreMaxHeight := xform.InputRange("goldOreMaxHeight", 0, 255, 1, 32)
+
+	redstoneOreSpawnSize := xform.InputRange("redstoneOreSpawnSize", 1, 50, 1, 8)
+	redstoneOreSpawnTries := xform.InputRange("redstoneOreSpawnTries", 0, 40, 1, 8)
+	redstoneOreMinHeight := xform.InputRange("redstoneOreMinHeight", 0, 255, 1, 0)
+	redstoneOreMaxHeight := xform.InputRange("redstoneOreMaxHeight", 0, 255, 1, 16)
+
+	diamondOreSpawnSize := xform.InputRange("diamondOreSpawnSize", 1, 50, 1, 8)
+	diamondOreSpawnTries := xform.InputRange("diamondOreSpawnTries", 0, 40, 1, 1)
+	diamondOreMinHeight := xform.InputRange("diamondOreMinHeight", 0, 255, 1, 0)
+	diamondOreMaxHeight := xform.InputRange("diamondOreMaxHeight", 0, 255, 1, 16)
+
+	lapisLazuliOreSpawnSize := xform.InputRange("lapisLazuliOreSpawnSize", 1, 50, 1, 7)
+	lapisLazuliOreSpawnTries := xform.InputRange("lapisLazuliOreSpawnTries", 0, 40, 1, 1)
+	lapisLazuliOreCentreHeight := xform.InputRange("lapisLazuliOreCentreHeight", 0, 255, 1, 16)
+	lapisLazuliOreSpreadHeight := xform.InputRange("lapisLazuliOreSpreadHeight", 0, 255, 1, 16)
+
+	mainNoiseScaleX := xform.InputRange("mainNoiseScaleX", 1, 5000, -1, 80)
+	mainNoiseScaleY := xform.InputRange("mainNoiseScaleY", 1, 5000, -1, 160)
+	mainNoiseScaleZ := xform.InputRange("mainNoiseScaleZ", 1, 5000, -1, 80)
+	depthNoiseScaleX := xform.InputRange("depthNoiseScaleX", 1, 2000, -1, 200)
+	depthNoiseScaleZ := xform.InputRange("depthNoiseScaleZ", 1, 2000, -1, 200)
+	depthNoiseExponent := xform.InputRange("depthNoiseExponent", 0.01, 20, -1, 0.5)
+	depthBaseSize := xform.InputRange("depthBaseSize", 1, 25, -1, 8.5)
+	coordinateScale := xform.InputRange("coordinateScale", 1, 6000, -1, 684.412)
+	heightScale := xform.InputRange("heightScale", 1, 6000, -1, 684.412)
+	heightStretch := xform.InputRange("heightStretch", 0.01, 50, -1, 12)
+	upperLimitScale := xform.InputRange("upperLimitScale", 1, 5000, -1, 512)
+	lowerLimitScale := xform.InputRange("lowerLimitScale", 1, 5000, -1, 512)
+	biomeDepthWeight := xform.InputRange("biomeDepthWeight", 1, 20, -1, 1)
+	biomeDepthOffset := xform.InputRange("biomeDepthOffset", 0, 20, -1, 0)
+	biomeScaleWeight := xform.InputRange("biomeScaleWeight", 1, 20, -1, 1)
+	biomeScaleOffset := xform.InputRange("biomeScaleOffset", 0, 20, -1, 0)
+
+	submit := xform.InputSubmit("Create Map")
+	submit.AddEventListener("click", false, func(e dom.Event) {
+
+	})
+
+	enabler(dungeons, dungeonCount)
+	enabler(waterLakes, waterLakeRarity)
+	enabler(lavaLakes, lavaLakeRarity)
+
+	xjs.AppendChildren(d,
+		xform.Label("Sea Level", "sea"), seaLevel, rangeWatch(seaLevel), xdom.Br(),
+		xform.Label("Caves", "caves"), caves, xdom.Br(),
+		xform.Label("Strongholds", "strongholds"), strongholds, xdom.Br(),
+		xform.Label("Villages", "villages"), villages, xdom.Br(),
+		xform.Label("Mineshafts", "mineshafts"), mineshafts, xdom.Br(),
+		xform.Label("Temples", "temples"), temples, xdom.Br(),
+		xform.Label("Ocean Monuments", "oceanMonuments"), oceanMonuments, xdom.Br(),
+		xform.Label("Ravines", "ravines"), ravines, xdom.Br(),
+		xform.Label("Dungeons", "dungeons"), dungeons, xdom.Br(),
+		xform.Label("Dungeon Count", "dungeonCount"), dungeonCount, rangeWatch(dungeonCount), xdom.Br(),
+		xform.Label("Water Lakes", "waterLakes"), waterLakes, xdom.Br(),
+		xform.Label("Water Lake Rarity", "waterLakeRarity"), waterLakeRarity, rangeWatch(waterLakeRarity), xdom.Br(),
+		xform.Label("Lava Lakes", "lavaLakes"), lavaLakes, xdom.Br(),
+		xform.Label("Lava Lake Rarity", "lavaLakeRarity"), lavaLakeRarity, rangeWatch(lavaLakeRarity), xdom.Br(),
+		xform.Label("Biomes", "biomes"), biome, xdom.Br(),
+		xform.Label("Biome Size", "biomeSize"), biomeSize, xdom.Br(),
+		xform.Label("River Size", "riverSize"), riverSize, xdom.Br(),
+		xdom.Br(),
+		xjs.AppendChildren(xdom.Table(),
+			xjs.AppendChildren(xdom.Tr(),
+				xjs.AppendChildren(xdom.Td(),
+					xform.Label("Dirt Spawn Size", "dirtSpawnSize"), dirtSpawnSize, rangeWatch(dirtSpawnSize), xdom.Br(),
+					xform.Label("Dirt Spawn Tries", "dirtSpawnTries"), dirtSpawnTries, rangeWatch(dirtSpawnTries), xdom.Br(),
+					xform.Label("Dirt Spawn Min Height", "dirtMinHeight"), dirtMinHeight, rangeWatch(dirtMinHeight), xdom.Br(),
+					xform.Label("Dirt Spawn Max Height", "dirtMaxHeight"), dirtMaxHeight, rangeWatch(dirtMaxHeight), xdom.Br(),
+				),
+				xjs.AppendChildren(xdom.Td(),
+					xform.Label("Gravel Spawn Size", "gravelSpawnSize"), gravelSpawnSize, rangeWatch(gravelSpawnSize), xdom.Br(),
+					xform.Label("Gravel Spawn Tries", "gravelSpawnTries"), gravelSpawnTries, rangeWatch(gravelSpawnTries), xdom.Br(),
+					xform.Label("Gravel Spawn Min Height", "gravelMinHeight"), gravelMinHeight, rangeWatch(gravelMinHeight), xdom.Br(),
+					xform.Label("Gravel Spawn Max Height", "gravelMaxHeight"), gravelMaxHeight, rangeWatch(gravelMaxHeight), xdom.Br(),
+				),
+			),
+			xjs.AppendChildren(xdom.Tr(),
+				xjs.AppendChildren(xdom.Td(),
+					xform.Label("Granite Spawn Size", "graniteSpawnSize"), graniteSpawnSize, rangeWatch(graniteSpawnSize), xdom.Br(),
+					xform.Label("Granite Spawn Tries", "graniteSpawnTries"), graniteSpawnTries, rangeWatch(graniteSpawnTries), xdom.Br(),
+					xform.Label("Granite Spawn Min Height", "graniteMinHeight"), graniteMinHeight, rangeWatch(graniteMinHeight), xdom.Br(),
+					xform.Label("Granite Spawn Max Height", "graniteMaxHeight"), graniteMaxHeight, rangeWatch(graniteMaxHeight), xdom.Br(),
+				),
+				xjs.AppendChildren(xdom.Td(),
+					xform.Label("Diorite Spawn Size", "dioriteSpawnSize"), dioriteSpawnSize, rangeWatch(dioriteSpawnSize), xdom.Br(),
+					xform.Label("Diorite Spawn Tries", "dioriteSpawnTries"), dioriteSpawnTries, rangeWatch(dioriteSpawnTries), xdom.Br(),
+					xform.Label("Diorite Spawn Min Height", "dioriteMinHeight"), dioriteMinHeight, rangeWatch(dioriteMinHeight), xdom.Br(),
+					xform.Label("Diorite Spawn Max Height", "dioriteMaxHeight"), dioriteMaxHeight, rangeWatch(dioriteMaxHeight), xdom.Br(),
+				),
+			),
+			xjs.AppendChildren(xdom.Tr(),
+				xjs.AppendChildren(xdom.Td(),
+					xform.Label("Andesite Spawn Size", "andesiteSpawnSize"), andesiteSpawnSize, rangeWatch(andesiteSpawnSize), xdom.Br(),
+					xform.Label("Andesite Spawn Tries", "andesiteSpawnTries"), andesiteSpawnTries, rangeWatch(andesiteSpawnTries), xdom.Br(),
+					xform.Label("Andesite Spawn Min Height", "andesiteMinHeight"), andesiteMinHeight, rangeWatch(andesiteMinHeight), xdom.Br(),
+					xform.Label("Andesite Spawn Max Height", "andesiteMaxHeight"), andesiteMaxHeight, rangeWatch(andesiteMaxHeight), xdom.Br(),
+				),
+				xjs.AppendChildren(xdom.Td(),
+					xform.Label("Coal Ore Spawn Size", "coalOreSpawnSize"), coalOreSpawnSize, rangeWatch(coalOreSpawnSize), xdom.Br(),
+					xform.Label("Coal Ore Spawn Tries", "coalOreSpawnTries"), coalOreSpawnTries, rangeWatch(coalOreSpawnTries), xdom.Br(),
+					xform.Label("Coal Ore Spawn Min Height", "coalOreMinHeight"), coalOreMinHeight, rangeWatch(coalOreMinHeight), xdom.Br(),
+					xform.Label("Coal Ore Spawn Max Height", "coalOreMaxHeight"), coalOreMaxHeight, rangeWatch(coalOreMaxHeight), xdom.Br(),
+				),
+			),
+			xjs.AppendChildren(xdom.Tr(),
+				xjs.AppendChildren(xdom.Td(),
+					xform.Label("Iron Ore Spawn Size", "ironOreSpawnSize"), ironOreSpawnSize, rangeWatch(ironOreSpawnSize), xdom.Br(),
+					xform.Label("Iron Ore Spawn Tries", "ironOreSpawnTries"), ironOreSpawnTries, rangeWatch(ironOreSpawnTries), xdom.Br(),
+					xform.Label("Iron Ore Spawn Min Height", "ironOreMinHeight"), ironOreMinHeight, rangeWatch(ironOreMinHeight), xdom.Br(),
+					xform.Label("Iron Ore Spawn Max Height", "ironOreMaxHeight"), ironOreMaxHeight, rangeWatch(ironOreMaxHeight), xdom.Br(),
+				),
+				xjs.AppendChildren(xdom.Td(),
+					xform.Label("Gold Ore Spawn Size", "goldOreSpawnSize"), goldOreSpawnSize, rangeWatch(goldOreSpawnSize), xdom.Br(),
+					xform.Label("Gold Ore Spawn Tries", "goldOreSpawnTries"), goldOreSpawnTries, rangeWatch(goldOreSpawnTries), xdom.Br(),
+					xform.Label("Gold Ore Spawn Min Height", "goldOreMinHeight"), goldOreMinHeight, rangeWatch(goldOreMinHeight), xdom.Br(),
+					xform.Label("Gold Ore Spawn Max Height", "goldOreMaxHeight"), goldOreMaxHeight, rangeWatch(goldOreMaxHeight), xdom.Br(),
+				),
+			),
+			xjs.AppendChildren(xdom.Tr(),
+				xjs.AppendChildren(xdom.Td(),
+					xform.Label("Redstone Ore Spawn Size", "redstoneOreSpawnSize"), redstoneOreSpawnSize, rangeWatch(redstoneOreSpawnSize), xdom.Br(),
+					xform.Label("Redstone Ore Spawn Tries", "redstoneOreSpawnTries"), redstoneOreSpawnTries, rangeWatch(redstoneOreSpawnTries), xdom.Br(),
+					xform.Label("Redstone Ore Spawn Min Height", "redstoneOreMinHeight"), redstoneOreMinHeight, rangeWatch(redstoneOreMinHeight), xdom.Br(),
+					xform.Label("Redstone Ore Spawn Max Height", "redstoneOreMaxHeight"), redstoneOreMaxHeight, rangeWatch(redstoneOreMaxHeight), xdom.Br(),
+				),
+				xjs.AppendChildren(xdom.Td(),
+					xform.Label("Diamond Ore Spawn Size", "diamondOreSpawnSize"), diamondOreSpawnSize, rangeWatch(diamondOreSpawnSize), xdom.Br(),
+					xform.Label("Diamond Ore Spawn Tries", "diamondOreSpawnTries"), diamondOreSpawnTries, rangeWatch(diamondOreSpawnTries), xdom.Br(),
+					xform.Label("Diamond Ore Spawn Min Height", "diamondOreMinHeight"), diamondOreMinHeight, rangeWatch(diamondOreMinHeight), xdom.Br(),
+					xform.Label("Diamond Ore Spawn Max Height", "diamondOreMaxHeight"), diamondOreMaxHeight, rangeWatch(diamondOreMaxHeight), xdom.Br(),
+				),
+			),
+			xjs.AppendChildren(xdom.Tr(),
+				xjs.AppendChildren(xdom.Td(),
+					xform.Label("Lapis Lazuli Ore Spawn Size", "lapisLazuliOreSpawnSize"), lapisLazuliOreSpawnSize, rangeWatch(lapisLazuliOreSpawnSize), xdom.Br(),
+					xform.Label("Lapis Lazuli Ore Spawn Tries", "lapisLazuliOreSpawnTries"), lapisLazuliOreSpawnTries, rangeWatch(lapisLazuliOreSpawnTries), xdom.Br(),
+					xform.Label("Lapis Lazuli Ore Centre Height", "lapisLazuliOreCentreHeight"), lapisLazuliOreCentreHeight, rangeWatch(lapisLazuliOreCentreHeight), xdom.Br(),
+					xform.Label("Lapis Lazuli Ore Spread Height", "lapisLazuliOreSpreadHeight"), lapisLazuliOreSpreadHeight, rangeWatch(lapisLazuliOreSpreadHeight), xdom.Br(),
+				),
+			),
+		),
+		xform.Label("Main Noise Scale X", "mainNoiseScaleX"), mainNoiseScaleX, rangeWatch(mainNoiseScaleX), xdom.Br(),
+		xform.Label("Main Noise Scale Y", "mainNoiseScaleY"), mainNoiseScaleY, rangeWatch(mainNoiseScaleY), xdom.Br(),
+		xform.Label("Main Noise Scale Z", "mainNoiseScaleZ"), mainNoiseScaleZ, rangeWatch(mainNoiseScaleZ), xdom.Br(),
+		xform.Label("Depth Noise Scale X", "depthNoiseScaleX"), depthNoiseScaleX, rangeWatch(depthNoiseScaleX), xdom.Br(),
+		xform.Label("Depth Noise Scale Z", "depthNoiseScaleZ"), depthNoiseScaleZ, rangeWatch(depthNoiseScaleZ), xdom.Br(),
+		xform.Label("Depth Noise Exponent", "depthNoiseExponent"), depthNoiseExponent, rangeWatch(depthNoiseExponent), xdom.Br(),
+		xform.Label("Depth Base Size", "depthBaseSize"), depthBaseSize, rangeWatch(depthBaseSize), xdom.Br(),
+		xform.Label("Coordinate Scale", "coordinateScale"), coordinateScale, rangeWatch(coordinateScale), xdom.Br(),
+		xform.Label("Height Scale", "heightScale"), heightScale, rangeWatch(heightScale), xdom.Br(),
+		xform.Label("Height Stretch", "heightStretch"), heightStretch, rangeWatch(heightStretch), xdom.Br(),
+		xform.Label("Upper Limit Scale", "upperLimitScale"), upperLimitScale, rangeWatch(upperLimitScale), xdom.Br(),
+		xform.Label("Lower Limit Scale", "lowerLimitScale"), lowerLimitScale, rangeWatch(lowerLimitScale), xdom.Br(),
+		xform.Label("Biome Depth Weight", "biomeDepthWeight"), biomeDepthWeight, rangeWatch(biomeDepthWeight), xdom.Br(),
+		xform.Label("Biome Depth Offset", "biomeDepthOffset"), biomeDepthOffset, rangeWatch(biomeDepthOffset), xdom.Br(),
+		xform.Label("Biome Scale Weight", "biomeDepthWeight"), biomeScaleWeight, rangeWatch(biomeScaleWeight), xdom.Br(),
+		xform.Label("Biome Scale Offset", "biomeDepthOffset"), biomeScaleOffset, rangeWatch(biomeScaleOffset), xdom.Br(),
+		submit,
+	)
+
 	return func(c dom.Element) {
 		c.AppendChild(d)
 	}
