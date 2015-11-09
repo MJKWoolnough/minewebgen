@@ -163,11 +163,10 @@ func createMapMode(mode int, o *overlay.Overlay, dataParser func() (data.Default
 		go func() {
 			err = RPC.CreateDefaultMap(data)
 			if err != nil {
-				xjs.Alert("Error parsing values: %s", err)
+				xjs.Alert("Error creating map: %s", err)
 				return
 			}
 			o.Close()
-
 		}()
 	})
 	return func(c dom.Element) {
@@ -205,7 +204,7 @@ func createSuperFlatMap(o *overlay.Overlay, dataParser func() (data.DefaultMap, 
 				GeneratorSettings: gs.Value,
 			})
 			if err != nil {
-				xjs.Alert("Error parsing values: %s", err)
+				xjs.Alert("Error creating map: %s", err)
 				return
 			}
 			o.Close()
@@ -376,7 +375,117 @@ func createCustomisedMap(o *overlay.Overlay, dataParser func() (data.DefaultMap,
 
 	submit := xform.InputSubmit("Create Map")
 	submit.AddEventListener("click", false, func(e dom.Event) {
+		d, err := dataParser()
+		if err != nil {
+			xjs.Alert("Error parsing values: %s", err)
+			return
+		}
+		e.PreventDefault()
+		cd := data.CustomMap{
+			DefaultMap: d,
+		}
+		cd.GeneratorSettings.SeaLevel = uint8(seaLevel.ValueAsNumber)
+		cd.GeneratorSettings.Caves = caves.Checked
+		cd.GeneratorSettings.Strongholds = strongholds.Checked
+		cd.GeneratorSettings.Villages = villages.Checked
+		cd.GeneratorSettings.Mineshafts = mineshafts.Checked
+		cd.GeneratorSettings.Temples = temples.Checked
+		cd.GeneratorSettings.OceanMonuments = oceanMonuments.Checked
+		cd.GeneratorSettings.Ravines = ravines.Checked
+		cd.GeneratorSettings.Dungeons = dungeons.Checked
+		cd.GeneratorSettings.DungeonChance = uint8(dungeonCount.ValueAsNumber)
+		cd.GeneratorSettings.WaterLake = waterLakes.Checked
+		cd.GeneratorSettings.WaterLakeChance = uint8(waterLakeRarity.ValueAsNumber)
+		cd.GeneratorSettings.LaveLake = lavaLakes.Checked
+		cd.GeneratorSettings.LavaLakeChance = uint8(lavaLakeRarity.ValueAsNumber)
+		b, err := strconv.Atoi(biome.Value)
+		if err != nil {
+			b = -1
+		}
+		cd.GeneratorSettings.Biome = int16(b)
 
+		cd.GeneratorSettings.BiomeSize = uint8(biomeSize.ValueAsNumber)
+		cd.GeneratorSettings.RiverSize = uint8(riverSize.ValueAsNumber)
+
+		cd.GeneratorSettings.DirtSize = uint8(dirtSpawnSize.ValueAsNumber)
+		cd.GeneratorSettings.DirtTries = uint8(dirtSpawnTries.ValueAsNumber)
+		cd.GeneratorSettings.DirtMinHeight = uint8(dirtMinHeight.ValueAsNumber)
+		cd.GeneratorSettings.DirtMaxHeight = uint8(dirtMaxHeight.ValueAsNumber)
+
+		cd.GeneratorSettings.GravelSize = uint8(gravelSpawnSize.ValueAsNumber)
+		cd.GeneratorSettings.GravelTries = uint8(gravelSpawnTries.ValueAsNumber)
+		cd.GeneratorSettings.GravelMinHeight = uint8(gravelMinHeight.ValueAsNumber)
+		cd.GeneratorSettings.GravelMaxHeight = uint8(gravelMaxHeight.ValueAsNumber)
+
+		cd.GeneratorSettings.GraniteSize = uint8(graniteSpawnSize.ValueAsNumber)
+		cd.GeneratorSettings.GraniteTries = uint8(graniteSpawnTries.ValueAsNumber)
+		cd.GeneratorSettings.GraniteMinHeight = uint8(graniteMinHeight.ValueAsNumber)
+		cd.GeneratorSettings.GraniteMaxHeight = uint8(graniteMaxHeight.ValueAsNumber)
+
+		cd.GeneratorSettings.DiortiteSize = uint8(dioriteSpawnSize.ValueAsNumber)
+		cd.GeneratorSettings.DiortiteTries = uint8(dioriteSpawnTries.ValueAsNumber)
+		cd.GeneratorSettings.DiortiteMinHeight = uint8(dioriteMinHeight.ValueAsNumber)
+		cd.GeneratorSettings.DiortiteMaxHeight = uint8(dioriteMaxHeight.ValueAsNumber)
+
+		cd.GeneratorSettings.AndesiteSize = uint8(andesiteSpawnSize.ValueAsNumber)
+		cd.GeneratorSettings.AndesiteTries = uint8(andesiteSpawnTries.ValueAsNumber)
+		cd.GeneratorSettings.AndesiteMinHeight = uint8(andesiteMinHeight.ValueAsNumber)
+		cd.GeneratorSettings.AndesiteMaxHeight = uint8(andesiteMaxHeight.ValueAsNumber)
+
+		cd.GeneratorSettings.CoalSize = uint8(coalOreSpawnSize.ValueAsNumber)
+		cd.GeneratorSettings.CoalTries = uint8(coalOreSpawnTries.ValueAsNumber)
+		cd.GeneratorSettings.CoalMinHeight = uint8(coalOreMinHeight.ValueAsNumber)
+		cd.GeneratorSettings.CoalMaxHeight = uint8(coalOreMaxHeight.ValueAsNumber)
+
+		cd.GeneratorSettings.IronSize = uint8(ironOreSpawnSize.ValueAsNumber)
+		cd.GeneratorSettings.IronTries = uint8(ironOreSpawnTries.ValueAsNumber)
+		cd.GeneratorSettings.IronMinHeight = uint8(ironOreMinHeight.ValueAsNumber)
+		cd.GeneratorSettings.IronMaxHeight = uint8(ironOreMaxHeight.ValueAsNumber)
+
+		cd.GeneratorSettings.GoldSize = uint8(goldOreSpawnSize.ValueAsNumber)
+		cd.GeneratorSettings.GoldTries = uint8(goldOreSpawnTries.ValueAsNumber)
+		cd.GeneratorSettings.GoldMinHeight = uint8(goldOreMinHeight.ValueAsNumber)
+		cd.GeneratorSettings.GoldMaxHeight = uint8(goldOreMaxHeight.ValueAsNumber)
+
+		cd.GeneratorSettings.RedstoneSize = uint8(redstoneOreSpawnSize.ValueAsNumber)
+		cd.GeneratorSettings.RedstoneTries = uint8(redstoneOreSpawnTries.ValueAsNumber)
+		cd.GeneratorSettings.RedstoneMinHeight = uint8(redstoneOreMinHeight.ValueAsNumber)
+		cd.GeneratorSettings.RedstoneMaxHeight = uint8(redstoneOreMaxHeight.ValueAsNumber)
+
+		cd.GeneratorSettings.DiamondSize = uint8(diamondOreSpawnSize.ValueAsNumber)
+		cd.GeneratorSettings.DiamondTries = uint8(diamondOreSpawnTries.ValueAsNumber)
+		cd.GeneratorSettings.DiamondMinHeight = uint8(diamondOreMinHeight.ValueAsNumber)
+		cd.GeneratorSettings.DiamondMaxHeight = uint8(diamondOreMaxHeight.ValueAsNumber)
+
+		cd.GeneratorSettings.LapisSize = uint8(lapisLazuliOreSpawnSize.ValueAsNumber)
+		cd.GeneratorSettings.LapisTries = uint8(lapisLazuliOreSpawnTries.ValueAsNumber)
+		cd.GeneratorSettings.LapisCenterHeight = uint8(lapisLazuliOreCentreHeight.ValueAsNumber)
+		cd.GeneratorSettings.LapisSpread = uint8(lapisLazuliOreSpreadHeight.ValueAsNumber)
+
+		cd.GeneratorSettings.MainNoiseScaleX = mainNoiseScaleX.ValueAsNumber
+		cd.GeneratorSettings.MainNoiseScaleY = mainNoiseScaleY.ValueAsNumber
+		cd.GeneratorSettings.MainNoiseScaleZ = mainNoiseScaleZ.ValueAsNumber
+		cd.GeneratorSettings.DepthNoiseScaleX = depthNoiseScaleX.ValueAsNumber
+		cd.GeneratorSettings.DepthNoiseScaleZ = depthNoiseScaleZ.ValueAsNumber
+		cd.GeneratorSettings.DepthNoiseScaleExponent = depthNoiseExponent.ValueAsNumber
+		cd.GeneratorSettings.BaseSize = depthBaseSize.ValueAsNumber
+		cd.GeneratorSettings.CoordinateScale = coordinateScale.ValueAsNumber
+		cd.GeneratorSettings.HeightScale = heightScale.ValueAsNumber
+		cd.GeneratorSettings.HeightStretch = heightStretch.ValueAsNumber
+		cd.GeneratorSettings.UpperLimitScale = upperLimitScale.ValueAsNumber
+		cd.GeneratorSettings.LowerLimitScale = lowerLimitScale.ValueAsNumber
+		cd.GeneratorSettings.BiomeDepthWeight = biomeDepthWeight.ValueAsNumber
+		cd.GeneratorSettings.BiomeDepthOffset = biomeDepthOffset.ValueAsNumber
+		cd.GeneratorSettings.BiomeScaleWeight = biomeScaleWeight.ValueAsNumber
+		cd.GeneratorSettings.BiomeScaleOffset = biomeScaleOffset.ValueAsNumber
+		go func() {
+			err = RPC.CreateCustomMap(cd)
+			if err != nil {
+				xjs.Alert("Error creating map: %s", err)
+				return
+			}
+			o.Close()
+		}()
 	})
 
 	enabler(dungeons, dungeonCount)
