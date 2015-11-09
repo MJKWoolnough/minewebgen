@@ -16,9 +16,28 @@ import (
 func mapsTab(c dom.Element) {
 	xjs.RemoveChildren(c)
 	c.AppendChild(xjs.SetInnerText(xdom.H2(), "Maps"))
-	ns := xdom.Button()
-	c.AppendChild(xjs.SetInnerText(ns, "New Map"))
-	ns.AddEventListener("click", false, WrapEvent(newMap, c))
+	nm := xdom.Button()
+	c.AppendChild(xjs.SetInnerText(nm, "New Map"))
+	nm.AddEventListener("click", false, func(dom.Event) {
+		d := xdom.Div()
+		o := overlay.New(d)
+		o.OnClose(func() {
+			go mapsTab(c)
+		})
+		xjs.AppendChildren(d,
+			xjs.SetInnerText(xdom.H1(), "New Map"),
+			tabs.New([]tabs.Tab{
+				{"Create", createMap(o)},
+				{"Upload/Download", func(c dom.Element) {
+					c.AppendChild(transferFile("Map", "Upload/Download", 1, o))
+				}},
+				{"Generate", func(c dom.Element) {
+					c.AppendChild(transferFile("Map", "Generate", 2, o))
+				}},
+			}),
+		)
+		xjs.Body().AppendChild(o)
+	})
 	m, err := RPC.MapList()
 	if err != nil {
 		c.AppendChild(xjs.SetInnerText(xdom.Div(), err.Error()))
@@ -52,8 +71,10 @@ func mapsTab(c dom.Element) {
 	c.AppendChild(t)
 }
 
-func newMap(c ...dom.Element) {
+func createMap(o *overlay.Overlay) func(dom.Element) {
+	return func(c dom.Element) {
 
+	}
 }
 
 func mapGeneral(m data.Map) func(dom.Element) {
