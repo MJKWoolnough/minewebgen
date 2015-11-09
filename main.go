@@ -50,8 +50,8 @@ func main() {
 		}
 		signal.Stop(sc)
 		close(sc)
-		l.Close()
 		close(cc)
+		l.Close()
 	}()
 
 	err = http.Serve(l, nil)
