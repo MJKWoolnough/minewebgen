@@ -83,22 +83,21 @@ type CustomMap struct {
 		LapisTries              uint8   `json:"lapisCount"`
 		LapisCenterHeight       uint8   `json:"lapisCenterHeight"`
 		LapisSpread             uint8   `json:"lapisSpread"`
-		MainNoiseScaleX         float32 `json:"mainNoiseScaleX"`
-		MainNoiseScaleY         float32 `json:"mainNoiseScaleY"`
-		MainNoiseScaleZ         float32 `json:"mainNoiseScaleZ"`
-		DepthNoiseScaleX        float32 `json:"depthNoiseScaleX"`
-		DepthNoiseScaleY        float32 `json:"depthNoiseScaleY"`
-		DepthNoiseScaleZ        float32 `json:"depthNoiseScaleZ"`
-		DepthNoiseScaleExponent float32 `json:"depthNoiseScaleExponent"`
-		BaseSize                float32 `json:"baseSize"`
-		CoordinateScale         float32 `json:"coordinateScale"`
-		HeightScale             float32 `json:"heightScale"`
-		HeightStretch           float32 `json:"stretchY"`
-		UpperLimitScale         float32 `json:"upperLimitScale"`
-		LowerLimitScale         float32 `json:"lowerLimitScale"`
-		BiomeDepthWeight        float32 `json:"biomeDepthWeight"`
-		BiomeScaleOffset        float32 `json:"biomeDepthOffset"`
-		BiomeScaleWeight        float32 `json:"biomeScaleWeight"`
-		BiomeDepthOffset        float32 `json:"biomeScaleOffset"`
+		MainNoiseScaleX         float64 `json:"mainNoiseScaleX"`
+		MainNoiseScaleY         float64 `json:"mainNoiseScaleY"`
+		MainNoiseScaleZ         float64 `json:"mainNoiseScaleZ"`
+		DepthNoiseScaleX        float64 `json:"depthNoiseScaleX"`
+		DepthNoiseScaleZ        float64 `json:"depthNoiseScaleZ"`
+		DepthNoiseScaleExponent float64 `json:"depthNoiseScaleExponent"`
+		BaseSize                float64 `json:"baseSize"`
+		CoordinateScale         float64 `json:"coordinateScale"`
+		HeightScale             float64 `json:"heightScale"`
+		HeightStretch           float64 `json:"stretchY"`
+		UpperLimitScale         float64 `json:"upperLimitScale"`
+		LowerLimitScale         float64 `json:"lowerLimitScale"`
+		BiomeDepthWeight        float64 `json:"biomeDepthWeight"`
+		BiomeScaleOffset        float64 `json:"biomeDepthOffset"`
+		BiomeScaleWeight        float64 `json:"biomeScaleWeight"`
+		BiomeDepthOffset        float64 `json:"biomeScaleOffset"`
 	}
 }
