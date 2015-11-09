@@ -103,31 +103,49 @@ func (r RPC) SetMap(m data.Map, _ *struct{}) error {
 }
 
 func (r RPC) SetServerMap(ids [2]int, _ *struct{}) error {
-	ser := r.c.Server(ids[0])
-	if ser == nil {
-		return ErrUnknownServer
+	if ids[0] != -1 {
+		serv := r.c.Server(ids[0])
+		if serv == nil {
+			return ErrUnknownServer
+		}
+		serv.RLock()
+		mID := serv.Map
+		serv.RUnlock()
+		if mID == ids[1] {
+			return nil
+		}
+		if mID != -1 {
+			mp := r.c.Map(mID)
+			if mp != nil {
+				mp.Lock()
+				mp.Server = -1
+				mp.Unlock()
+			}
+		}
+		serv.Lock()
+		serv.Map = ids[1]
+		serv.Unlock()
 	}
-	ser.Lock()
-	defer ser.Unlock()
-	if ser.State != data.StateStopped {
-		return ErrServerRunning
-	}
-	if ser.Map != ids[1] {
-		m := r.c.Map(ser.Map)
-		m.Lock()
-		m.Server = -1
-		m.Unlock()
-	}
-	if ids[1] >= 0 {
-		m := r.c.Map(ids[1])
-		if m == nil {
+	if ids[1] != -1 {
+		mp := r.c.Map(ids[1])
+		if mp == nil {
 			return ErrUnknownMap
 		}
-		m.Lock()
-		m.Server = ids[0]
-		m.Unlock()
+		mp.RLock()
+		sID := mp.Server
+		mp.RUnlock()
+		if sID != -1 {
+			serv := r.c.Server(sID)
+			if serv != nil {
+				serv.Lock()
+				serv.Map = -1
+				serv.Unlock()
+			}
+		}
+		mp.Lock()
+		mp.Server = ids[0]
+		mp.Unlock()
 	}
-	ser.Map = ids[1]
 	go r.c.Save()
 	return nil
 }
