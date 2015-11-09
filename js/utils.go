@@ -51,7 +51,7 @@ func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom
 	url := xform.InputRadio("url", "switch", true)
 	upload := xform.InputRadio("upload", "switch", false)
 	fileI := xform.InputUpload("")
-	urlI := xform.InputText("", "")
+	urlI := xform.InputURL("", "")
 	s := xform.InputSubmit(method)
 
 	name.Required = true
@@ -267,7 +267,7 @@ func editProperties(c dom.Element, name string, id int, rpcGet func(int) (map[st
 	for i, prop := range props {
 		k := xform.InputSizeable("", prop[0])
 		v := xform.InputSizeable("", prop[1])
-		toggle := xform.InputButton("-")
+		toggle := xform.InputButton("", "-")
 		toggle.AddEventListener("click", false, toggleFunc(k, v, toggle))
 		propE[i][0] = k
 		propE[i][1] = v
@@ -280,8 +280,8 @@ func editProperties(c dom.Element, name string, id int, rpcGet func(int) (map[st
 		)
 	}
 
-	add := xform.InputButton("Add")
-	submit := xform.InputButton("Save")
+	add := xform.InputButton("", "Add")
+	submit := xform.InputButton("", "Save")
 	fs := xjs.AppendChildren(xdom.Fieldset(), xjs.AppendChildren(
 		df,
 		xjs.SetInnerText(xdom.Legend(), name+" Properties"),
@@ -292,7 +292,7 @@ func editProperties(c dom.Element, name string, id int, rpcGet func(int) (map[st
 	add.AddEventListener("click", false, func(dom.Event) {
 		k := xform.InputSizeable("", "")
 		v := xform.InputSizeable("", "")
-		toggle := xform.InputButton("-")
+		toggle := xform.InputButton("", "-")
 		toggle.AddEventListener("click", false, toggleFunc(k, v, toggle))
 		propE = append(propE, [2]*dom.HTMLSpanElement{k, v})
 		fs.InsertBefore(toggle, add)
