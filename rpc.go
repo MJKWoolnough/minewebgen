@@ -98,8 +98,8 @@ func (r RPC) SetMap(m data.Map, _ *struct{}) error {
 	mp.RLock()
 	sID := mp.Server
 	mp.RUnlock()
-	if mp.Server != -1 {
-		ser := r.c.Server(mp.Server)
+	if sID != -1 {
+		ser := r.c.Server(sID)
 		if ser != nil {
 			ser.RLock()
 			s := ser.State
