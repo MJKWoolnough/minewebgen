@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"math/rand"
 	"os"
 	"path"
 	"strconv"
 
+	"github.com/MJKWoolnough/memio"
 	"github.com/MJKWoolnough/minecraft"
 	"github.com/MJKWoolnough/minewebgen/internal/data"
 )
@@ -241,6 +243,10 @@ func (r RPC) RemoveMap(id int, _ *struct{}) error {
 }
 
 func (r RPC) CreateDefaultMap(data data.DefaultMap, _ *struct{}) error {
+	return r.createMap(data, "")
+}
+
+func (r RPC) createMap(data data.DefaultMap, generatorSettings string) error {
 	if data.Seed == 0 {
 		data.Seed = rand.Int63()
 	}
@@ -278,6 +284,9 @@ func (r RPC) CreateDefaultMap(data data.DefaultMap, _ *struct{}) error {
 	l.Seed(data.Seed)
 	l.AllowCommands(data.Cheats)
 	l.MapFeatures(data.Structures)
+	if generatorSettings != "" {
+		l.GeneratorOptions(generatorSettings)
+	}
 	l.Save()
 	f, err := os.Create(path.Join(m.Path))
 	if err != nil {
@@ -292,6 +301,9 @@ func (r RPC) CreateDefaultMap(data data.DefaultMap, _ *struct{}) error {
 	}
 	if data.GameMode == 3 {
 		ms["hardcore"] = "true"
+	}
+	if generatorSettings != "" {
+		ms["generator-settings"] = generatorSettings
 	}
 	ms["level-seed"] = strconv.FormatInt(data.Seed, 10)
 	ms["motd"] = data.Name
@@ -317,11 +329,17 @@ func (r RPC) CreateDefaultMap(data data.DefaultMap, _ *struct{}) error {
 }
 
 func (r RPC) CreateSuperflatMap(data data.SuperFlatMap, _ *struct{}) error {
-	return errors.New("unimplemented")
+	return r.createMap(data.DefaultMap, data.GeneratorSettings)
 }
 
 func (r RPC) CreateCustomMap(data data.CustomMap, _ *struct{}) error {
-	return errors.New("unimplemented")
+	// check settings for validity
+	var buf []byte
+	err := json.NewEncoder(memio.Create(&buf)).Encode(data.GeneratorSettings)
+	if err != nil {
+		return err
+	}
+	return r.createMap(data.DefaultMap, string(buf))
 }
 
 // Errors
