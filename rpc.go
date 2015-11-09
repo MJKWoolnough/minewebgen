@@ -104,7 +104,7 @@ func (r RPC) SetMap(m data.Map, _ *struct{}) error {
 			ser.RLock()
 			s := ser.State
 			ser.RUnlock()
-			if s != StateStopped {
+			if s != data.StateStopped {
 				return ErrServerRunning
 			}
 		}
