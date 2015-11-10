@@ -75,13 +75,16 @@ func (t Transfer) server(r *byteio.StickyReader, w *byteio.StickyWriter, f *os.F
 	}
 	serverProperties := DefaultServerSettings()
 	ps, err := os.OpenFile(path.Join(d, "properties.server"), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
-	if err != nil {
-		return err
-	}
 	defer ps.Close()
-	err = serverProperties.WriteTo(ps)
 	if err != nil {
-		return err
+		if !os.IsExist(err) {
+			return err
+		}
+	} else {
+		err = serverProperties.WriteTo(ps)
+		if err != nil {
+			return err
+		}
 	}
 	done = true
 	return nil
