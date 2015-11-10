@@ -98,6 +98,10 @@ func serverGeneral(s data.Server) func(dom.Element) {
 			sel := xform.SelectBox("map", opts...)
 			submit := xform.InputSubmit("Set")
 			submit.AddEventListener("click", false, func(e dom.Event) {
+				if s.State != data.StateStopped {
+					xjs.Alert("Cannot modify these settings while the server is running")
+					return
+				}
 				if name.Value == "" {
 					return
 				}

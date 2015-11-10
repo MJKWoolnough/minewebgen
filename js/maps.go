@@ -631,10 +631,12 @@ func mapGeneral(m data.Map) func(dom.Element) {
 				Value:    "-1",
 				Selected: m.Server == -1,
 			}
+			var cs data.Server
 			for i, s := range servers {
 				n := s.Name
-				if s.Map == -1 {
+				if s.Map != -1 {
 					if s.ID == m.Server {
+						cs = s
 						n += "* - " + n
 					} else {
 						n += "! - " + n
@@ -651,6 +653,10 @@ func mapGeneral(m data.Map) func(dom.Element) {
 			sel := xform.SelectBox("server", opts...)
 			submit := xform.InputSubmit("Set")
 			submit.AddEventListener("click", false, func(e dom.Event) {
+				if cs.State != data.StateStopped {
+					xjs.Alert("Cannot modify these settings while connected server is running.")
+					return
+				}
 				if name.Value == "" {
 					return
 				}
