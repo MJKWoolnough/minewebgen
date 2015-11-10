@@ -11,7 +11,7 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-var transferFuncs = [...]func(Transfer, *byteio.StickyReader, *byteio.StickyWriter, *os.File) error{
+var transferFuncs = [...]func(Transfer, *byteio.StickyReader, *byteio.StickyWriter, *os.File, int64) error{
 	Transfer.server,
 	Transfer.maps,
 	Transfer.generate,
@@ -55,7 +55,7 @@ func (t Transfer) handle(r *byteio.StickyReader, w *byteio.StickyWriter) error {
 	if err != nil {
 		return err
 	}
-
+	var size int64
 	if transferType&1 == 0 {
 		url := readString(r)
 		if r.Err != nil {
@@ -66,7 +66,7 @@ func (t Transfer) handle(r *byteio.StickyReader, w *byteio.StickyWriter) error {
 			return err
 		}
 		w.WriteInt32(int32(resp.ContentLength))
-		_, err = io.Copy(f, downloadProgress{resp.Body, w})
+		size, err = io.Copy(f, downloadProgress{resp.Body, w})
 		resp.Body.Close()
 		if err != nil {
 			return err
@@ -77,13 +77,14 @@ func (t Transfer) handle(r *byteio.StickyReader, w *byteio.StickyWriter) error {
 		if err != nil {
 			return err
 		}
+		size = int64(length)
 	}
 	f.Seek(0, 0)
 	name := readString(r)
 	if r.Err != nil {
 		return r.Err
 	}
-	err = transferFuncs[transferType>>1](t, name, r, w, f)
+	err = transferFuncs[transferType>>1](t, name, r, w, f, size)
 	if err != nil {
 		return err
 	}

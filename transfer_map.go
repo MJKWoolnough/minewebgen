@@ -8,12 +8,8 @@ import (
 	"github.com/MJKWoolnough/byteio"
 )
 
-func (t Transfer) maps(name string, r *byteio.StickyReader, w *byteio.StickyWriter, f *os.File) error {
-	stat, err := f.Stat()
-	if err != nil {
-		return err
-	}
-	zr, err := zip.NewReader(f, stat.Size())
+func (t Transfer) maps(name string, r *byteio.StickyReader, w *byteio.StickyWriter, f *os.File, size int64) error {
+	zr, err := zip.NewReader(f, size)
 	if err != nil {
 		return err
 	}
