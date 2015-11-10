@@ -87,10 +87,6 @@ func (t Transfer) handle(r *byteio.StickyReader, w *byteio.StickyWriter) error {
 	return nil
 }
 
-func (Transfer) maps(*byteio.StickyReader, *byteio.StickyWriter, *os.File) error {
-	return nil
-}
-
 func (Transfer) generate(*byteio.StickyReader, *byteio.StickyWriter, *os.File) error {
 	return nil
 }
