@@ -175,10 +175,17 @@ func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom
 
 			WriteString(&w, name.Value)
 
+			canvas := xdom.Canvas()
+			ctx := canvas.GetContext2d()
+
 			for {
 				switch v := r.ReadUint8(); v {
 				case 0:
-					xjs.SetInnerText(status, ReadError(&r).Error())
+					if r.Err != nil {
+						xjs.SetInnerText(status, r.Err.Error())
+					} else {
+						xjs.SetInnerText(status, ReadError(&r).Error())
+					}
 					return
 				case 1:
 					jars := make([]xform.Option, r.ReadInt16())
@@ -220,7 +227,22 @@ func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom
 					w.WriteInt16(<-c)
 					close(c)
 				case 2:
-					// generate map
+					w := r.ReadInt32()
+					h := r.ReadInt32()
+					canvas.Width = int(w)
+					canvas.Height = int(h)
+					d.AppendChild(canvas)
+				case 3:
+					xjs.SetInnerText(status, readString(r))
+				case 4:
+					x := r.ReadInt32()
+					y := r.ReadInt32()
+					red := r.ReadUint8()
+					green := r.ReadUint8()
+					blue := r.ReadUint8()
+					alpha := r.ReadUint8()
+					ctx.FillStyle = "rgba(" + strconv.Itoa(int(red)) + ", " + strconv.Itoa(int(green)) + ", " + strconv.Itoa(int(blue)) + ", " + strconv.FormatFloat(float64(alpha)/255, 'f', -1, 32) + ")"
+					ctx.FillRect(int(x), int(y), 1, 1)
 				case 255:
 					uo.Close()
 					return
