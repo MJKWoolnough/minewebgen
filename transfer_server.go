@@ -32,6 +32,7 @@ func (t Transfer) server(r *byteio.StickyReader, w *byteio.StickyWriter, f *os.F
 		if !done {
 			t.c.RemoveServer(s.ID)
 		}
+		go t.c.Save()
 	}()
 	if s == nil {
 		return errors.New("error creating server")
@@ -82,7 +83,6 @@ func (t Transfer) server(r *byteio.StickyReader, w *byteio.StickyWriter, f *os.F
 	if err != nil {
 		return err
 	}
-	go t.c.Save()
 	done = true
 	return nil
 }
