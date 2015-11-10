@@ -79,14 +79,14 @@ func (t Transfer) handle(r *byteio.StickyReader, w *byteio.StickyWriter) error {
 		}
 	}
 	f.Seek(0, 0)
-	err = transferFuncs[transferType>>1](t, r, w, f)
+	name := readString(r)
+	if r.Err != nil {
+		return r.Err
+	}
+	err = transferFuncs[transferType>>1](t, name, r, w, f)
 	if err != nil {
 		return err
 	}
 	w.WriteUint8(255)
-	return nil
-}
-
-func (Transfer) generate(*byteio.StickyReader, *byteio.StickyWriter, *os.File) error {
 	return nil
 }

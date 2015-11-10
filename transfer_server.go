@@ -10,7 +10,7 @@ import (
 	"github.com/MJKWoolnough/byteio"
 )
 
-func (t Transfer) server(r *byteio.StickyReader, w *byteio.StickyWriter, f *os.File) error {
+func (t Transfer) server(name string, r *byteio.StickyReader, w *byteio.StickyWriter, f *os.File) error {
 	stat, err := f.Stat()
 	if err != nil {
 		return err
@@ -18,10 +18,6 @@ func (t Transfer) server(r *byteio.StickyReader, w *byteio.StickyWriter, f *os.F
 	zr, err := zip.NewReader(f, stat.Size())
 	if err != nil {
 		return err
-	}
-	name := readString(r)
-	if r.Err != nil {
-		return r.Err
 	}
 	jars := make([]*zip.File, 0, 16)
 	for _, file := range zr.File {
