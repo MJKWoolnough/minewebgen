@@ -20,6 +20,9 @@ func (t Transfer) server(r *byteio.StickyReader, w *byteio.StickyWriter, f *os.F
 		return err
 	}
 	name := readString(r)
+	if r.Err != nil {
+		return r.Err
+	}
 	jars := make([]*zip.File, 0, 16)
 	for _, file := range zr.File {
 		if strings.HasSuffix(file.Name, ".jar") {
