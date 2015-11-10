@@ -11,7 +11,7 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-var transferFuncs = [...]func(Transfer, *byteio.StickyReader, *byteio.StickyWriter, *os.File, int64) error{
+var transferFuncs = [...]func(Transfer, string, *byteio.StickyReader, *byteio.StickyWriter, *os.File, int64) error{
 	Transfer.server,
 	Transfer.maps,
 	Transfer.generate,
