@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"path"
@@ -382,6 +383,46 @@ func (r RPC) CreateCustomMap(data data.CustomMap, _ *struct{}) error {
 		return err
 	}
 	return r.createMap(data.DefaultMap, string(buf))
+}
+
+func (r RPC) ServerEULA(id int, d *string) error {
+	s := r.c.Server(id)
+	if s == nil {
+		return ErrUnknownServer
+	}
+	s.RLock()
+	p := s.Path
+	s.RUnlock()
+	f, err := os.Open(path.Join(p, "eula.txt"))
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		} else {
+			return nil
+		}
+	}
+	b, err := ioutil.ReadAll(f)
+	if err != nil {
+		return err
+	}
+	*d = string(b)
+	return nil
+}
+
+func (r RPC) SetServerEULA(d data.ServerEULA, _ *struct{}) error {
+	s := r.c.Server(d.ID)
+	if s == nil {
+		return ErrUnknownServer
+	}
+	s.RLock()
+	p := s.Path
+	s.RUnlock()
+	f, err := os.Create(path.Join(p, "eula.txt"))
+	if err != nil {
+		return err
+	}
+	_, err = f.WriteString(d.EULA)
+	return err
 }
 
 // Errors
