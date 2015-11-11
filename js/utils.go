@@ -233,7 +233,7 @@ func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom
 					canvas.Height = int(h)
 					d.AppendChild(canvas)
 				case 3:
-					xjs.SetInnerText(status, readString(r))
+					xjs.SetInnerText(status, ReadString(&r))
 				case 4:
 					x := r.ReadInt32()
 					y := r.ReadInt32()
