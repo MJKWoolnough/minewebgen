@@ -139,3 +139,17 @@ func (j jRPC) CreateSuperflatMap(d data.SuperFlatMap) error {
 func (j jRPC) CreateCustomMap(d data.CustomMap) error {
 	return j.rpc.Call("RPC.CreateCustomMap", d, es)
 }
+
+func (j jRPC) ServerEULA(id int) (string, error) {
+	var d string
+	err := j.rpc.Call("RPC.ServerEULA", id, &d)
+	return d, err
+}
+
+func (j jRPC) SetServerEULA(id int, d string) error {
+	type data struct {
+		ID   int
+		Data string
+	}
+	return j.rpc.Call("SetRPC.ServerEULA", data{id, d}, es)
+}

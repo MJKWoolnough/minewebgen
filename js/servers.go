@@ -45,11 +45,19 @@ func serversTab(c dom.Element) {
 		name.AddEventListener("click", false, func() func(dom.Event) {
 			s := serv
 			return func(dom.Event) {
-				o := overlay.New(xjs.AppendChildren(xdom.Div(), tabs.New([]tabs.Tab{
+				d, err := RPC.ServerEULA(s.ID)
+				if err != nil {
+					d = ""
+				}
+				t := []tabs.Tab{
 					{"General", serverGeneral(s)},
 					{"Properties", serverProperties(s)},
 					{"Console", serverConsole(s)},
-				})))
+				}
+				if d != "" {
+					t = append(t, tabs.Tab{"EULA", serverEULA(s, d)})
+				}
+				o := overlay.New(xjs.AppendChildren(xdom.Div(), tabs.New(t)))
 				o.OnClose(func() {
 					go serversTab(c)
 				})
@@ -175,5 +183,34 @@ func serverProperties(s data.Server) func(dom.Element) {
 func serverConsole(s data.Server) func(dom.Element) {
 	return func(c dom.Element) {
 		c.AppendChild(xjs.SetInnerText(xdom.Div(), "Console"))
+	}
+}
+
+func serverEULA(s data.Server, d string) func(dom.Element) {
+	return func(c dom.Element) {
+		t := xform.TextArea("eula", d)
+		submit := xform.InputSubmit("Save")
+		c.AppendChild(xjs.AppendChildren(xdom.Form(), xjs.AppendChildren(xdom.Fieldset(),
+			xjs.SetInnerText(xdom.Label(), "End User License Agreement"),
+			xform.Label("EULA", "eula"), t, xdom.Br(),
+			submit,
+		)))
+		submit.AddEventListener("click", false, func(e dom.Event) {
+			e.PreventDefault()
+			submit.Disabled = true
+			go func() {
+				err := RPC.SetServerEULA(s.ID, t.Value)
+				if err != nil {
+					xjs.Alert("Error setting server EULA: %s", err)
+					return
+				}
+				span := xdom.Span()
+				span.Style().Set("color", "#f00")
+				c.AppendChild(xjs.SetInnerText(span, "Saved!"))
+				time.Sleep(5 * time.Second)
+				c.RemoveChild(span)
+				submit.Disabled = false
+			}()
+		})
 	}
 }

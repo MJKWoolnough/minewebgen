@@ -5,6 +5,11 @@ type ServerProperties struct {
 	Properties map[string]string
 }
 
+type ServerEULA struct {
+	ID   int
+	EULA string
+}
+
 type DefaultMap struct {
 	Mode               int
 	Name               string
