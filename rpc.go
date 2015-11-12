@@ -185,8 +185,8 @@ func (r RPC) ServerProperties(id int, sp *ServerProperties) error {
 		return ErrUnknownServer
 	}
 	s.RLock()
+	defer s.RUnlock()
 	p := s.Path
-	s.RUnlock()
 	f, err := os.Open(path.Join(p, "properties.server"))
 	if err != nil {
 		return err
@@ -201,9 +201,9 @@ func (r RPC) SetServerProperties(sp data.ServerProperties, _ *struct{}) error {
 	if s == nil {
 		return ErrUnknownServer
 	}
-	s.RLock()
+	s.Lock()
+	defer s.Unlock()
 	p := s.Path
-	s.RUnlock()
 	f, err := os.Create(path.Join(p, "properties.server"))
 	if err != nil {
 		return err
@@ -218,8 +218,8 @@ func (r RPC) MapProperties(id int, mp *ServerProperties) error {
 		return ErrUnknownMap
 	}
 	m.RLock()
+	defer m.RUnlock()
 	p := m.Path
-	m.RUnlock()
 	f, err := os.Open(path.Join(p, "properties.map"))
 	if err != nil {
 		return err
@@ -234,9 +234,9 @@ func (r RPC) SetMapProperties(sp data.ServerProperties, _ *struct{}) error {
 	if m == nil {
 		return ErrUnknownMap
 	}
-	m.RLock()
+	m.Lock()
+	defer m.Unlock()
 	p := m.Path
-	m.RUnlock()
 	f, err := os.Create(path.Join(p, "properties.map"))
 	if err != nil {
 		return err
