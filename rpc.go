@@ -44,7 +44,9 @@ func (r RPC) ServerList(_ struct{}, list *[]data.Server) error {
 	defer r.c.Servers.mu.RUnlock()
 	*list = make([]data.Server, len(r.c.Servers.List))
 	for n, s := range r.c.Servers.List {
+		s.RLock()
 		(*list)[n] = *s
+		s.RUnlock()
 	}
 	return nil
 }
@@ -54,7 +56,9 @@ func (r RPC) MapList(_ struct{}, list *[]data.Map) error {
 	defer r.c.Maps.mu.RUnlock()
 	*list = make([]data.Map, len(r.c.Maps.List))
 	for n, m := range r.c.Maps.List {
+		m.RLock()
 		(*list)[n] = *m
+		m.RUnlock()
 	}
 	return nil
 }
