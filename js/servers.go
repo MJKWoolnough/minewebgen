@@ -84,7 +84,7 @@ func serversTab(c dom.Element) {
 					time.Sleep(time.Second * 5)
 					serversTab(c)
 				}
-			})
+			}())
 		case data.StateRunning:
 			xjs.SetInnerText(startStop, "Stop")
 			startStop.AddEventListener("click", false, func() func(dom.Event) {
@@ -100,7 +100,7 @@ func serversTab(c dom.Element) {
 					time.Sleep(time.Second * 5)
 					serversTab(c)
 				}
-			})
+			}())
 		default:
 			startStop.Disabled = true
 			xjs.SetInnerText(startStop, "N/A")
