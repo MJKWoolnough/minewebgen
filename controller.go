@@ -16,7 +16,7 @@ import (
 type runner struct {
 	s        *data.Server
 	shutdown chan struct{}
-	*io.PipeWriter
+	io.Writer
 }
 
 type Controller struct {
@@ -110,9 +110,7 @@ var stopCmd = []byte{'\r', '\n', 's', 't', 'o', 'p', '\r', '\n'}
 func (c *Controller) run(r *runner) {
 	cmd := exec.Command("java", append(r.s.Args, "-jar", "server.jar", "nogui")...)
 	cmd.Dir = r.s.Path
-	pr, pw := io.Pipe()
-	cmd.Stdin = pr
-	r.PipeWriter = pw
+	r.Writer, _ = cmd.StdinPipe()
 	err := cmd.Start()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -133,7 +131,7 @@ func (c *Controller) run(r *runner) {
 				t := time.NewTimer(time.Second * 10)
 				defer t.Stop()
 				for i := 0; i < 6; i++ {
-					pw.Write(stopCmd)
+					r.Write(stopCmd)
 					select {
 					case <-died:
 						return
