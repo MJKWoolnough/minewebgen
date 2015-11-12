@@ -22,6 +22,8 @@ func (s State) String() string {
 		return "Running"
 	case StateStopping:
 		return "Stopping"
+	case StateBusy:
+		return "Busy"
 	}
 	return ""
 }
