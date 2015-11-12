@@ -29,8 +29,8 @@ func main() {
 	rpc.RegisterName("RPC", RPC{NewController(c)})
 
 	t := Transfer{c}
-	http.Handle("/download/server/", c.Servers.Download)
-	http.Handle("/download/maps/", c.Maps.Download)
+	http.Handle("/download/server/", http.HandlerFunc(c.Servers.Download))
+	http.Handle("/download/maps/", http.HandlerFunc(c.Maps.Download))
 	http.Handle("/transfer", websocket.Handler(t.Websocket))
 	http.Handle("/rpc", websocket.Handler(func(conn *websocket.Conn) { jsonrpc.ServeConn(conn) }))
 	http.Handle("/", http.FileServer(dir))

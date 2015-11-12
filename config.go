@@ -49,13 +49,13 @@ func archive(w io.Writer, p string) {
 	paths := []string{p}
 	for len(paths) > 0 {
 		p := paths[0]
-		paths[1:]
+		paths = paths[1:]
 		d, err := os.Open(p)
 		if err != nil {
 			continue
 		}
 		for {
-			fs, err := d.Readdir(n)
+			fs, err := d.Readdir(1)
 			if err != nil {
 				break
 			}
@@ -77,7 +77,7 @@ func archive(w io.Writer, p string) {
 			if err != nil {
 				continue
 			}
-			_, err = io.Copy(zw, f)
+			_, err = io.Copy(fw, f)
 			f.Close()
 			if err != nil {
 				return
@@ -134,7 +134,7 @@ func (s *Servers) Download(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := strconv.Atoi(b[:len(b)-4])
 	if err != nil {
-		http.Error(w, "not found", http.StatuNotFound)
+		http.Error(w, "not found", http.StatusNotFound)
 	}
 	serv := s.Get(id)
 	if serv == nil {
@@ -193,7 +193,7 @@ func (m *Maps) Download(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := strconv.Atoi(b[:len(b)-4])
 	if err != nil {
-		http.Error(w, "not found", http.StatuNotFound)
+		http.Error(w, "not found", http.StatusNotFound)
 	}
 	mp := m.Get(id)
 	if mp == nil {
