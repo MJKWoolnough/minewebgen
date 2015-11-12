@@ -15,7 +15,7 @@ import (
 )
 
 type RPC struct {
-	c *Config
+	*Controller
 }
 
 func (r RPC) Settings(_ struct{}, settings *data.ServerSettings) error {

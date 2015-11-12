@@ -106,3 +106,8 @@ type CustomMap struct {
 		BiomeDepthOffset        float64 `json:"biomeScaleOffset"`
 	}
 }
+
+type WriteCmd struct {
+	ID  int
+	Cmd string
+}

@@ -26,7 +26,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	rpc.RegisterName("RPC", RPC{c})
+	rpc.RegisterName("RPC", RPC{NewController(c)})
 
 	t := Transfer{c}
 	http.Handle("/transfer", websocket.Handler(t.Websocket))

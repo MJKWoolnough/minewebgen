@@ -26,7 +26,14 @@ type Controller struct {
 	running map[int]*runner
 }
 
-func (c Controller) Run(id int) error {
+func NewController(c *Config) *Controller {
+	return &Controller{
+		c:       c,
+		running: make(map[int]*runner),
+	}
+}
+
+func (c Controller) StartServer(id int, _ *struct{}) error {
 	s := c.c.Server(id)
 	if s == nil {
 		return ErrUnknownServer
@@ -92,7 +99,7 @@ func (c Controller) Run(id int) error {
 	return nil
 }
 
-func (c *Controller) Stop(id int) error {
+func (c *Controller) StopServer(id int, _ *struct{}) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	r, ok := c.running[id]
@@ -154,16 +161,16 @@ func (c *Controller) run(r *runner) {
 	r.s.Unlock()
 }
 
-func (c *Controller) WriteCmd(id int, cmd string) error {
+func (c *Controller) WriteCmd(d data.WriteCmd, _ *struct{}) error {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	r, ok := c.running[id]
+	r, ok := c.running[d.ID]
 	if !ok {
 		return ErrUnknownServer
 	}
-	toWrite := make([]byte, 0, len(cmd)+4)
+	toWrite := make([]byte, 0, len(d.Cmd)+4)
 	toWrite = append(toWrite, '\r', '\n')
-	toWrite = append(toWrite, cmd...)
+	toWrite = append(toWrite, d.Cmd...)
 	toWrite = append(toWrite, '\r', '\n')
 	_, err := r.Write(toWrite)
 	return err
