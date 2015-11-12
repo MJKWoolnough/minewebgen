@@ -9,6 +9,7 @@ const (
 	StateStarting
 	StateRunning
 	StateStopping
+	StateBusy
 )
 
 func (s State) String() string {

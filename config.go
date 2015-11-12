@@ -1,7 +1,10 @@
 package main
 
 import (
+	"archive/zip"
 	"encoding/json"
+	"io"
+	"net/http"
 	"os"
 	"path"
 	"strconv"
@@ -38,6 +41,49 @@ func freePath(p string) string {
 		}
 	}
 	return ""
+}
+
+func archive(w io.Writer, p string) {
+	zw := zip.NewWriter(w)
+	defer zw.Close()
+	paths := []string{p}
+	for len(paths) > 0 {
+		p := paths[0]
+		paths[1:]
+		d, err := os.Open(p)
+		if err != nil {
+			continue
+		}
+		for {
+			fs, err := d.Readdir(n)
+			if err != nil {
+				break
+			}
+			fname := path.Join(p, fs[0].Name())
+			if fs[0].IsDir() {
+				paths = append(paths, fname)
+				continue
+			}
+			if fs[0].Mode()&os.ModeSymlink > 0 {
+				continue
+			}
+			fh, _ := zip.FileInfoHeader(fs[0])
+			fh.Name = fname
+			fw, err := zw.CreateHeader(fh)
+			if err != nil {
+				return
+			}
+			f, err := os.Open(fname)
+			if err != nil {
+				continue
+			}
+			_, err = io.Copy(zw, f)
+			f.Close()
+			if err != nil {
+				return
+			}
+		}
+	}
 }
 
 func (s *Servers) New(path string) *data.Server {
@@ -80,6 +126,35 @@ func (s *Servers) Remove(id int) {
 	}
 }
 
+func (s *Servers) Download(w http.ResponseWriter, r *http.Request) {
+	b := path.Base(r.URL.Path)
+	if len(b) < 5 || b[len(b)-4:] != ".zip" {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	id, err := strconv.Atoi(b[:len(b)-4])
+	if err != nil {
+		http.Error(w, "not found", http.StatuNotFound)
+	}
+	serv := s.Get(id)
+	if serv == nil {
+		http.Error(w, "unknown sevrer", http.StatusNotFound)
+		return
+	}
+	serv.Lock()
+	defer serv.Unlock()
+	if serv.State != data.StateStopped {
+		http.Error(w, "server running", http.StatusBadGateway)
+		return
+	}
+	serv.State = data.StateBusy
+	serv.Unlock()
+	w.Header().Set("Content-Type", "application/zip")
+	archive(w, serv.Path)
+	serv.Lock()
+	serv.State = data.StateStopped
+}
+
 type Maps struct {
 	mu   sync.RWMutex
 	List []*data.Map
@@ -108,6 +183,35 @@ func (m *Maps) Remove(id int) {
 			break
 		}
 	}
+}
+
+func (m *Maps) Download(w http.ResponseWriter, r *http.Request) {
+	b := path.Base(r.URL.Path)
+	if len(b) < 5 || b[len(b)-4:] != ".zip" {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	id, err := strconv.Atoi(b[:len(b)-4])
+	if err != nil {
+		http.Error(w, "not found", http.StatuNotFound)
+	}
+	mp := m.Get(id)
+	if mp == nil {
+		http.Error(w, "unknown map", http.StatusNotFound)
+		return
+	}
+	mp.Lock()
+	defer mp.Unlock()
+	if mp.Server != -1 {
+		http.Error(w, "server attached", http.StatusBadGateway)
+		return
+	}
+	mp.Server = -2
+	mp.Unlock()
+	w.Header().Set("Content-Type", "application/zip")
+	archive(w, mp.Path)
+	mp.Lock()
+	mp.Server = -1
 }
 
 func (m *Maps) New(path string) *data.Map {
