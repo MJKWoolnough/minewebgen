@@ -61,6 +61,7 @@ func mapsTab(c dom.Element) {
 				o := overlay.New(xjs.AppendChildren(xdom.Div(), tabs.New([]tabs.Tab{
 					{"General", mapGeneral(m)},
 					{"Properties", mapProperties(m)},
+					{"Misc.", mapMisc(m)},
 				})))
 				o.OnClose(func() {
 					mapsTab(c)
@@ -706,5 +707,12 @@ func mapGeneral(m data.Map) func(dom.Element) {
 func mapProperties(m data.Map) func(dom.Element) {
 	return func(c dom.Element) {
 		go editProperties(c, "Map", m.ID, RPC.MapProperties, RPC.SetMapProperties)
+	}
+}
+
+func mapMisc(m data.Map) func(dom.Element) {
+	return func(c dom.Element) {
+		// Download Map
+		// Delete Map
 	}
 }

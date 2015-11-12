@@ -59,6 +59,7 @@ func serversTab(c dom.Element) {
 				if d != "" {
 					t = append(t, tabs.Tab{"EULA", serverEULA(s, d)})
 				}
+				t = append(t, tabs.Tab{"Misc.", serverMisc(s)})
 				o := overlay.New(xjs.AppendChildren(xdom.Div(), tabs.New(t)))
 				o.OnClose(func() {
 					go serversTab(c)
@@ -257,5 +258,12 @@ func serverEULA(s data.Server, d string) func(dom.Element) {
 				submit.Disabled = false
 			}()
 		})
+	}
+}
+
+func serverMisc(s data.Server) func(dom.Element) {
+	return func(c dom.Element) {
+		// Delete Server
+		// Download Server
 	}
 }
