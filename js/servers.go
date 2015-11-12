@@ -38,6 +38,8 @@ func serversTab(c dom.Element) {
 	}
 	t := xjs.AppendChildren(xdom.Table(), xjs.AppendChildren(xdom.Thead(), xjs.AppendChildren(xdom.Tr(),
 		xjs.SetInnerText(xdom.Th(), "Server Name"),
+		xjs.SetInnerText(xdom.Th(), "Status"),
+		xjs.SetInnerText(xdom.Th(), "Controls"),
 	)))
 
 	for _, serv := range s {
@@ -64,7 +66,50 @@ func serversTab(c dom.Element) {
 				xjs.Body().AppendChild(o)
 			}
 		}())
-		t.AppendChild(xjs.AppendChildren(xdom.Tr(), name))
+		startStop := xdom.Button()
+		switch serv.State {
+		case data.StateStopped:
+			xjs.SetInnerText(startStop, "Start")
+			startStop.AddEventListener("click", false, func() func(dom.Event) {
+				id := serv.ID
+				return func(dom.Event) {
+					startStop.Disabled = true
+					err := RPC.StartServer(id)
+					if err != nil {
+						xjs.Alert("Error starting server: %s", err)
+						startStop.Disabled = false
+						return
+					}
+					time.Sleep(time.Second * 5)
+					serversTab(c)
+				}
+			})
+		case data.StateRunning:
+			xjs.SetInnerText(startStop, "Stop")
+			startStop.AddEventListener("click", false, func() func(dom.Event) {
+				id := serv.ID
+				return func(dom.Event) {
+					startStop.Disabled = true
+					err := RPC.StopServer(id)
+					if err != nil {
+						xjs.Alert("Error stopping server: %s", err)
+						startStop.Disabled = false
+						return
+					}
+					time.Sleep(time.Second * 5)
+					serversTab(c)
+				}
+			})
+		default:
+			startStop.Disabled = true
+			xjs.SetInnerText(startStop, "N/A")
+		}
+		t.AppendChild(xjs.AppendChildren(xdom.Tr(),
+			name,
+			xjs.SetInnerText(xdom.Td(), serv.State.String()),
+			xjs.AppendChildren(xdom.Td(), startStop),
+		))
+
 	}
 	c.AppendChild(t)
 }
