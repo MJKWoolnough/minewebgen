@@ -344,6 +344,37 @@ func editProperties(c dom.Element, name string, id int, rpcGet func(int) (map[st
 
 	xjs.AppendChildren(c, xjs.AppendChildren(xdom.Form(), fs))
 }
+
+func misc(mType string, id int, o *overlay.Overlay, deleteFunc func(int) error) func(dom.Element) {
+	return func(c dom.Element) {
+		download := xdom.A()
+		download.Href = "http://" + js.Global.Get("location").Get("host").String() + "/download/" + mType + "/" + strconv.Itoa(id) + ".zip"
+		del := xdom.Button()
+		del.AddEventListener("click", false, func(dom.Event) {
+			if dom.GetWindow().Confirm("Are you sure?") {
+				err := deleteFunc(id)
+				if err != nil {
+					xjs.Alert("Error while deleting %s: %s", mType, err)
+				} else {
+					o.Close()
+				}
+			}
+		})
+		xjs.AppendChildren(c,
+			xjs.AppendChildren(xdom.Fieldset(), xjs.AppendChildren(
+				xjs.SetInnerText(xdom.Legend(), "Download"),
+				xjs.SetInnerText(xdom.Div(), "Click the following link to download the "+mType+" as a zip file."),
+				xjs.SetInnerText(download, download.Href),
+			)),
+			xjs.AppendChildren(xdom.Fieldset(), xjs.AppendChildren(
+				xjs.SetInnerText(xdom.Legend(), "Delete"),
+				xjs.SetInnerText(xdom.Div(), "The following button will permanently delete the "+mType+" (this cannot be undone)."),
+				xjs.SetInnerText(del, "Delete "+mType),
+			)),
+		)
+	}
+}
+
 func registerUpdateStopper(c dom.Element, updateStop chan struct{}) {
 	if c.ParentNode() != nil {
 		mutation.New(func(rs []*mutation.Record, o *mutation.Observer) {

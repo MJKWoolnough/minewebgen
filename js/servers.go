@@ -10,7 +10,6 @@ import (
 	"github.com/MJKWoolnough/gopherjs/xform"
 	"github.com/MJKWoolnough/gopherjs/xjs"
 	"github.com/MJKWoolnough/minewebgen/internal/data"
-	"github.com/gopherjs/gopherjs/js"
 	"honnef.co/go/js/dom"
 )
 
@@ -112,7 +111,7 @@ func ServersTab() func(dom.Element) {
 								}
 								div := xdom.Div()
 								o := overlay.New(div)
-								t = append(t, tabs.Tab{"Misc.", serverMisc(s.Server, o)})
+								t = append(t, tabs.Tab{"Misc.", misc("server", s.Server.ID, o, RPC.RemoveServer)})
 								div.AppendChild(tabs.New(t))
 								o.OnClose(func() {
 									go func() {
@@ -336,35 +335,5 @@ func serverEULA(s data.Server, d string) func(dom.Element) {
 				submit.Disabled = false
 			}()
 		})
-	}
-}
-
-func serverMisc(s data.Server, o *overlay.Overlay) func(dom.Element) {
-	return func(c dom.Element) {
-		download := xdom.A()
-		download.Href = "http://" + js.Global.Get("location").Get("host").String() + "/download/server/" + strconv.Itoa(s.ID) + ".zip"
-		del := xdom.Button()
-		del.AddEventListener("click", false, func(dom.Event) {
-			if dom.GetWindow().Confirm("Are you sure?") {
-				err := RPC.RemoveServer(s.ID)
-				if err != nil {
-					xjs.Alert("Error while deleting server: %s", err)
-				} else {
-					o.Close()
-				}
-			}
-		})
-		xjs.AppendChildren(c,
-			xjs.AppendChildren(xdom.Fieldset(), xjs.AppendChildren(
-				xjs.SetInnerText(xdom.Legend(), "Download"),
-				xjs.SetInnerText(xdom.Div(), "Click the following link to download the server as a zip file."),
-				xjs.SetInnerText(download, download.Href),
-			)),
-			xjs.AppendChildren(xdom.Fieldset(), xjs.AppendChildren(
-				xjs.SetInnerText(xdom.Legend(), "Delete"),
-				xjs.SetInnerText(xdom.Div(), "The following button will permanently delete the server (this cannot be undone)."),
-				xjs.SetInnerText(del, "Delete Server"),
-			)),
-		)
 	}
 }

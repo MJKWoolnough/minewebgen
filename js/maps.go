@@ -104,11 +104,13 @@ func MapsTab() func(dom.Element) {
 					name.AddEventListener("click", false, func() func(dom.Event) {
 						m := om
 						return func(dom.Event) {
-							o := overlay.New(xjs.AppendChildren(xdom.Div(), tabs.New([]tabs.Tab{
+							div := xdom.Div()
+							o := overlay.New(div)
+							div.AppendChild(tabs.New([]tabs.Tab{
 								{"General", mapGeneral(m.Map)},
 								{"Properties", mapProperties(m.Map)},
-								{"Misc.", mapMisc(m.Map)},
-							})))
+								{"Misc.", misc("map", m.Map.ID, o, RPC.RemoveMap)},
+							}))
 							o.OnClose(func() {
 								go func() {
 									forceUpdate <- struct{}{}
@@ -789,12 +791,5 @@ func mapGeneral(m data.Map) func(dom.Element) {
 func mapProperties(m data.Map) func(dom.Element) {
 	return func(c dom.Element) {
 		go editProperties(c, "Map", m.ID, RPC.MapProperties, RPC.SetMapProperties)
-	}
-}
-
-func mapMisc(m data.Map) func(dom.Element) {
-	return func(c dom.Element) {
-		// Download Map
-		// Delete Map
 	}
 }
