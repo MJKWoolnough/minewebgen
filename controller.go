@@ -24,6 +24,8 @@ type Controller struct {
 
 	mu      sync.RWMutex
 	running map[int]*runner
+
+	w sync.WaitGroup
 }
 
 func NewController(c *Config) *Controller {
@@ -111,10 +113,19 @@ func (c *Controller) StopServer(id int, _ *struct{}) error {
 	return nil
 }
 
+func (c *Controller) StopAll() {
+	for _, r := range c.running {
+		close(r.shutdown)
+	}
+	c.w.Wait()
+}
+
 var stopCmd = []byte{'\r', '\n', 's', 't', 'o', 'p', '\r', '\n'}
 
 // runs in its own goroutine
 func (c *Controller) run(r *runner) {
+	c.w.Add(1)
+	defer c.w.Done()
 	cmd := exec.Command("java", append(r.s.Args, "-jar", "server.jar", "nogui")...)
 	cmd.Dir = r.s.Path
 	r.Writer, _ = cmd.StdinPipe()

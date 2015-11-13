@@ -25,8 +25,8 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-
-	rpc.RegisterName("RPC", RPC{NewController(c)})
+	controller := NewController(c)
+	rpc.RegisterName("RPC", RPC{controller})
 
 	t := Transfer{c}
 	http.Handle("/download/server/", http.HandlerFunc(c.Servers.Download))
@@ -65,4 +65,5 @@ func main() {
 	}
 	<-cc
 	// Close all running minecraft servers before closing
+	controller.StopAll()
 }
