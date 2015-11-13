@@ -38,7 +38,6 @@ func ServersTab() func(dom.Element) {
 	noneTd := xdom.Td()
 	noneTd.ColSpan = 3
 	none := xjs.AppendChildren(xdom.Tr(), xjs.SetInnerText(noneTd, "No Servers Found"))
-	xjs.SetInnerText(none, "No Servers Found")
 	serverList := xjs.AppendChildren(xdom.Table(),
 		xjs.AppendChildren(xdom.Thead(), xjs.AppendChildren(xdom.Tr(),
 			xjs.SetInnerText(xdom.Th(), "Server Name"),
