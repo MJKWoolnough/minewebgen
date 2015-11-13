@@ -156,65 +156,6 @@ func MapsTab() func(dom.Element) {
 	}
 }
 
-func mapsTab(c dom.Element) {
-	xjs.RemoveChildren(c)
-	c.AppendChild(xjs.SetInnerText(xdom.H2(), "Maps"))
-	nm := xdom.Button()
-	c.AppendChild(xjs.SetInnerText(nm, "New Map"))
-	nm.AddEventListener("click", false, func(dom.Event) {
-		d := xdom.Div()
-		o := overlay.New(d)
-		o.OnClose(func() {
-			go mapsTab(c)
-		})
-		xjs.AppendChildren(d,
-			xjs.SetInnerText(xdom.H1(), "New Map"),
-			tabs.New([]tabs.Tab{
-				{"Create", createMap(o)},
-				{"Upload/Download", func(c dom.Element) {
-					c.AppendChild(transferFile("Map", "Upload/Download", 1, o))
-				}},
-				{"Generate", func(c dom.Element) {
-					c.AppendChild(transferFile("Map", "Generate", 2, o))
-				}},
-			}),
-		)
-		xjs.Body().AppendChild(o)
-	})
-	m, err := RPC.MapList()
-	if err != nil {
-		c.AppendChild(xjs.SetInnerText(xdom.Div(), err.Error()))
-		return
-	}
-	if len(m) == 0 {
-		c.AppendChild(xjs.SetInnerText(xdom.Div(), "No Maps"))
-		return
-	}
-	t := xjs.AppendChildren(xdom.Table(), xjs.AppendChildren(xdom.Thead(), xjs.AppendChildren(xdom.Tr(),
-		xjs.SetInnerText(xdom.Th(), "Map Name"),
-	)))
-
-	for _, mp := range m {
-		name := xjs.SetInnerText(xdom.Td(), mp.Name)
-		name.AddEventListener("click", false, func() func(dom.Event) {
-			m := mp
-			return func(dom.Event) {
-				o := overlay.New(xjs.AppendChildren(xdom.Div(), tabs.New([]tabs.Tab{
-					{"General", mapGeneral(m)},
-					{"Properties", mapProperties(m)},
-					{"Misc.", mapMisc(m)},
-				})))
-				o.OnClose(func() {
-					mapsTab(c)
-				})
-				xjs.Body().AppendChild(o)
-			}
-		}())
-		t.AppendChild(xjs.AppendChildren(xdom.Tr(), name))
-	}
-	c.AppendChild(t)
-}
-
 var gameModes = [...]string{"Survival", "Creative", "Adventure", "Hardcore", "Spectator"}
 
 func createMap(o *overlay.Overlay) func(dom.Element) {
