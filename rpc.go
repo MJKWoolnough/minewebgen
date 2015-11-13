@@ -335,7 +335,7 @@ func (r RPC) createMap(data data.DefaultMap, generatorSettings string) error {
 		l.GeneratorOptions(generatorSettings)
 	}
 	l.Save()
-	f, err := os.Create(path.Join(m.Path))
+	f, err := os.Create(path.Join(m.Path, "properties.map"))
 	if err != nil {
 		r.c.RemoveMap(m.ID)
 		return err
