@@ -315,7 +315,7 @@ func (r RPC) createMap(data data.DefaultMap, generatorSettings string) error {
 	}
 	l.GameMode(data.GameMode)
 	l.LevelName(data.Name)
-	l.LevelName(data.Name)
+	m.Name = data.Name
 	switch data.Mode {
 	case 0:
 		l.Generator(minecraft.DefaultGenerator)
