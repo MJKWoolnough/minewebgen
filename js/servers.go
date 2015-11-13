@@ -47,24 +47,26 @@ func serversTab(c dom.Element) {
 		name.AddEventListener("click", false, func() func(dom.Event) {
 			s := serv
 			return func(dom.Event) {
-				d, err := RPC.ServerEULA(s.ID)
-				if err != nil {
-					d = ""
-				}
-				t := []tabs.Tab{
-					{"General", serverGeneral(s)},
-					{"Properties", serverProperties(s)},
-					{"Console", serverConsole(s)},
-				}
-				if d != "" {
-					t = append(t, tabs.Tab{"EULA", serverEULA(s, d)})
-				}
-				t = append(t, tabs.Tab{"Misc.", serverMisc(s)})
-				o := overlay.New(xjs.AppendChildren(xdom.Div(), tabs.New(t)))
-				o.OnClose(func() {
-					go serversTab(c)
-				})
-				xjs.Body().AppendChild(o)
+				go func() {
+					d, err := RPC.ServerEULA(s.ID)
+					if err != nil {
+						d = ""
+					}
+					t := []tabs.Tab{
+						{"General", serverGeneral(s)},
+						{"Properties", serverProperties(s)},
+						{"Console", serverConsole(s)},
+					}
+					if d != "" {
+						t = append(t, tabs.Tab{"EULA", serverEULA(s, d)})
+					}
+					t = append(t, tabs.Tab{"Misc.", serverMisc(s)})
+					o := overlay.New(xjs.AppendChildren(xdom.Div(), tabs.New(t)))
+					o.OnClose(func() {
+						go serversTab(c)
+					})
+					xjs.Body().AppendChild(o)
+				}()
 			}
 		}())
 		startStop := xdom.Button()
