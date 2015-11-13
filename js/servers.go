@@ -150,19 +150,25 @@ func ServersTab() func(dom.Element) {
 						}
 					}())
 				}
-				xjs.SetInnerText(os.status, os.State.String())
-				xjs.SetInnerText(os.name, os.Name)
-				switch os.State {
-				case data.StateStopped:
-					xjs.SetInnerText(os.button, "Start")
-					os.button.Disabled = false
-				case data.StateRunning:
-					xjs.SetInnerText(os.button, "Stop")
-					os.button.Disabled = false
-				default:
-					xjs.SetInnerText(os.button, "N/A")
+				if os.Map >= 0 {
+					xjs.SetInnerText(os.status, os.State.String())
+					switch os.State {
+					case data.StateStopped:
+						xjs.SetInnerText(os.button, "Start")
+						os.button.Disabled = false
+					case data.StateRunning:
+						xjs.SetInnerText(os.button, "Stop")
+						os.button.Disabled = false
+					default:
+						xjs.SetInnerText(os.button, "N/A")
+						os.button.Disabled = true
+					}
+				} else {
+					xjs.SetInnerText(os.status, "No Map")
 					os.button.Disabled = true
+					xjs.SetInnerText(os.button, "N/A")
 				}
+				xjs.SetInnerText(os.name, os.Name)
 			}
 
 			for id, s := range servers {
