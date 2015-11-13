@@ -58,7 +58,6 @@ func ServersTab() func(dom.Element) {
 		updateStop := make(chan struct{})
 		registerUpdateStopper(c, updateStop)
 		for {
-			xjs.Alert("HERE")
 			servs, err := RPC.ServerList()
 			if err != nil {
 				xjs.Alert("Error getting server list: %s", err)
