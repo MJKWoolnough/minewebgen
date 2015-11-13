@@ -49,7 +49,7 @@ func main() {
 			body.AppendChild(xdom.H1())
 			SetTitle(title)
 			body.AppendChild(tabs.New([]tabs.Tab{
-				{"Servers", serversTab},
+				{"Servers", ServersTab()},
 				{"Maps", mapsTab},
 				{"Settings", settingsTab},
 			}))

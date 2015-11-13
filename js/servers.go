@@ -13,108 +13,177 @@ import (
 	"honnef.co/go/js/dom"
 )
 
-func serversTab(c dom.Element) {
-	xjs.RemoveChildren(c)
-	c.AppendChild(xjs.SetInnerText(xdom.H2(), "Servers"))
+type Server struct {
+	data.Server
+	row    dom.Node
+	name   *dom.HTMLTableCellElement
+	status *dom.HTMLTableCellElement
+	button *dom.HTMLButtonElement
+}
+
+func ServersTab() func(dom.Element) {
+	forceUpdate := make(chan struct{})
 	ns := xdom.Button()
-	c.AppendChild(xjs.SetInnerText(ns, "New Server"))
 	ns.AddEventListener("click", false, func(dom.Event) {
 		d := xdom.Div()
 		o := overlay.New(d)
 		d.AppendChild(transferFile("Server", "Upload/Download", 0, o))
 		o.OnClose(func() {
-			go serversTab(c)
+			go func() {
+				forceUpdate <- struct{}{}
+			}()
 		})
 		xjs.Body().AppendChild(o)
 	})
-	s, err := RPC.ServerList()
-	if err != nil {
-		c.AppendChild(xjs.SetInnerText(xdom.Div(), err.Error()))
-		return
-	}
-	if len(s) == 0 {
-		c.AppendChild(xjs.SetInnerText(xdom.Div(), "No Servers"))
-		return
-	}
-	t := xjs.AppendChildren(xdom.Table(), xjs.AppendChildren(xdom.Thead(), xjs.AppendChildren(xdom.Tr(),
-		xjs.SetInnerText(xdom.Th(), "Server Name"),
-		xjs.SetInnerText(xdom.Th(), "Status"),
-		xjs.SetInnerText(xdom.Th(), "Controls"),
-	)))
+	noneTd := xdom.Td()
+	noneTd.ColSpan = 3
+	none := xjs.AppendChildren(xdom.Tr(), xjs.SetInnerText(noneTd, "No Servers Found"))
+	xjs.SetInnerText(none, "No Servers Found")
+	serverList := xjs.AppendChildren(xdom.Table(),
+		xjs.AppendChildren(xdom.Thead(), xjs.AppendChildren(xdom.Tr(),
+			xjs.SetInnerText(xdom.Th(), "Server Name"),
+			xjs.SetInnerText(xdom.Th(), "Status"),
+			xjs.SetInnerText(xdom.Th(), "Controls"),
+		)),
+		none,
+	)
+	nodes := xjs.AppendChildren(xdom.Div(),
+		xjs.SetInnerText(xdom.H2(), "Servers"),
+		xjs.SetInnerText(ns, "New Server"),
+		serverList,
+	)
+	servers := make(map[int]*Server)
 
-	for _, serv := range s {
-		name := xjs.SetInnerText(xdom.Td(), serv.Name)
-		name.AddEventListener("click", false, func() func(dom.Event) {
-			s := serv
-			return func(dom.Event) {
-				go func() {
-					d, err := RPC.ServerEULA(s.ID)
-					if err != nil {
-						d = ""
-					}
-					t := []tabs.Tab{
-						{"General", serverGeneral(s)},
-						{"Properties", serverProperties(s)},
-						{"Console", serverConsole(s)},
-					}
-					if d != "" {
-						t = append(t, tabs.Tab{"EULA", serverEULA(s, d)})
-					}
-					t = append(t, tabs.Tab{"Misc.", serverMisc(s)})
-					o := overlay.New(xjs.AppendChildren(xdom.Div(), tabs.New(t)))
-					o.OnClose(func() {
-						go serversTab(c)
-					})
-					xjs.Body().AppendChild(o)
-				}()
+	return func(c dom.Element) {
+		c.AppendChild(nodes)
+		updateStop := make(chan struct{})
+		registerUpdateStopper(c, updateStop)
+		for {
+			xjs.Alert("HERE")
+			servs, err := RPC.ServerList()
+			if err != nil {
+				xjs.Alert("Error getting server list: %s", err)
+				return
 			}
-		}())
-		startStop := xdom.Button()
-		switch serv.State {
-		case data.StateStopped:
-			xjs.SetInnerText(startStop, "Start")
-			startStop.AddEventListener("click", false, func() func(dom.Event) {
-				id := serv.ID
-				return func(dom.Event) {
-					startStop.Disabled = true
-					err := RPC.StartServer(id)
-					if err != nil {
-						xjs.Alert("Error starting server: %s", err)
-						startStop.Disabled = false
-						return
-					}
-					time.Sleep(time.Second * 5)
-					serversTab(c)
-				}
-			}())
-		case data.StateRunning:
-			xjs.SetInnerText(startStop, "Stop")
-			startStop.AddEventListener("click", false, func() func(dom.Event) {
-				id := serv.ID
-				return func(dom.Event) {
-					startStop.Disabled = true
-					err := RPC.StopServer(id)
-					if err != nil {
-						xjs.Alert("Error stopping server: %s", err)
-						startStop.Disabled = false
-						return
-					}
-					time.Sleep(time.Second * 5)
-					serversTab(c)
-				}
-			}())
-		default:
-			startStop.Disabled = true
-			xjs.SetInnerText(startStop, "N/A")
-		}
-		t.AppendChild(xjs.AppendChildren(xdom.Tr(),
-			name,
-			xjs.SetInnerText(xdom.Td(), serv.State.String()),
-			xjs.AppendChildren(xdom.Td(), startStop),
-		))
 
+			if none.ParentNode() != nil {
+				serverList.RemoveChild(none)
+			}
+
+			for _, s := range servers {
+				s.ID = -1
+			}
+
+			for _, s := range servs {
+				os, ok := servers[s.ID]
+				if ok {
+					os.Server = s
+				} else {
+					name := xdom.Td()
+					status := xdom.Td()
+					startStop := xdom.Button()
+					os = &Server{
+						Server: s,
+						row: xjs.AppendChildren(xdom.Tr(),
+							name,
+							status,
+							xjs.AppendChildren(xdom.Td(), startStop),
+						),
+						name:   name,
+						status: status,
+						button: startStop,
+					}
+					servers[s.ID] = os
+					serverList.AppendChild(os.row)
+					name.AddEventListener("click", false, func() func(dom.Event) {
+						s := os
+						return func(dom.Event) {
+							go func() {
+								d, err := RPC.ServerEULA(s.ID)
+								if err != nil {
+									d = ""
+								}
+								t := []tabs.Tab{
+									{"General", serverGeneral(s.Server)},
+									{"Properties", serverProperties(s.Server)},
+									{"Console", serverConsole(s.Server)},
+								}
+								if d != "" {
+									t = append(t, tabs.Tab{"EULA", serverEULA(s.Server, d)})
+								}
+								t = append(t, tabs.Tab{"Misc.", serverMisc(s.Server)})
+								o := overlay.New(xjs.AppendChildren(xdom.Div(), tabs.New(t)))
+								o.OnClose(func() {
+									go func() {
+										forceUpdate <- struct{}{}
+									}()
+								})
+								xjs.Body().AppendChild(o)
+							}()
+
+						}
+					}())
+					startStop.AddEventListener("click", false, func() func(dom.Event) {
+						b := startStop
+						s := os
+						return func(dom.Event) {
+							go func() {
+								b.Disabled = true
+								switch s.State {
+								case data.StateStopped:
+									err := RPC.StartServer(s.ID)
+									if err != nil {
+										xjs.Alert("Error starting server: %s", err)
+										return
+									}
+								case data.StateRunning:
+									err := RPC.StopServer(s.ID)
+									if err != nil {
+										xjs.Alert("Error stopping server: %s", err)
+										return
+									}
+								default:
+									return
+								}
+								go func() {
+									forceUpdate <- struct{}{}
+								}()
+							}()
+						}
+					}())
+				}
+				xjs.SetInnerText(os.status, os.State.String())
+				xjs.SetInnerText(os.name, os.Name)
+				switch os.State {
+				case data.StateStopped:
+					xjs.SetInnerText(os.button, "Start")
+					os.button.Disabled = false
+				case data.StateRunning:
+					xjs.SetInnerText(os.button, "Stop")
+					os.button.Disabled = false
+				default:
+					xjs.SetInnerText(os.button, "N/A")
+					os.button.Disabled = true
+				}
+			}
+
+			for id, s := range servers {
+				if s.ID == -1 {
+					delete(servers, id)
+					serverList.RemoveChild(s.row)
+				}
+			}
+
+			if len(servers) == 0 {
+				serverList.AppendChild(none)
+			}
+
+			// Sleep until update
+			if !updateSleep(forceUpdate, updateStop) {
+				return
+			}
+		}
 	}
-	c.AppendChild(t)
 }
 
 func serverGeneral(s data.Server) func(dom.Element) {

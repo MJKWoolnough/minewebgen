@@ -10,6 +10,7 @@ import (
 
 	"github.com/MJKWoolnough/byteio"
 	"github.com/MJKWoolnough/gopherjs/files"
+	"github.com/MJKWoolnough/gopherjs/mutation"
 	"github.com/MJKWoolnough/gopherjs/overlay"
 	"github.com/MJKWoolnough/gopherjs/progress"
 	"github.com/MJKWoolnough/gopherjs/xdom"
@@ -348,4 +349,33 @@ func editProperties(c dom.Element, name string, id int, rpcGet func(int) (map[st
 	})
 
 	xjs.AppendChildren(c, xjs.AppendChildren(xdom.Form(), fs))
+}
+func registerUpdateStopper(c dom.Element, updateStop chan struct{}) {
+	if c.ParentNode() != nil {
+		mutation.New(func(rs []*mutation.Record, o *mutation.Observer) {
+			if len(rs) > 0 {
+				for _, r := range rs {
+					for _, n := range r.RemovedNodes() {
+						if c.IsEqualNode(n) {
+							o.Disconnect()
+							close(updateStop)
+							return
+						}
+					}
+				}
+			}
+		}).Observe(c.ParentNode(), mutation.ObserverInit{ChildList: true})
+	}
+}
+
+func updateSleep(forceUpdate, updateStop <-chan struct{}) bool {
+	t := time.NewTicker(time.Second * 30)
+	defer t.Stop()
+	select {
+	case <-updateStop:
+		return false
+	case <-forceUpdate:
+	case <-t.C:
+	}
+	return true
 }
