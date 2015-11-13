@@ -65,5 +65,5 @@ func main() {
 	}
 	<-cc
 	// Close all running minecraft servers before closing
-	controller.StopAll()
+	controller.StopAll(struct{}{}, nil)
 }

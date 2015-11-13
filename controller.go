@@ -113,11 +113,15 @@ func (c *Controller) StopServer(id int, _ *struct{}) error {
 	return nil
 }
 
-func (c *Controller) StopAll() {
-	for _, r := range c.running {
+func (c *Controller) StopAll(_ struct{}, _ *struct{}) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for id, r := range c.running {
 		close(r.shutdown)
+		delete(c.running, id)
 	}
 	c.w.Wait()
+	return nil
 }
 
 var stopCmd = []byte{'\r', '\n', 's', 't', 'o', 'p', '\r', '\n'}
