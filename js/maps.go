@@ -15,6 +15,147 @@ import (
 	"honnef.co/go/js/dom"
 )
 
+type Map struct {
+	data.Map
+	row    dom.Node
+	name   *dom.HTMLTableCellElement
+	status *dom.HTMLTableCellElement
+}
+
+func MapsTab() func(dom.Element) {
+	forceUpdate := make(chan struct{})
+	nm := xdom.Button()
+	nm.AddEventListener("click", false, func(dom.Event) {
+		d := xdom.Div()
+		o := overlay.New(d)
+		o.OnClose(func() {
+			go func() {
+				forceUpdate <- struct{}{}
+			}()
+		})
+		xjs.AppendChildren(d,
+			xjs.SetInnerText(xdom.H1(), "New Map"),
+			tabs.New([]tabs.Tab{
+				{"Create", createMap(o)},
+				{"Upload/Download", func(c dom.Element) {
+					c.AppendChild(transferFile("Map", "Upload/Download", 1, o))
+				}},
+				{"Generate", func(c dom.Element) {
+					c.AppendChild(transferFile("Map", "Generate", 2, o))
+				}},
+			}),
+		)
+		xjs.Body().AppendChild(o)
+	})
+	noneTd := xdom.Td()
+	noneTd.ColSpan = 2
+	none := xjs.AppendChildren(xdom.Tr(), xjs.SetInnerText(noneTd, "No Maps Found"))
+	mapList := xjs.AppendChildren(xdom.Table(),
+		xjs.AppendChildren(xdom.Thead(), xjs.AppendChildren(xdom.Tr(),
+			xjs.SetInnerText(xdom.Th(), "Map Name"),
+			xjs.SetInnerText(xdom.Th(), "Status"),
+		)),
+		none,
+	)
+	nodes := xjs.AppendChildren(xdom.Div(),
+		xjs.SetInnerText(xdom.H2(), "Maps"),
+		xjs.SetInnerText(nm, "New Map"),
+		mapList,
+	)
+
+	maps := make(map[int]*Map)
+	return func(c dom.Element) {
+		c.AppendChild(nodes)
+		updateStop := make(chan struct{})
+		registerUpdateStopper(c, updateStop)
+		for {
+			mps, err := RPC.MapList()
+			if err != nil {
+				xjs.Alert("Error getting map list: %s", err)
+				return
+			}
+
+			if none.ParentNode() != nil {
+				mapList.RemoveChild(none)
+			}
+
+			for _, m := range maps {
+				m.ID = -1
+			}
+
+			for _, m := range mps {
+				om, ok := maps[m.ID]
+				if ok {
+					om.Map = m
+				} else {
+					name := xdom.Td()
+					status := xdom.Td()
+					om = &Map{
+						Map: m,
+						row: xjs.AppendChildren(xdom.Tr(),
+							name,
+							status,
+						),
+						name:   name,
+						status: status,
+					}
+					maps[m.ID] = om
+					mapList.AppendChild(om.row)
+					name.AddEventListener("click", false, func() func(dom.Event) {
+						m := om
+						return func(dom.Event) {
+							o := overlay.New(xjs.AppendChildren(xdom.Div(), tabs.New([]tabs.Tab{
+								{"General", mapGeneral(m.Map)},
+								{"Properties", mapProperties(m.Map)},
+								{"Misc.", mapMisc(m.Map)},
+							})))
+							o.OnClose(func() {
+								go func() {
+									forceUpdate <- struct{}{}
+								}()
+							})
+							xjs.Body().AppendChild(o)
+						}
+					}())
+				}
+				switch om.Server {
+				case -2:
+					xjs.SetInnerText(om.status, "Busy")
+					om.status.Style().SetProperty("color", "#f00", "")
+				case -1:
+					xjs.SetInnerText(om.status, "Unassigned")
+					om.status.Style().SetProperty("color", "#00f", "")
+				default:
+					serv, err := RPC.Server(om.Server)
+					if err == nil {
+						xjs.SetInnerText(om.status, "Assigned")
+					} else {
+						xjs.SetInnerText(om.status, "Assigned - "+serv.Name)
+					}
+					om.status.Style().SetProperty("color", "#000", "")
+				}
+				xjs.SetInnerText(om.name, om.Name)
+			}
+
+			for id, m := range maps {
+				if m.ID == -1 {
+					delete(maps, id)
+					mapList.RemoveChild(m.row)
+				}
+			}
+
+			if len(maps) == 0 {
+				mapList.AppendChild(none)
+			}
+
+			// Sleep until update
+			if !updateSleep(forceUpdate, updateStop) {
+				return
+			}
+		}
+	}
+}
+
 func mapsTab(c dom.Element) {
 	xjs.RemoveChildren(c)
 	c.AppendChild(xjs.SetInnerText(xdom.H2(), "Maps"))
