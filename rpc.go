@@ -157,7 +157,9 @@ func (r RPC) SetServerMap(ids [2]int, _ *struct{}) error {
 		mp.RLock()
 		sID := mp.Server
 		mp.RUnlock()
-		if sID != -1 {
+		if sID == -2 {
+			return errors.New("map busy")
+		} else if sID != -1 {
 			serv := r.c.Server(sID)
 			if serv != nil {
 				serv.RLock()
