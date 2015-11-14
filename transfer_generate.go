@@ -73,10 +73,10 @@ func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.Sticky
 		for {
 			select {
 			case message := <-m:
-				w.WriteUint8(4)
+				w.WriteUint8(3)
 				writeString(w, message)
 			case p := <-c:
-				w.WriteUint8(3)
+				w.WriteUint8(4)
 				w.WriteInt32(p.X)
 				w.WriteInt32(p.Y)
 				r, g, b, a := p.RGBA()

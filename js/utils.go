@@ -170,8 +170,10 @@ func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom
 
 			WriteString(&w, name.Value)
 
-			canvas := xdom.Canvas()
-			ctx := canvas.GetContext2d()
+			var (
+				canvas *dom.HTMLCanvasElement
+				ctx    *dom.CanvasRenderingContext2D
+			)
 
 			for {
 				switch v := r.ReadUint8(); v {
@@ -224,9 +226,12 @@ func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom
 				case 2:
 					w := r.ReadInt32()
 					h := r.ReadInt32()
-					canvas.Width = int(w)
-					canvas.Height = int(h)
+					canvas = xdom.Canvas()
+					canvas.Width = int(w) * 8
+					canvas.Height = int(h) * 8
 					d.AppendChild(canvas)
+					ctx = canvas.GetContext2d()
+					ctx.Scale(8, 8)
 				case 3:
 					xjs.SetInnerText(status, ReadString(&r))
 				case 4:
