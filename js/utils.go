@@ -349,6 +349,7 @@ func misc(mType string, id int, o *overlay.Overlay, deleteFunc func(int) error) 
 	return func(c dom.Element) {
 		download := xdom.A()
 		download.Href = "http://" + js.Global.Get("location").Get("host").String() + "/download/" + mType + "/" + strconv.Itoa(id) + ".zip"
+		download.Target = "_blank"
 		del := xdom.Button()
 		del.AddEventListener("click", false, func(dom.Event) {
 			if dom.GetWindow().Confirm("Are you sure?") {
