@@ -261,8 +261,8 @@ func (r RPC) RemoveServer(id int, _ *struct{}) error {
 		m.Server = -1
 		m.Unlock()
 	}
-	s.ID = -1
 	r.c.RemoveServer(id)
+	s.ID = -1
 	go r.c.Save()
 	return nil
 }
@@ -283,8 +283,8 @@ func (r RPC) RemoveMap(id int, _ *struct{}) error {
 		}
 		m.Server = -1
 	}
-	m.ID = -1
 	r.c.RemoveMap(id)
+	m.ID = -1
 	go r.c.Save()
 	return nil
 }
