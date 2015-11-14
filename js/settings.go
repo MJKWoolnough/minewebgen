@@ -13,27 +13,21 @@ func settingsTab(c dom.Element) {
 		xjs.Alert("Error reading settings: %s", err)
 		return
 	}
-	c.AppendChild(xjs.SetInnerText(xdom.H2(), "Change Settings"))
-	c.AppendChild(xform.Label("Server Name", "serverName"))
 	sn := xform.InputText("serverName", s.ServerName)
-	c.AppendChild(sn)
-	c.AppendChild(xdom.Br())
-	c.AppendChild(xform.Label("Listen Address", "listenAddr"))
+	sn.Required = true
 	la := xform.InputText("listenAddr", s.ListenAddr)
-	c.AppendChild(la)
-	c.AppendChild(xdom.Br())
-	c.AppendChild(xform.Label("Servers Path", "serversPath"))
+	la.Required = true
 	sp := xform.InputText("serversPath", s.DirServers)
-	c.AppendChild(sp)
-	c.AppendChild(xdom.Br())
-	c.AppendChild(xform.Label("Maps Path", "mapsPath"))
+	sp.Required = true
 	mp := xform.InputText("mapsPath", s.DirMaps)
-	c.AppendChild(mp)
-	c.AppendChild(xdom.Br())
-
-	sb := xdom.Button()
-	xjs.SetInnerText(sb, "Save")
-	sb.AddEventListener("click", false, func(dom.Event) {
+	mp.Required = true
+	sb := xform.InputSubmit("Save")
+	sb.AddEventListener("click", false, func(e dom.Event) {
+		if sn.Value == "" || la.Value == "" || sp.Value == "" || mp.Value == "" {
+			return
+		}
+		e.PreventDefault()
+		sb.Disabled = true
 		go func() {
 			s.ServerName = sn.Value
 			s.ListenAddr = la.Value
@@ -41,10 +35,18 @@ func settingsTab(c dom.Element) {
 			s.DirMaps = mp.Value
 			if err := RPC.SetSettings(s); err != nil {
 				xjs.Alert("Error saving settings: %s", err)
-			} else {
-				SetTitle(sn.Value)
+				return
 			}
+			SetTitle(sn.Value)
+			sb.Disabled = false
 		}()
 	})
-	c.AppendChild(sb)
+	xjs.AppendChildren(c, xjs.AppendChildren(xdom.Form(), xjs.AppendChildren(xdom.Fieldset(),
+		xjs.SetInnerText(xdom.Legend(), "Change Settings"),
+		xform.Label("Server Name", "serverName"), sn, xdom.Br(),
+		xform.Label("Listen Address", "listenAddr"), la, xdom.Br(),
+		xform.Label("Servers Path", "serversPath"), sp, xdom.Br(),
+		xform.Label("Maps Path", "mapsPath"), mp, xdom.Br(),
+		sb,
+	)))
 }
