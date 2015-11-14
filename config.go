@@ -44,6 +44,7 @@ func freePath(p string) string {
 }
 
 func archive(w io.Writer, p string) {
+	p = path.Clean(p)
 	zw := zip.NewWriter(w)
 	defer zw.Close()
 	paths := []string{p}
@@ -68,7 +69,7 @@ func archive(w io.Writer, p string) {
 				continue
 			}
 			fh, _ := zip.FileInfoHeader(fs[0])
-			fh.Name = fname
+			fh.Name = fname[len(p)+1:]
 			fw, err := zw.CreateHeader(fh)
 			if err != nil {
 				return
