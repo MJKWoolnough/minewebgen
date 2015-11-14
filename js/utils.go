@@ -352,13 +352,17 @@ func misc(mType string, id int, o *overlay.Overlay, deleteFunc func(int) error) 
 		download.Target = "_blank"
 		del := xdom.Button()
 		del.AddEventListener("click", false, func(dom.Event) {
+			del.Disabled = true
 			if dom.GetWindow().Confirm("Are you sure?") {
-				err := deleteFunc(id)
-				if err != nil {
-					xjs.Alert("Error while deleting %s: %s", mType, err)
-				} else {
-					o.Close()
-				}
+				go func() {
+					err := deleteFunc(id)
+					if err != nil {
+						del.Disabled = false
+						xjs.Alert("Error while deleting %s: %s", mType, err)
+					} else {
+						o.Close()
+					}
+				}()
 			}
 		})
 		xjs.AppendChildren(c,
