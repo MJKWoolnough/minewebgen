@@ -299,12 +299,12 @@ func editProperties(c dom.Element, name string, id int, rpcGet func(int) (map[st
 
 	add := xform.InputButton("", "Add")
 	submit := xform.InputButton("", "Save")
-	fs := xjs.AppendChildren(xdom.Fieldset(), xjs.AppendChildren(
-		df,
+	fs := xjs.AppendChildren(xdom.Fieldset(),
 		xjs.SetInnerText(xdom.Legend(), name+" Properties"),
+		df,
 		add,
 		submit,
-	))
+	)
 
 	add.AddEventListener("click", false, func(dom.Event) {
 		k := xform.InputSizeable("", "")
