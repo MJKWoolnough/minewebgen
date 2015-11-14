@@ -361,16 +361,16 @@ func misc(mType string, id int, o *overlay.Overlay, deleteFunc func(int) error) 
 			}
 		})
 		xjs.AppendChildren(c,
-			xjs.AppendChildren(xdom.Fieldset(), xjs.AppendChildren(
+			xjs.AppendChildren(xdom.Fieldset(),
 				xjs.SetInnerText(xdom.Legend(), "Download"),
 				xjs.SetInnerText(xdom.Div(), "Click the following link to download the "+mType+" as a zip file."),
 				xjs.SetInnerText(download, download.Href),
-			)),
-			xjs.AppendChildren(xdom.Fieldset(), xjs.AppendChildren(
+			),
+			xjs.AppendChildren(xdom.Fieldset(),
 				xjs.SetInnerText(xdom.Legend(), "Delete"),
 				xjs.SetInnerText(xdom.Div(), "The following button will permanently delete the "+mType+" (this cannot be undone)."),
 				xjs.SetInnerText(del, "Delete "+mType),
-			)),
+			),
 		)
 	}
 }
