@@ -29,9 +29,11 @@ func main() {
 	rpc.RegisterName("RPC", RPC{controller})
 
 	t := Transfer{c}
+	con := Console{controller}
 	http.Handle("/download/server/", http.HandlerFunc(c.Servers.Download))
 	http.Handle("/download/maps/", http.HandlerFunc(c.Maps.Download))
 	http.Handle("/transfer", websocket.Handler(t.Websocket))
+	http.Handle("/console", websocket.Handler(con.Websocket))
 	http.Handle("/rpc", websocket.Handler(func(conn *websocket.Conn) { jsonrpc.ServeConn(conn) }))
 	http.Handle("/", http.FileServer(dir))
 	l, err := net.Listen("tcp", c.ServerSettings.ListenAddr)
