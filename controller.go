@@ -114,7 +114,7 @@ func (c *Controller) StopServer(id int, _ *struct{}) error {
 }
 
 func (c *Controller) StopAll(_ struct{}, _ *struct{}) {
-	for id, r := range c.running {
+	for _, r := range c.running {
 		close(r.shutdown)
 	}
 	c.w.Wait()
