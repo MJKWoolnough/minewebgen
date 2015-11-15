@@ -19,6 +19,11 @@ fieldset legend {
 	margin-left : auto;
 	margin-right : auto;
 }
+
+textarea {
+	width : 400px;
+	height : 200px;
+}
 `)
 }
 
