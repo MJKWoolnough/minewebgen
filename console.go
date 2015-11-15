@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path"
@@ -106,8 +105,6 @@ func (c Console) handle(r *byteio.StickyReader, w *byteio.StickyWriter) error {
 				if ev.Name == logPath {
 					f.Close()
 				}
-			default:
-				fmt.Println(ev)
 			}
 		case err = <-fsw.Errors:
 		case <-t.C:
