@@ -124,7 +124,7 @@ func (c *Controller) StopAll(_ struct{}, _ *struct{}) error {
 	return nil
 }
 
-var stopCmd = []byte{'\r', '\n', 's', 't', 'o', 'p', '\r', '\n'}
+var stopCmd = []byte{'s', 't', 'o', 'p', '\r', '\n'}
 
 // runs in its own goroutine
 func (c *Controller) run(r *runner) {
@@ -183,8 +183,7 @@ func (c *Controller) WriteCmd(d data.WriteCmd, _ *struct{}) error {
 	if !ok {
 		return ErrUnknownServer
 	}
-	toWrite := make([]byte, 0, len(d.Cmd)+4)
-	toWrite = append(toWrite, '\r', '\n')
+	toWrite := make([]byte, 0, len(d.Cmd)+2)
 	toWrite = append(toWrite, d.Cmd...)
 	toWrite = append(toWrite, '\r', '\n')
 	_, err := r.Write(toWrite)
