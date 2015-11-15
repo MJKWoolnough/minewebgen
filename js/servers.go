@@ -305,7 +305,33 @@ func serverProperties(s data.Server) func(dom.Element) {
 
 func serverConsole(s data.Server) func(dom.Element) {
 	return func(c dom.Element) {
-		c.AppendChild(xjs.SetInnerText(xdom.Div(), "Console"))
+		log := xform.TextArea("log", "")
+		log.Disabled = true
+		command := xform.InputText("command", "")
+		command.Required = true
+		send := xform.InputSubmit("Send")
+		c.AppendChild(xjs.AppendChildren(xdom.Form(), xjs.AppendChildren(xdom.Fieldset(),
+			xjs.SetInnerText(xdom.Legend(), "Console"),
+			xform.Label("Log", ""), log, xdom.Br(),
+			xform.Label("command", "Command"), command, send,
+		)))
+		send.AddEventListener("click", false, func(e dom.Event) {
+			if command.Value == "" {
+				return
+			}
+			e.PreventDefault()
+			send.Disabled = true
+			cmd := command.Value
+			command.Value = ""
+			go func() {
+				err := RPC.WriteCommand(s.ID, cmd)
+				if err != nil {
+					xjs.Alert("Error sending command: %s", err)
+					return
+				}
+				send.Disabled = false
+			}()
+		})
 	}
 }
 
