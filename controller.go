@@ -113,7 +113,7 @@ func (c *Controller) StopServer(id int, _ *struct{}) error {
 	return nil
 }
 
-func (c *Controller) StopAll(_ struct{}, _ *struct{}) {
+func (c *Controller) stopAll() {
 	for _, r := range c.running {
 		close(r.shutdown)
 	}
