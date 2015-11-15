@@ -411,6 +411,7 @@ func serverEULA(s data.Server, d string) func(dom.Element) {
 					xjs.Alert("Error setting server EULA: %s", err)
 					return
 				}
+				d = t.Value
 				span := xdom.Span()
 				span.Style().Set("color", "#f00")
 				c.AppendChild(xjs.SetInnerText(span, "Saved!"))
