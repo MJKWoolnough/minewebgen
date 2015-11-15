@@ -86,7 +86,7 @@ func (c Controller) StartServer(id int, _ *struct{}) error {
 		return err
 	}
 	sp["level-name"] = "world"
-	f, err = os.Open(path.Join(s.Path, "server.properties"))
+	f, err = os.Create(path.Join(s.Path, "server.properties"))
 	if err != nil {
 		return err
 	}
