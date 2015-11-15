@@ -147,7 +147,7 @@ func (j jRPC) ServerEULA(id int) (string, error) {
 }
 
 func (j jRPC) SetServerEULA(id int, d string) error {
-	return j.rpc.Call("RPC.SetServerEULA", data.ServerEULA{ID: id, Data: d}, es)
+	return j.rpc.Call("RPC.SetServerEULA", data.ServerEULA{ID: id, EULA: d}, es)
 }
 
 func (j jRPC) WriteCommand(id int, command string) error {
