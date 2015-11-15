@@ -46,7 +46,7 @@ func main() {
 	go func() {
 		log.Println("Server Started")
 		sc := make(chan os.Signal, 1)
-		signal.Notify(sc, os.Interrupt)
+		signal.Notify(sc, os.Interrupt, os.Kill)
 		select {
 		case <-sc:
 			log.Println("Closing")
