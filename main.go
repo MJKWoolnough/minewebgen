@@ -67,5 +67,9 @@ func main() {
 	}
 	<-cc
 	// Close all running minecraft servers before closing
-	controller.StopAll(struct{}{}, nil)
+	if len(controller.running) > 0 {
+		log.Println("Stopping all servers...")
+		controller.StopAll(struct{}{}, nil)
+		log.Println("...servers stopped")
+	}
 }
