@@ -116,7 +116,6 @@ func (c *Controller) StopServer(id int, _ *struct{}) error {
 func (c *Controller) StopAll(_ struct{}, _ *struct{}) {
 	for id, r := range c.running {
 		close(r.shutdown)
-		delete(c.running, id)
 	}
 	c.w.Wait()
 }
