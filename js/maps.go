@@ -15,6 +15,15 @@ import (
 	"honnef.co/go/js/dom"
 )
 
+func init() {
+	style.Add(`.mapName {
+	background-color : #ddd;
+	cursor: pointer;
+	cursor: hand;
+}
+`)
+}
+
 type Map struct {
 	data.Map
 	row    dom.Node
@@ -101,6 +110,7 @@ func MapsTab() func(dom.Element) {
 					}
 					maps[m.ID] = om
 					mapList.AppendChild(om.row)
+					name.Class().SetString("mapName")
 					name.AddEventListener("click", false, func() func(dom.Event) {
 						m := om
 						return func(dom.Event) {

@@ -19,7 +19,7 @@ import (
 
 func init() {
 	style.Add(`.serverName {
-	background-color : #ccc;
+	background-color : #ddd;
 	cursor: pointer;
 	cursor: hand;
 }
