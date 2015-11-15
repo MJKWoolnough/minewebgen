@@ -4,12 +4,15 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/MJKWoolnough/byteio"
 	"github.com/MJKWoolnough/gopherjs/overlay"
 	"github.com/MJKWoolnough/gopherjs/tabs"
 	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xform"
 	"github.com/MJKWoolnough/gopherjs/xjs"
 	"github.com/MJKWoolnough/minewebgen/internal/data"
+	"github.com/gopherjs/gopherjs/js"
+	"github.com/gopherjs/websocket"
 	"honnef.co/go/js/dom"
 )
 
@@ -306,32 +309,76 @@ func serverProperties(s data.Server) func(dom.Element) {
 func serverConsole(s data.Server) func(dom.Element) {
 	return func(c dom.Element) {
 		log := xform.TextArea("log", "")
-		log.Disabled = true
+		log.ReadOnly = true
 		command := xform.InputText("command", "")
 		command.Required = true
 		send := xform.InputSubmit("Send")
 		c.AppendChild(xjs.AppendChildren(xdom.Form(), xjs.AppendChildren(xdom.Fieldset(),
 			xjs.SetInnerText(xdom.Legend(), "Console"),
 			xform.Label("Log", ""), log, xdom.Br(),
-			xform.Label("command", "Command"), command, send,
+			xform.Label("Command", "command"), command, send,
 		)))
-		send.AddEventListener("click", false, func(e dom.Event) {
-			if command.Value == "" {
-				return
-			}
-			e.PreventDefault()
+		if s.State == data.StateStopped {
 			send.Disabled = true
-			cmd := command.Value
-			command.Value = ""
-			go func() {
-				err := RPC.WriteCommand(s.ID, cmd)
-				if err != nil {
-					xjs.Alert("Error sending command: %s", err)
+			command.Disabled = true
+		} else {
+			send.AddEventListener("click", false, func(e dom.Event) {
+				if command.Value == "" {
 					return
 				}
-				send.Disabled = false
+				e.PreventDefault()
+				send.Disabled = true
+				cmd := command.Value
+				log.Value += "\n>" + cmd + "\n"
+				log.Set("scrollTop", log.Get("scrollHeight"))
+				command.Value = ""
+				go func() {
+					err := RPC.WriteCommand(s.ID, cmd)
+					if err != nil {
+						xjs.Alert("Error sending command: %s", err)
+						return
+					}
+					send.Disabled = false
+				}()
+			})
+		}
+		go func() {
+			conn, err := websocket.Dial("ws://" + js.Global.Get("location").Get("host").String() + "/console")
+			if err != nil {
+				xjs.Alert("Failed to connect to console: %s", err)
+				return
+			}
+			defer conn.Close()
+			w := byteio.StickyWriter{Writer: byteio.LittleEndianWriter{Writer: conn}}
+			r := byteio.StickyReader{Reader: byteio.LittleEndianReader{Reader: conn}}
+			updateStop := make(chan struct{})
+			registerUpdateStopper(c, updateStop)
+			done := false
+			go func() {
+				<-updateStop
+				done = true
+				conn.Close()
 			}()
-		})
+			w.WriteInt32(int32(s.ID))
+			for {
+				state := r.ReadUint8()
+				switch state {
+				case 0:
+					if !done {
+						err := ReadError(&r)
+						if r.Err != nil {
+							err = r.Err
+						}
+						log.Value += "\n\nError reading from console: " + err.Error()
+						log.Set("scrollTop", log.Get("scrollHeight"))
+					}
+					return
+				case 1:
+					log.Value += ReadString(&r)
+					log.Set("scrollTop", log.Get("scrollHeight"))
+				}
+			}
+		}()
 	}
 }
 
