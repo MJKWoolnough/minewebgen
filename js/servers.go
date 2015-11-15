@@ -398,7 +398,7 @@ func serverEULA(s data.Server, d string) func(dom.Element) {
 		t := xform.TextArea("eula", d)
 		submit := xform.InputSubmit("Save")
 		c.AppendChild(xjs.AppendChildren(xdom.Form(), xjs.AppendChildren(xdom.Fieldset(),
-			xjs.SetInnerText(xdom.Label(), "End User License Agreement"),
+			xjs.SetInnerText(xdom.Legend(), "End User License Agreement"),
 			xform.Label("EULA", "eula"), t, xdom.Br(),
 			submit,
 		)))
