@@ -48,6 +48,7 @@ func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.Sticky
 	ms := DefaultMapSettings()
 	ms["level-type"] = minecraft.FlatGenerator
 	ms["generator-settings"] = "0"
+	ms["motd"] = name
 
 	pf, err := os.Create(path.Join(mapPath, "properties.map"))
 	if err != nil {

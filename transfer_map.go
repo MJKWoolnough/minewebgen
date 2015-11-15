@@ -30,6 +30,7 @@ func (t Transfer) maps(name string, _ *byteio.StickyReader, _ *byteio.StickyWrit
 		return err
 	}
 	mapProperties := DefaultMapSettings()
+	mapProperties["motd"] = name
 	pm, err := os.OpenFile(path.Join(d, "properties.map"), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	defer pm.Close()
 	if err != nil {
