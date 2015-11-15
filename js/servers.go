@@ -6,6 +6,7 @@ import (
 
 	"github.com/MJKWoolnough/byteio"
 	"github.com/MJKWoolnough/gopherjs/overlay"
+	"github.com/MJKWoolnough/gopherjs/style"
 	"github.com/MJKWoolnough/gopherjs/tabs"
 	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xform"
@@ -15,6 +16,15 @@ import (
 	"github.com/gopherjs/websocket"
 	"honnef.co/go/js/dom"
 )
+
+func init() {
+	style.Add(`.serverName {
+	background-color : #ccc;
+	cursor: pointer;
+	cursor: hand;
+}
+`)
+}
 
 type Server struct {
 	data.Server
@@ -96,6 +106,7 @@ func ServersTab() func(dom.Element) {
 					}
 					servers[s.ID] = os
 					serverList.AppendChild(os.row)
+					name.Class().SetString("serverName")
 					name.AddEventListener("click", false, func() func(dom.Event) {
 						s := os
 						return func(dom.Event) {
