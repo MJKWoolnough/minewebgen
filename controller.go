@@ -35,7 +35,7 @@ func NewController(c *Config) *Controller {
 	}
 }
 
-func (c Controller) StartServer(id int, _ *struct{}) error {
+func (c *Controller) StartServer(id int, _ *struct{}) error {
 	s := c.c.Server(id)
 	if s == nil {
 		return ErrUnknownServer
