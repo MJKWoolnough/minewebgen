@@ -732,9 +732,9 @@ func mapGeneral(m data.Map) func(dom.Element) {
 				if s.Map != -1 {
 					if s.ID == m.Server {
 						cs = s
-						n += "* - " + n
+						n = "* - " + n
 					} else {
-						n += "! - " + n
+						n = "! - " + n
 					}
 				} else {
 					n = "    " + n
