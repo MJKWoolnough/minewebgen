@@ -43,6 +43,7 @@ func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.Sticky
 	mp.Lock()
 	mp.Name = name
 	mapPath := mp.Path
+	mp.Server = -2
 	mp.Unlock()
 
 	ms := DefaultMapSettings()
@@ -139,6 +140,9 @@ func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.Sticky
 	level.Save()
 	level.Close()
 	done = true
+	mp.Lock()
+	mp.Server = -1
+	mp.Unlock()
 
 	return nil
 }
