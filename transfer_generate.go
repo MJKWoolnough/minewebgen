@@ -111,20 +111,18 @@ func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.Sticky
 		return err
 	}
 
-	m <- "Building Terrain"
-	if err := buildTerrain(p, sTerrain, sHeight, c); err != nil {
-		return err
-	}
 	level, err := minecraft.NewLevel(p)
 	if err != nil {
 		return err
 	}
+
 	level.LevelName(name)
 
-	m <- "Building Height Map"
-	if err := shapeTerrain(level, sTerrain, sHeight, c); err != nil {
+	m <- "Building Terrain"
+	if err := buildTerrain(p, level, sTerrain, sHeight, c); err != nil {
 		return err
 	}
+
 	level.LevelName(name)
 	level.MobSpawning(false)
 	level.KeepInventory(true)
@@ -273,32 +271,42 @@ func (c *chunkCache) getFromCache(x, z int32, terrain uint8, height int32) nbt.T
 	return chunk
 }
 
-func buildTerrain(mpath minecraft.Path, terrain *image.Paletted, height *image.Gray, c chan paint) error {
-	cc := newCache()
+func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain *image.Paletted, height *image.Gray, c chan paint) error {
 	b := terrain.Bounds()
-	for j := 0; j < b.Max.Y; j += 16 {
-		chunkZ := int32(j >> 4)
-		for i := 0; i < b.Max.X; i += 16 {
-			chunkX := int32(i >> 4)
-			p := terrain.SubImage(image.Rect(i, j, i+16, j+16)).(*image.Paletted)
-			g := height.SubImage(image.Rect(i, j, i+16, j+16)).(*image.Gray)
-			t := modeTerrain(p)
-			h := int32(meanHeight(g))
-			err := mpath.SetChunk(cc.getFromCache(chunkX, chunkZ, t, h))
-			if err != nil {
-				return err
-			}
-			c <- paint{
-				terrainColours[t],
-				chunkX, chunkZ,
+	proceed := make(chan struct{}, 10)
+	errChan := make(chan error, 1)
+	go func() {
+		defer close(proceed)
+		cc := newCache()
+		for j := 0; j < b.Max.Y; j += 16 {
+			chunkZ := int32(j >> 4)
+			for i := 0; i < b.Max.X; i += 16 {
+				chunkX := int32(i >> 4)
+				p := terrain.SubImage(image.Rect(i, j, i+16, j+16)).(*image.Paletted)
+				g := height.SubImage(image.Rect(i, j, i+16, j+16)).(*image.Gray)
+				t := modeTerrain(p)
+				h := int32(meanHeight(g))
+				err := mpath.SetChunk(cc.getFromCache(chunkX, chunkZ, t, h))
+				if err != nil {
+					errChan <- err
+					return
+				}
+				c <- paint{
+					terrainColours[t],
+					chunkX, chunkZ,
+				}
+				proceed <- struct{}{}
 			}
 		}
+	}()
+	for i := 0; i < (b.Max.X>>4)+2; i++ {
+		<-proceed // get far enough ahead so all chunks are surrounded before shaping, to get correct lighting
 	}
-	return nil
-}
-
-func shapeTerrain(level *minecraft.Level, terrain *image.Paletted, height *image.Gray, c chan paint) error {
-	b := terrain.Bounds()
+	select {
+	case err := <-errChan:
+		return err
+	default:
+	}
 	for j := 0; j < b.Max.Y; j += 16 {
 		chunkZ := int32(j >> 4)
 		for i := 0; i < b.Max.X; i += 16 {
@@ -307,19 +315,34 @@ func shapeTerrain(level *minecraft.Level, terrain *image.Paletted, height *image
 			for x := int32(i); x < int32(i)+16; x++ {
 				for z := int32(j); z < int32(j)+16; z++ {
 					h := int32(height.GrayAt(int(x), int(z)).Y)
+					min := h
+					for mz := int(z) - 1; mz < int(z)+2; mz++ {
+						if mz < 0 || mz >= b.Max.Y {
+							continue
+						}
+						for mx := int(x) - 1; mx < int(x)+2; mx++ {
+							if mx < 0 || mx >= b.Max.X {
+								continue
+							}
+							if mh := int32(height.GrayAt(mx, mz).Y); mh < min {
+								min = mh
+							}
+						}
+					}
+
 					totalHeight += h
-					ch, err := level.GetHeight(x, z)
+					y, err := level.GetHeight(x, z)
 					if err != nil {
 						return err
 					}
-					for y := ch - 1; y > h; y-- {
+					for ; y > h; y-- {
 						level.SetBlock(x, y, z, minecraft.Block{})
 					}
 					t := terrainBlocks[terrain.ColorIndexAt(int(x), int(z))]
-					for y := h; y > h-int32(t.TopLevel); y-- {
+					for ; y > h-int32(t.TopLevel); y-- {
 						level.SetBlock(x, y, z, t.Top)
 					}
-					for y := h - int32(t.TopLevel); y >= ch; y-- {
+					for ; y >= min; y-- {
 						level.SetBlock(x, y, z, t.Base)
 					}
 				}
@@ -327,6 +350,11 @@ func shapeTerrain(level *minecraft.Level, terrain *image.Paletted, height *image
 			c <- paint{
 				color.Alpha{uint8(totalHeight >> 8)},
 				chunkX, chunkZ,
+			}
+			select {
+			case <-proceed:
+			case err := <-errChan:
+				return err
 			}
 		}
 	}
