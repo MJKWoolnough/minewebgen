@@ -120,7 +120,7 @@ func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.Sticky
 	level.LevelName(name)
 
 	m <- "Building Terrain"
-	if err := buildTerrain(p, level, sTerrain, sHeight, c); err != nil {
+	if err := buildTerrain(p, level, sTerrain, nil, sHeight, c); err != nil {
 		return err
 	}
 
@@ -184,6 +184,8 @@ var (
 		{minecraft.Block{ID: 1}, minecraft.Block{ID: 1}, 0},            // Stone - Stone
 		{minecraft.Block{ID: 1}, minecraft.Block{ID: 80}, 3},           // Stone - Snow
 	}
+	biomePalette = color.Palette{}
+	biomeList    = []minecraft.Biome{}
 )
 
 func modeTerrain(p *image.Paletted) uint8 {
@@ -275,7 +277,7 @@ func (c *chunkCache) getFromCache(x, z int32, terrain uint8, height int32) nbt.T
 	return chunk
 }
 
-func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain *image.Paletted, height *image.Gray, c chan paint) error {
+func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes *image.Paletted, height *image.Gray, c chan paint) error {
 	b := terrain.Bounds()
 	proceed := make(chan struct{}, 10)
 	errChan := make(chan error, 1)
@@ -318,6 +320,9 @@ func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain *image.P
 			var totalHeight int32
 			for x := i; x < i+16; x++ {
 				for z := j; z < j+16; z++ {
+					if biomes != nil {
+						level.SetBiome(x, z, biomeList[biomePalette.ColorIndexAt(int(x), int(z))])
+					}
 					h := int32(height.GrayAt(int(x), int(z)).Y)
 					min := h
 					for mz := int(z) - 1; mz <= int(z)+1; mz++ {
