@@ -188,7 +188,7 @@ var (
 
 func modeTerrain(p *image.Paletted) uint8 {
 	b := p.Bounds()
-	var modeMap [7]uint16
+	modeMap := make([]uint16, len(terrainColours))
 	most := uint16(0)
 	mode := uint8(0)
 	for i := b.Min.X; i < b.Max.X; i++ {
@@ -311,20 +311,20 @@ func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain *image.P
 		return err
 	default:
 	}
-	for j := 0; j < b.Max.Y; j += 16 {
-		chunkZ := int32(j >> 4)
-		for i := 0; i < b.Max.X; i += 16 {
-			chunkX := int32(i >> 4)
-			totalHeight := int32(0)
-			for x := int32(i); x < int32(i)+16; x++ {
-				for z := int32(j); z < int32(j)+16; z++ {
+	for j := int32(0); j < int32(b.Max.Y); j += 16 {
+		chunkZ := j >> 4
+		for i := int32(0); i < int32(b.Max.X); i += 16 {
+			chunkX := i >> 4
+			var totalHeight int32
+			for x := i; x < i+16; x++ {
+				for z := j; z < j+16; z++ {
 					h := int32(height.GrayAt(int(x), int(z)).Y)
 					min := h
-					for mz := int(z) - 1; mz < int(z)+2; mz++ {
+					for mz := int(z) - 1; mz <= int(z)+1; mz++ {
 						if mz < 0 || mz >= b.Max.Y {
 							continue
 						}
-						for mx := int(x) - 1; mx < int(x)+2; mx++ {
+						for mx := int(x) - 1; mx <= int(x)+1; mx++ {
 							if mx < 0 || mx >= b.Max.X {
 								continue
 							}
