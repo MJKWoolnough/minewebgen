@@ -118,7 +118,7 @@ func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.Sticky
 	}
 
 	var sWater *image.Gray
-	if water := o.Layer("biomes"); water != nil {
+	if water := o.Layer("water"); water != nil {
 		sWater = image.NewGray(o.Bounds())
 		waterI, err := water.Image()
 		if err != nil {
@@ -205,8 +205,20 @@ var (
 		{minecraft.Block{ID: 1}, minecraft.Block{ID: 80}, 3},           // Stone - Snow
 		{minecraft.Block{ID: 9}, minecraft.Block{ID: 9}, 0},
 	}
-	biomePalette = color.Palette{}
-	biomeList    = []minecraft.Biome{}
+	biomePalette = color.Palette{
+		color.RGBA{},
+		color.RGBA{60, 60, 255, 255},
+		color.RGBA{20, 100, 20, 255},
+		color.RGBA{255, 255, 0, 255},
+		color.RGBA{0, 255, 255, 255},
+	}
+	biomeList = []minecraft.Biome{
+		minecraft.Plains,
+		minecraft.Ocean,
+		minecraft.Forest,
+		minecraft.Desert,
+		minecraft.River,
+	}
 )
 
 func modeTerrain(p *image.Paletted) uint8 {
