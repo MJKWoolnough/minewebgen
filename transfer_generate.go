@@ -291,7 +291,7 @@ func (c *chunkCache) getFromCache(x, z int32, terrain uint8, height int32) nbt.T
 	chunk, ok := c.cache[cacheID]
 	if !ok {
 		b := terrainBlocks[terrain].Base
-		for j := int32(0); j < height; j++ {
+		for j := height - 1; j >= 0; j-- {
 			for i := int32(0); i < 16; i++ {
 				for k := int32(0); k < 16; k++ {
 					c.level.SetBlock(i, j, k, b)
