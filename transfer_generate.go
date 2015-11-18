@@ -107,6 +107,26 @@ func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.Sticky
 	draw.Draw(sHeight, image.Rect(height.X, height.Y, sTerrain.Bounds().Max.X, sTerrain.Bounds().Max.Y), heightI, image.Point{}, draw.Src)
 	heightI = nil
 
+	var sBiomes *image.Paletted
+	if biomes := o.Layer("biomes"); biomes != nil {
+		sBiomes = image.NewPaletted(o.Bounds(), biomePalette)
+		biomesI, err := biomes.Image()
+		if err != nil {
+			return err
+		}
+		draw.Draw(sBiomes, image.Rect(height.X, height.Y, sBiomes.Bounds().Max.X, sBiomes.Bounds().Max.Y), biomesI, image.Point{}, draw.Src)
+	}
+
+	var sWater *image.Gray
+	if water := o.Layer("biomes"); water != nil {
+		sWater = image.NewGray(o.Bounds())
+		waterI, err := water.Image()
+		if err != nil {
+			return err
+		}
+		draw.Draw(sWater, image.Rect(height.X, height.Y, sWater.Bounds().Max.X, sWater.Bounds().Max.Y), waterI, image.Point{}, draw.Src)
+	}
+
 	p, err := minecraft.NewFilePath(mapPath)
 	if err != nil {
 		return err
@@ -120,7 +140,7 @@ func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.Sticky
 	level.LevelName(name)
 
 	m <- "Building Terrain"
-	if err := buildTerrain(p, level, sTerrain, nil, sHeight, c); err != nil {
+	if err := buildTerrain(p, level, sTerrain, sBiomes, sHeight, sWater, c); err != nil {
 		return err
 	}
 
@@ -183,6 +203,7 @@ var (
 		{minecraft.Block{ID: 3}, minecraft.Block{ID: 60, Data: 7}, 1},  // Dirt - Farmland
 		{minecraft.Block{ID: 1}, minecraft.Block{ID: 1}, 0},            // Stone - Stone
 		{minecraft.Block{ID: 1}, minecraft.Block{ID: 80}, 3},           // Stone - Snow
+		{minecraft.Block{ID: 9}, minecraft.Block{ID: 9}, 0},
 	}
 	biomePalette = color.Palette{}
 	biomeList    = []minecraft.Biome{}
@@ -277,7 +298,7 @@ func (c *chunkCache) getFromCache(x, z int32, terrain uint8, height int32) nbt.T
 	return chunk
 }
 
-func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes *image.Paletted, height *image.Gray, c chan paint) error {
+func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes *image.Paletted, height, water *image.Gray, c chan paint) error {
 	b := terrain.Bounds()
 	proceed := make(chan struct{}, 10)
 	errChan := make(chan error, 1)
@@ -290,23 +311,34 @@ func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes 
 				chunkX := int32(i >> 4)
 				p := terrain.SubImage(image.Rect(i, j, i+16, j+16)).(*image.Paletted)
 				g := height.SubImage(image.Rect(i, j, i+16, j+16)).(*image.Gray)
-				t := modeTerrain(p)
+				w := water.SubImage(image.Rect(i, j, i+16, j+16)).(*image.Gray)
 				h := int32(meanHeight(g))
-				err := mpath.SetChunk(cc.getFromCache(chunkX, chunkZ, t, h))
-				if err != nil {
+				wh := int32(meanHeight(w))
+				var t uint8
+				if wh >= h<<1 { // more water than land...
+					c <- paint{
+						color.RGBA{0, 0, 255, 255},
+						chunkX, chunkZ,
+					}
+					t = uint8(len(terrainBlocks) - 1)
+				} else {
+					t = modeTerrain(p)
+					c <- paint{
+						terrainColours[t],
+						chunkX, chunkZ,
+					}
+				}
+				if err := mpath.SetChunk(cc.getFromCache(chunkX, chunkZ, t, h)); err != nil {
 					errChan <- err
 					return
-				}
-				c <- paint{
-					terrainColours[t],
-					chunkX, chunkZ,
 				}
 				proceed <- struct{}{}
 			}
 		}
 	}()
+	ts := make([]uint8, 0, 1024)
 	for i := 0; i < (b.Max.X>>4)+2; i++ {
-		<-proceed // get far enough ahead so all chunks are surrounded before shaping, to get correct lighting
+		ts = append(ts, <-proceed) // get far enough ahead so all chunks are surrounded before shaping, to get correct lighting
 	}
 	select {
 	case err := <-errChan:
@@ -318,41 +350,31 @@ func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes 
 		for i := int32(0); i < int32(b.Max.X); i += 16 {
 			chunkX := i >> 4
 			var totalHeight int32
+			ot := ts[0]
+			ts = ts[1:]
 			for x := i; x < i+16; x++ {
 				for z := j; z < j+16; z++ {
 					if biomes != nil {
 						level.SetBiome(x, z, biomeList[biomePalette.ColorIndexAt(int(x), int(z))])
 					}
 					h := int32(height.GrayAt(int(x), int(z)).Y)
-					min := h
-					for mz := int(z) - 1; mz <= int(z)+1; mz++ {
-						if mz < 0 || mz >= b.Max.Y {
-							continue
-						}
-						for mx := int(x) - 1; mx <= int(x)+1; mx++ {
-							if mx < 0 || mx >= b.Max.X {
-								continue
-							}
-							if mh := int32(height.GrayAt(mx, mz).Y); mh < min {
-								min = mh
-							}
-						}
-					}
-
 					totalHeight += h
-					y, err := level.GetHeight(x, z)
-					if err != nil {
-						return err
+					y, _ := level.GetHeight(x, z)
+					wl := int32(water.GrayAt(int(x), int(z)).Y)
+					for ; y > h && y > wl; y-- {
+						level.SetBlock(x, y, z, minecraft.Block{})
 					}
 					for ; y > h; y-- {
-						level.SetBlock(x, y, z, minecraft.Block{})
+						level.SetBlock(x, y, z, minecraft.Block{ID: 9})
 					}
 					t := terrainBlocks[terrain.ColorIndexAt(int(x), int(z))]
 					for ; y > h-int32(t.TopLevel); y-- {
 						level.SetBlock(x, y, z, t.Top)
 					}
-					for ; y >= min; y-- {
-						level.SetBlock(x, y, z, t.Base)
+					if t != ot {
+						for ; y >= 0; y-- {
+							level.SetBlock(x, y, z, t.Base)
+						}
 					}
 				}
 			}
@@ -361,7 +383,10 @@ func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes 
 				chunkX, chunkZ,
 			}
 			select {
-			case <-proceed:
+			case p, ok := <-proceed:
+				if ok {
+					ts = append(ts, p)
+				}
 			case err := <-errChan:
 				return err
 			}
