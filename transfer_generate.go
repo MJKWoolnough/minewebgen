@@ -300,7 +300,7 @@ func (c *chunkCache) getFromCache(x, z int32, terrain uint8, height int32) nbt.T
 
 func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes *image.Paletted, height, water *image.Gray, c chan paint) error {
 	b := terrain.Bounds()
-	proceed := make(chan struct{}, 10)
+	proceed := make(chan uint8, 10)
 	errChan := make(chan error, 1)
 	go func() {
 		defer close(proceed)
@@ -332,7 +332,7 @@ func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes 
 					errChan <- err
 					return
 				}
-				proceed <- struct{}{}
+				proceed <- t
 			}
 		}
 	}()
@@ -355,7 +355,7 @@ func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes 
 			for x := i; x < i+16; x++ {
 				for z := j; z < j+16; z++ {
 					if biomes != nil {
-						level.SetBiome(x, z, biomeList[biomePalette.ColorIndexAt(int(x), int(z))])
+						level.SetBiome(x, z, biomeList[biomes.ColorIndexAt(int(x), int(z))])
 					}
 					h := int32(height.GrayAt(int(x), int(z)).Y)
 					totalHeight += h
@@ -367,13 +367,14 @@ func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes 
 					for ; y > h; y-- {
 						level.SetBlock(x, y, z, minecraft.Block{ID: 9})
 					}
-					t := terrainBlocks[terrain.ColorIndexAt(int(x), int(z))]
-					for ; y > h-int32(t.TopLevel); y-- {
-						level.SetBlock(x, y, z, t.Top)
+					t := terrain.ColorIndexAt(int(x), int(z))
+					tb := terrainBlocks[t]
+					for ; y > h-int32(tb.TopLevel); y-- {
+						level.SetBlock(x, y, z, tb.Top)
 					}
 					if t != ot {
 						for ; y >= 0; y-- {
-							level.SetBlock(x, y, z, t.Base)
+							level.SetBlock(x, y, z, tb.Base)
 						}
 					}
 				}
