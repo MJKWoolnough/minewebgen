@@ -296,17 +296,57 @@ func (c *chunkCache) getFromCache(x, z int32, terrain uint8, height int32) nbt.T
 	chunk, ok := c.cache[cacheID]
 	if !ok {
 		b := terrainBlocks[terrain].Base
-		for j := height - 1; j >= 0; j-- {
-			for i := int32(0); i < 16; i++ {
-				for k := int32(0); k < 16; k++ {
-					c.level.SetBlock(i, j, k, b)
+		closest := c.clear
+		var (
+			closestLevel int32
+			cl           int32
+			h            int32
+		)
+		for {
+			cl++
+			h = height - cl
+			if h == 0 {
+				break
+			}
+			if chunk, ok := c.cache[uint16(terrain)<<8|uint16(h)]; ok {
+				closestLevel = h
+				closest = chunk
+				break
+			}
+			h = height + cl
+			if h > 255 {
+				continue
+			}
+			if chunk, ok := c.cache[uint16(terrain)<<8|uint16(h)]; ok {
+				closestLevel = h
+				closest = chunk
+				break
+			}
+		}
+		ld := closest.Data().(nbt.Compound).Get("Level").Data().(nbt.Compound)
+		ld.Set(nbt.NewTag("xPos", nbt.Int(0)))
+		ld.Set(nbt.NewTag("zPos", nbt.Int(0)))
+		c.mem.SetChunk(closest)
+		if closestLevel < height {
+			for j := height - 1; j >= closestLevel; j-- {
+				for i := int32(0); i < 16; i++ {
+					for k := int32(0); k < 16; k++ {
+						c.level.SetBlock(i, j, k, b)
+					}
+				}
+			}
+		} else {
+			for j := closestLevel; j > height; j-- {
+				for i := int32(0); i < 16; i++ {
+					for k := int32(0); k < 16; k++ {
+						c.level.SetBlock(i, j, k, minecraft.Block{})
+					}
 				}
 			}
 		}
 		c.level.Save()
 		c.level.Close()
 		chunk, _ = c.mem.GetChunk(0, 0)
-		c.mem.SetChunk(c.clear)
 		c.cache[cacheID] = chunk
 	}
 	ld := chunk.Data().(nbt.Compound).Get("Level").Data().(nbt.Compound)
