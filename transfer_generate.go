@@ -14,18 +14,36 @@ import (
 	"github.com/MJKWoolnough/ora"
 )
 
+func toGray(o *ora.ORA, name string) (*image.Gray, error) {
+	var p *image.Gray
+	if l := o.Layer("water"); l != nil {
+		p = image.NewGray(o.Bounds())
+		i, err := l.Image()
+		if err != nil {
+			return nil, err
+		}
+		draw.Draw(p, image.Rect(0, 0, p.Bounds().Max.X, p.Bounds().Max.Y), i, image.Point{}, draw.Src)
+	}
+	return p, nil
+}
+
+func toPaletted(o *ora.ORA, name string, palette color.Palette) (*image.Paletted, error) {
+	var p *image.Paletted
+	if l := o.Layer("biomes"); l != nil {
+		p = image.NewPaletted(o.Bounds(), palette)
+		i, err := l.Image()
+		if err != nil {
+			return nil, err
+		}
+		draw.Draw(p, image.Rect(0, 0, p.Bounds().Max.X, p.Bounds().Max.Y), i, image.Point{}, draw.Src)
+	}
+	return p
+}
+
 func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.StickyWriter, f *os.File, size int64) error {
 	o, err := ora.Open(f, size)
 	if err != nil {
 		return err
-	}
-	terrain := o.Layer("terrain")
-	if terrain == nil {
-		return layerError{"terrain"}
-	}
-	height := o.Layer("height")
-	if height == nil {
-		return layerError{"height"}
 	}
 	mp := t.c.NewMap()
 	if mp == nil {
@@ -92,40 +110,18 @@ func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.Sticky
 		}
 	}()
 
-	sTerrain := image.NewPaletted(o.Bounds(), terrainColours)
-	terrainI, err := terrain.Image()
-	if err != nil {
-		return err
-	}
-	draw.Draw(sTerrain, image.Rect(terrain.X, terrain.Y, sTerrain.Bounds().Max.X, sTerrain.Bounds().Max.Y), terrainI, image.Point{}, draw.Src)
-	terrainI = nil
-	sHeight := image.NewGray(o.Bounds())
-	heightI, err := height.Image()
-	if err != nil {
-		return err
-	}
-	draw.Draw(sHeight, image.Rect(height.X, height.Y, sTerrain.Bounds().Max.X, sTerrain.Bounds().Max.Y), heightI, image.Point{}, draw.Src)
-	heightI = nil
-
-	var sBiomes *image.Paletted
-	if biomes := o.Layer("biomes"); biomes != nil {
-		sBiomes = image.NewPaletted(o.Bounds(), biomePalette)
-		biomesI, err := biomes.Image()
-		if err != nil {
-			return err
-		}
-		draw.Draw(sBiomes, image.Rect(height.X, height.Y, sBiomes.Bounds().Max.X, sBiomes.Bounds().Max.Y), biomesI, image.Point{}, draw.Src)
+	sTerrain := toPaletted(o, "terrain", terrainColours)
+	if sTerrain == nil {
+		return layerError{"terrain"}
 	}
 
-	var sWater *image.Gray
-	if water := o.Layer("water"); water != nil {
-		sWater = image.NewGray(o.Bounds())
-		waterI, err := water.Image()
-		if err != nil {
-			return err
-		}
-		draw.Draw(sWater, image.Rect(height.X, height.Y, sWater.Bounds().Max.X, sWater.Bounds().Max.Y), waterI, image.Point{}, draw.Src)
+	sHeight := toGray(o, "height")
+	if sHeight == nil {
+		return layerError{"height"}
 	}
+
+	sBiomes := toPaletted(o, "biomes", biomePalette)
+	sWater := toGray(o, "water")
 
 	p, err := minecraft.NewFilePath(mapPath)
 	if err != nil {
