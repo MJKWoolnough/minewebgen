@@ -333,6 +333,7 @@ func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes 
 						chunkX, chunkZ,
 					}
 					t = uint8(len(terrainBlocks) - 1)
+					h = wh
 				} else {
 					t = modeTerrain(p)
 					c <- paint{
@@ -364,6 +365,7 @@ func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes 
 			var totalHeight int32
 			ot := ts[0]
 			ts = ts[1:]
+			oy, _ := level.GetHeight(i, j)
 			for x := i; x < i+16; x++ {
 				for z := j; z < j+16; z++ {
 					if biomes != nil {
@@ -371,8 +373,14 @@ func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes 
 					}
 					h := int32(height.GrayAt(int(x), int(z)).Y)
 					totalHeight += h
-					y, _ := level.GetHeight(x, z)
 					wl := int32(water.GrayAt(int(x), int(z)).Y)
+					y := oy
+					if h > y {
+						y = h
+					}
+					if wl > y {
+						y = wl
+					}
 					for ; y > h && y > wl; y-- {
 						level.SetBlock(x, y, z, minecraft.Block{})
 					}
@@ -385,9 +393,12 @@ func buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes 
 						level.SetBlock(x, y, z, tb.Top)
 					}
 					if t != ot {
-						for ; y >= 0; y-- {
-							level.SetBlock(x, y, z, tb.Base)
-						}
+						h = 0
+					} else {
+						h = oy
+					}
+					for ; y >= h; y-- {
+						level.SetBlock(x, y, z, tb.Base)
 					}
 				}
 			}
