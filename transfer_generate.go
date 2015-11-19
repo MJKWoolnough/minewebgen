@@ -268,11 +268,16 @@ func newCache() *chunkCache {
 	l.Close()
 	clearChunk, _ := mem.GetChunk(0, 0)
 
-	for i := int32(-16); i < 16; i++ {
-		for j := int32(0); j < 255; j++ {
-			for k := int32(-16); j < 16; j++ {
-				l.SetBlock(i, j, k, bedrock)
-			}
+	for j := int32(0); j < 255; j++ {
+		l.SetBlock(-1, j, -1, bedrock)
+		l.SetBlock(-1, j, 16, bedrock)
+		l.SetBlock(16, j, -1, bedrock)
+		l.SetBlock(16, j, 16, bedrock)
+		for i := int32(0); i < 16; i++ {
+			l.SetBlock(i, j, -1, bedrock)
+			l.SetBlock(i, j, 16, bedrock)
+			l.SetBlock(-1, j, i, bedrock)
+			l.SetBlock(16, j, i, bedrock)
 		}
 	}
 	l.Save()
