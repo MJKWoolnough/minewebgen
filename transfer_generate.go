@@ -206,7 +206,7 @@ var (
 		{minecraft.Block{ID: 9}, minecraft.Block{ID: 9}, 0},
 	}
 	biomePalette = color.Palette{
-		color.RGBA{},
+		color.RGBA{0, 0, 0, 255},
 		color.RGBA{60, 60, 255, 255},
 		color.RGBA{20, 100, 20, 255},
 		color.RGBA{255, 255, 0, 255},
