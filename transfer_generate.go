@@ -37,7 +37,7 @@ func toPaletted(o *ora.ORA, name string, palette color.Palette) (*image.Paletted
 		}
 		draw.Draw(p, image.Rect(0, 0, p.Bounds().Max.X, p.Bounds().Max.Y), i, image.Point{}, draw.Src)
 	}
-	return p
+	return p, nil
 }
 
 func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.StickyWriter, f *os.File, size int64) error {
@@ -110,18 +110,30 @@ func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.Sticky
 		}
 	}()
 
-	sTerrain := toPaletted(o, "terrain", terrainColours)
+	sTerrain, err := toPaletted(o, "terrain", terrainColours)
+	if err != nil {
+		return err
+	}
 	if sTerrain == nil {
 		return layerError{"terrain"}
 	}
 
-	sHeight := toGray(o, "height")
+	sHeight, err := toGray(o, "height")
+	if err != nil {
+		return err
+	}
 	if sHeight == nil {
 		return layerError{"height"}
 	}
 
-	sBiomes := toPaletted(o, "biomes", biomePalette)
-	sWater := toGray(o, "water")
+	sBiomes, err := toPaletted(o, "biomes", biomePalette)
+	if err != nil {
+		return err
+	}
+	sWater, err := toGray(o, "water")
+	if err != nil {
+		return err
+	}
 
 	p, err := minecraft.NewFilePath(mapPath)
 	if err != nil {
