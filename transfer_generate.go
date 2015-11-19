@@ -151,6 +151,7 @@ func (t Transfer) generate(name string, _ *byteio.StickyReader, w *byteio.Sticky
 	level.GeneratorOptions("0")
 	level.GameMode(minecraft.Creative)
 	level.AllowCommands(true)
+	level.MapFeatures(false)
 
 	m <- "Exporting"
 	level.Save()
