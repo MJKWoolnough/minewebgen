@@ -3,7 +3,6 @@ package main
 import (
 	"archive/zip"
 	"encoding/json"
-	"fmt"
 	"image/color"
 	"io"
 	"net/http"
@@ -308,7 +307,6 @@ func (gs *Generators) Load(gPath string) error {
 		}
 		err = json.NewDecoder(f).Decode(g)
 		if err != nil {
-			fmt.Println(err)
 			continue
 		}
 		gName := name[:len(name)-4]
