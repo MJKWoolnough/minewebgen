@@ -21,6 +21,8 @@ func settingsTab(c dom.Element) {
 	sp.Required = true
 	mp := xform.InputText("mapsPath", s.DirMaps)
 	mp.Required = true
+	gp := xform.InputText("gensPath", s.DirGenerators)
+	gp.Required = true
 	sb := xform.InputSubmit("Save")
 	sb.AddEventListener("click", false, func(e dom.Event) {
 		if sn.Value == "" || la.Value == "" || sp.Value == "" || mp.Value == "" {
@@ -33,6 +35,7 @@ func settingsTab(c dom.Element) {
 			s.ListenAddr = la.Value
 			s.DirServers = sp.Value
 			s.DirMaps = mp.Value
+			s.DirGenerators = gp.Value
 			if err := RPC.SetSettings(s); err != nil {
 				xjs.Alert("Error saving settings: %s", err)
 				return
@@ -47,6 +50,7 @@ func settingsTab(c dom.Element) {
 		xform.Label("Listen Address", "listenAddr"), la, xdom.Br(),
 		xform.Label("Servers Path", "serversPath"), sp, xdom.Br(),
 		xform.Label("Maps Path", "mapsPath"), mp, xdom.Br(),
+		xform.Label("Generators Path", "gensPath"), gp, xdom.Br(),
 		sb,
 	)))
 }

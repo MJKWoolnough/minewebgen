@@ -185,25 +185,25 @@ func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom
 					}
 					return
 				case 1:
-					jars := make([]xform.Option, r.ReadInt16())
-					for i := range jars {
-						jars[i] = xform.Option{
+					files := make([]xform.Option, r.ReadInt16())
+					for i := range files {
+						files[i] = xform.Option{
 							Value: strconv.Itoa(i),
 							Label: ReadString(&r),
 						}
 					}
-					j := xform.SelectBox("jars", jars...)
+					j := xform.SelectBox("files", files...)
 					sel := xjs.SetInnerText(xdom.Button(), "Select")
-					jo := overlay.New(xjs.AppendChildren(xdom.Div(), xjs.AppendChildren(xdom.Fieldset(),
-						xjs.SetInnerText(xdom.Legend(), "Please select the server jar"),
-						xform.Label("Jar File", "jars"),
+					fo := overlay.New(xjs.AppendChildren(xdom.Div(), xjs.AppendChildren(xdom.Fieldset(),
+						xjs.SetInnerText(xdom.Legend(), "Please select the "+typeName+" file"),
+						xform.Label("File", "files"),
 						j,
 						xdom.Br(),
 						sel,
 					)))
 					c := make(chan int16, 0)
 					done := false
-					jo.OnClose(func() {
+					fo.OnClose(func() {
 						if !done {
 							done = true
 							c <- -1
@@ -217,10 +217,10 @@ func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom
 								v = -1
 							}
 							c <- int16(v)
-							jo.Close()
+							fo.Close()
 						}
 					})
-					xjs.Body().AppendChild(jo)
+					xjs.Body().AppendChild(fo)
 					w.WriteInt16(<-c)
 					close(c)
 				case 2:
