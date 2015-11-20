@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"encoding/json"
+	"image/color"
 	"io"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/MJKWoolnough/minecraft"
 	"github.com/MJKWoolnough/minewebgen/internal/data"
 )
 
@@ -259,6 +261,16 @@ func (gs *Generators) Names() []string {
 	return n
 }
 
+var empty = struct {
+	Palette color.Palette
+	Biomes  []minecraft.Biome
+	Blocks  []blocks
+}{
+	color.Palette{color.RGBA{}},
+	[]minecraft.Biome{minecraft.Plains},
+	[]blocks{blocks{}},
+}
+
 func (gs *Generators) Load(gPath string) error {
 	d, err := os.Open(gPath)
 	if err != nil {
@@ -290,6 +302,33 @@ func (gs *Generators) Load(gPath string) error {
 			continue
 		}
 		gName := name[:len(name)-4]
+
+		// Sanity Checks
+		if len(g.Terrain.Blocks) < len(g.Terrain.Colours) {
+			g.Terrain.Colours = g.Terrain.Colours[:len(g.Terrain.Blocks)]
+		}
+		if len(g.Terrain.Colours) == 0 {
+			g.Terrain.Colours = empty.Palette
+			g.Terrain.Blocks = empty.Blocks
+		}
+		if len(g.Terrain.Colours) == g.Terrain.Blocks {
+			g.Terrain.Blocks = append(g.Terrain.Blocks, minecraft.Block{ID: 9}) // water block
+		}
+		if len(g.Biomes.Values) < len(g.Biomes.Colours) {
+			g.Biomes.Colours = g.Biomes.Colours[:len(g.Biomes.Values)]
+		}
+		if len(g.Biomes.Colours) == 0 {
+			g.Biomes.Colours = empty.Palette
+			g.Biomes.Values = empty.Biomes
+		}
+		if len(g.Plants.Blocks) < len(g.Plants.Colours) {
+			g.Plants.Colours = g.Plants.Colours[:len(g.Plants.Blocks)]
+		}
+		if len(g.Plants.Colours) == 0 {
+			g.Plants.Colours = empty.Palette
+			g.Plants.Blocks = empty.Blocks
+		}
+
 		gs.list[gName] = g
 		gs.names = append(gs.names, gName)
 
