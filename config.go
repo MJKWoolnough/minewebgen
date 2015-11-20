@@ -245,6 +245,8 @@ type Config struct {
 	Servers Servers
 	Maps    Maps
 
+	Generators Generators
+
 	filename string
 }
 
@@ -260,6 +262,9 @@ func LoadConfig(filename string) (*Config, error) {
 	if err == nil {
 		defer f.Close()
 		err = json.NewDecoder(f).Decode(c)
+		if err == nil {
+			err = c.Generators.Load(c.ServerSettings.DirGenerators)
+		}
 	}
 	if err != nil {
 		if !os.IsNotExist(err) {

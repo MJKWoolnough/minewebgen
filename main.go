@@ -25,10 +25,6 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	if err = LoadGenerators(c.ServerSettings.DirGenerators); err != nil {
-		fmt.Println(os.Stderr, err)
-		os.Exit(2)
-	}
 
 	controller := NewController(c)
 	rpc.RegisterName("RPC", RPC{controller})

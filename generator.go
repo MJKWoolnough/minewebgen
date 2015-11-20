@@ -8,28 +8,34 @@ import (
 	"os"
 	"path"
 	"sort"
+	"sync"
 
 	"github.com/MJKWoolnough/minecraft"
 	"github.com/MJKWoolnough/minecraft/nbt"
 	"github.com/MJKWoolnough/ora"
 )
 
-var Generators generators
-
-type generators struct {
+type Generators struct {
+	mu    sync.RWMutex
 	list  map[string]*generator
 	names []string
 }
 
-func (g *generators) Get(name string) *generator {
-	return g.list[name]
+func (gs *Generators) Get(name string) *generator {
+	gs.mu.RLock()
+	defer gs.mu.RUnlock()
+	return gs.list[name]
 }
 
-func (g *generators) Names() []string {
-	return g.names
+func (gs *Generators) Names() []string {
+	gs.mu.RLock()
+	defer gs.mu.RUnlock()
+	n := make([]string, len(gs.names))
+	copy(n, gs.names)
+	return n
 }
 
-func LoadGenerators(gPath string) error {
+func (gs *Generators) Load(gPath string) error {
 	d, err := os.Open(gPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -41,8 +47,8 @@ func LoadGenerators(gPath string) error {
 	if err != nil {
 		return err
 	}
-	Generators.list = make(map[string]*generator)
-	Generators.names = make([]string, 0, 32)
+	gs.list = make(map[string]*generator)
+	gs.names = make([]string, 0, 32)
 	for _, name := range fs {
 		if len(name) < 5 {
 			continue
@@ -60,11 +66,11 @@ func LoadGenerators(gPath string) error {
 			continue
 		}
 		gName := name[:len(name)-4]
-		Generators.list[gName] = g
-		Generators.names = append(Generators.names, gName)
+		gs.list[gName] = g
+		gs.names = append(gs.names, gName)
 
 	}
-	sort.Strings(Generators.names)
+	sort.Strings(gs.names)
 	return nil
 }
 

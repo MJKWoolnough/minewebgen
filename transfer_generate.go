@@ -55,7 +55,7 @@ func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.Sticky
 	w.WriteInt32(int32(b.Max.X) >> 4)
 	w.WriteInt32(int32(b.Max.Y) >> 4)
 
-	gNames := Generators.Names()
+	gNames := t.c.Generators.Names()
 	var gID int16
 	if len(gNames) == 0 {
 		return errors.New("no generators installed")
@@ -76,7 +76,7 @@ func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.Sticky
 		}
 	}
 
-	g := Generators.Get(gNames[gID])
+	g := t.c.Generators.Get(gNames[gID])
 
 	c := make(chan paint, 1024)
 	m := make(chan string, 4)
