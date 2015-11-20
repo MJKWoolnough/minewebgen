@@ -77,6 +77,10 @@ func (g *generator) Generate(name, mapPath string, o *ora.ORA, c chan paint, m c
 	if err != nil {
 		return err
 	}
+	sPlants, err := toPaletted(o, "plants", g.Plants.Colours)
+	if err != nil {
+		return err
+	}
 
 	p, err := minecraft.NewFilePath(mapPath)
 	if err != nil {
@@ -91,7 +95,7 @@ func (g *generator) Generate(name, mapPath string, o *ora.ORA, c chan paint, m c
 	level.LevelName(name)
 
 	m <- "Building Terrain"
-	if err = g.buildTerrain(p, level, sTerrain, sBiomes, sHeight, sWater, c); err != nil {
+	if err = g.buildTerrain(p, level, sTerrain, sBiomes, sPlants, sHeight, sWater, c); err != nil {
 		return err
 	}
 
@@ -262,7 +266,7 @@ func (c *chunkCache) getFromCache(x, z int32, terrain uint8, height int32) nbt.T
 	return chunk
 }
 
-func (g *generator) buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes *image.Paletted, height, water *image.Gray, c chan paint) error {
+func (g *generator) buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes, plants *image.Paletted, height, water *image.Gray, c chan paint) error {
 	b := terrain.Bounds()
 	proceed := make(chan uint8, 10)
 	errChan := make(chan error, 1)
@@ -332,6 +336,14 @@ func (g *generator) buildTerrain(mpath minecraft.Path, level *minecraft.Level, t
 					}
 					for ; y > h && y > wl; y-- {
 						level.SetBlock(x, y, z, minecraft.Block{})
+					}
+					if plants != nil {
+						p := g.Plants.Blocks[plants.ColorIndexAt(int(x), int(z))]
+						py := int32(1)
+						for ; py <= int32(p.TopLevel); py++ {
+							level.SetBlock(x, y+py, z, p.Base)
+						}
+						level.SetBlock(x, y+py, z, p.Top)
 					}
 					for ; y > h; y-- {
 						level.SetBlock(x, y, z, minecraft.Block{ID: 9})
