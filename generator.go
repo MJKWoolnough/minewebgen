@@ -39,24 +39,24 @@ func toPaletted(o *ora.ORA, name string, palette color.Palette) (*image.Paletted
 type generator struct {
 	Terrain struct {
 		Colours []color.RGBA
-		Palette color.Palette
 		Blocks  []blocks
+		palette color.Palette
 	}
 	Biomes struct {
 		Colours []color.RGBA
-		Palette color.Palette
 		Values  []minecraft.Biome
+		palette color.Palette
 	}
 	Plants struct {
 		Colours []color.RGBA
-		Palette color.Palette
 		Blocks  []blocks
+		palette color.Palette
 	}
 }
 
 func (g *generator) Generate(name, mapPath string, o *ora.ORA, c chan paint, m chan string) error {
 
-	sTerrain, err := toPaletted(o, "terrain", g.Terrain.Palette)
+	sTerrain, err := toPaletted(o, "terrain", g.Terrain.palette)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (g *generator) Generate(name, mapPath string, o *ora.ORA, c chan paint, m c
 		return layerError{"height"}
 	}
 
-	sBiomes, err := toPaletted(o, "biomes", g.Biomes.Palette)
+	sBiomes, err := toPaletted(o, "biomes", g.Biomes.palette)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (g *generator) Generate(name, mapPath string, o *ora.ORA, c chan paint, m c
 	if err != nil {
 		return err
 	}
-	sPlants, err := toPaletted(o, "plants", g.Plants.Palette)
+	sPlants, err := toPaletted(o, "plants", g.Plants.palette)
 	if err != nil {
 		return err
 	}

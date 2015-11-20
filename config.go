@@ -337,9 +337,9 @@ func (gs *Generators) Load(gPath string) error {
 			g.Plants.Blocks = empty.Blocks
 		}
 
-		g.Terrain.Palette = toPalette(g.Terrain.Colours)
-		g.Biomes.Palette = toPalette(g.Biomes.Colours)
-		g.Plants.Palette = toPalette(g.Plants.Colours)
+		g.Terrain.palette = toPalette(g.Terrain.Colours)
+		g.Biomes.palette = toPalette(g.Biomes.Colours)
+		g.Plants.palette = toPalette(g.Plants.Colours)
 
 		gs.list[gName] = g
 		gs.names = append(gs.names, gName)
