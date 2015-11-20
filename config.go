@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"sync"
 
@@ -236,6 +237,65 @@ func (m *Maps) New(path string) *data.Map {
 	}
 	m.List = append(m.List, mp)
 	return mp
+}
+
+type Generators struct {
+	mu    sync.RWMutex
+	list  map[string]*generator
+	names []string
+}
+
+func (gs *Generators) Get(name string) *generator {
+	gs.mu.RLock()
+	defer gs.mu.RUnlock()
+	return gs.list[name]
+}
+
+func (gs *Generators) Names() []string {
+	gs.mu.RLock()
+	defer gs.mu.RUnlock()
+	n := make([]string, len(gs.names))
+	copy(n, gs.names)
+	return n
+}
+
+func (gs *Generators) Load(gPath string) error {
+	d, err := os.Open(gPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	fs, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	gs.list = make(map[string]*generator)
+	gs.names = make([]string, 0, 32)
+	for _, name := range fs {
+		if len(name) < 5 {
+			continue
+		}
+		if name[len(name)-4:] != ".gen" {
+			continue
+		}
+		g := new(generator)
+		f, err := os.Open(path.Join(gPath, name))
+		if err != nil {
+			continue
+		}
+		err = json.NewDecoder(f).Decode(g)
+		if err != nil {
+			continue
+		}
+		gName := name[:len(name)-4]
+		gs.list[gName] = g
+		gs.names = append(gs.names, gName)
+
+	}
+	sort.Strings(gs.names)
+	return nil
 }
 
 type Config struct {
