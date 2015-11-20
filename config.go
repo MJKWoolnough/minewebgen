@@ -311,8 +311,8 @@ func (gs *Generators) Load(gPath string) error {
 			g.Terrain.Colours = empty.Palette
 			g.Terrain.Blocks = empty.Blocks
 		}
-		if len(g.Terrain.Colours) == g.Terrain.Blocks {
-			g.Terrain.Blocks = append(g.Terrain.Blocks, minecraft.Block{ID: 9}) // water block
+		if len(g.Terrain.Colours) == len(g.Terrain.Blocks) {
+			g.Terrain.Blocks = append(g.Terrain.Blocks, blocks{Base: minecraft.Block{ID: 9}}) // water block
 		}
 		if len(g.Biomes.Values) < len(g.Biomes.Colours) {
 			g.Biomes.Colours = g.Biomes.Colours[:len(g.Biomes.Values)]
