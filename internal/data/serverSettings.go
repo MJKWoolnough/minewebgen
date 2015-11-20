@@ -29,9 +29,9 @@ func (s State) String() string {
 }
 
 type ServerSettings struct {
-	ServerName          string
-	ListenAddr          string
-	DirServers, DirMaps string
+	ServerName                         string
+	ListenAddr                         string
+	DirServers, DirMaps, DirGenerators string
 }
 
 type Server struct {

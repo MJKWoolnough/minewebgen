@@ -254,6 +254,7 @@ func LoadConfig(filename string) (*Config, error) {
 	c.ServerSettings.ListenAddr = ":8080"
 	c.ServerSettings.DirServers = "servers"
 	c.ServerSettings.DirMaps = "maps"
+	c.ServerSettings.DirGenerators = "generators"
 	c.filename = filename
 	f, err := os.Open(filename)
 	if err == nil {
