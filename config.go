@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"encoding/json"
+	"fmt"
 	"image/color"
 	"io"
 	"net/http"
@@ -262,13 +263,21 @@ func (gs *Generators) Names() []string {
 }
 
 var empty = struct {
-	Palette color.Palette
+	Palette []color.RGBA
 	Biomes  []minecraft.Biome
 	Blocks  []blocks
 }{
-	color.Palette{color.RGBA{}},
+	[]color.RGBA{color.RGBA{}},
 	[]minecraft.Biome{minecraft.Plains},
 	[]blocks{blocks{}},
+}
+
+func toPalette(c []color.RGBA) color.Palette {
+	p := make(color.Palette, len(c))
+	for i := range c {
+		p[i] = c[i]
+	}
+	return p
 }
 
 func (gs *Generators) Load(gPath string) error {
@@ -299,6 +308,7 @@ func (gs *Generators) Load(gPath string) error {
 		}
 		err = json.NewDecoder(f).Decode(g)
 		if err != nil {
+			fmt.Println(err)
 			continue
 		}
 		gName := name[:len(name)-4]
@@ -328,6 +338,10 @@ func (gs *Generators) Load(gPath string) error {
 			g.Plants.Colours = empty.Palette
 			g.Plants.Blocks = empty.Blocks
 		}
+
+		g.Terrain.Palette = toPalette(g.Terrain.Colours)
+		g.Biomes.Palette = toPalette(g.Biomes.Colours)
+		g.Plants.Palette = toPalette(g.Plants.Colours)
 
 		gs.list[gName] = g
 		gs.names = append(gs.names, gName)
