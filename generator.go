@@ -185,42 +185,6 @@ type blocks struct {
 	TopLevel  uint8
 }
 
-var (
-	terrainColours = color.Palette{
-		color.RGBA{},
-		color.RGBA{255, 255, 0, 255},   // Yellow - Sand
-		color.RGBA{0, 255, 0, 255},     // Green - Grass
-		color.RGBA{87, 59, 12, 255},    // Brown - Dirt
-		color.RGBA{255, 128, 0, 255},   // Orange - Farm
-		color.RGBA{128, 128, 128, 255}, // Grey - Stone
-		color.RGBA{255, 255, 255, 255}, // White - Snow
-	}
-	terrainBlocks = []blocks{
-		{},
-		{minecraft.Block{ID: 24, Data: 2}, minecraft.Block{ID: 12}, 5}, // Sandstone - Sand
-		{minecraft.Block{ID: 3}, minecraft.Block{ID: 2}, 1},            // Dirt - Grass
-		{minecraft.Block{ID: 3}, minecraft.Block{ID: 3}, 0},            // Dirt - Dirt
-		{minecraft.Block{ID: 3}, minecraft.Block{ID: 60, Data: 7}, 1},  // Dirt - Farmland
-		{minecraft.Block{ID: 1}, minecraft.Block{ID: 1}, 0},            // Stone - Stone
-		{minecraft.Block{ID: 1}, minecraft.Block{ID: 80}, 3},           // Stone - Snow
-		{minecraft.Block{ID: 9}, minecraft.Block{ID: 9}, 0},
-	}
-	biomePalette = color.Palette{
-		color.RGBA{0, 0, 0, 255},
-		color.RGBA{60, 60, 255, 255},
-		color.RGBA{20, 100, 20, 255},
-		color.RGBA{255, 255, 0, 255},
-		color.RGBA{0, 255, 255, 255},
-	}
-	biomeList = []minecraft.Biome{
-		minecraft.Plains,
-		minecraft.Ocean,
-		minecraft.Forest,
-		minecraft.Desert,
-		minecraft.River,
-	}
-)
-
 func modeTerrain(p *image.Paletted, l int) uint8 {
 	b := p.Bounds()
 	modeMap := make([]uint8, l)
