@@ -77,6 +77,9 @@ func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.Sticky
 	}
 
 	g := t.c.Generators.Get(gNames[gID])
+	if g == nil {
+		return errors.New("generator removed")
+	}
 
 	c := make(chan paint, 1024)
 	m := make(chan string, 4)
