@@ -431,10 +431,25 @@ func (r RPC) SetServerEULA(d data.ServerEULA, _ *struct{}) error {
 	return err
 }
 
+func (r RPC) Generators(_ struct{}, gs *[]string) error {
+	*gs = r.c.Generators.Names()
+	return nil
+}
+
+func (r RPC) Generator(name string, g *data.Generator) error {
+	tg := r.c.Generators.Get(name)
+	if tg == nil {
+		return ErrUnknownGenerator
+	}
+	*g = tg.generator
+	return nil
+}
+
 // Errors
 
 var (
-	ErrUnknownServer = errors.New("unknown server")
-	ErrUnknownMap    = errors.New("unknown map")
-	ErrServerRunning = errors.New("server running")
+	ErrUnknownServer    = errors.New("unknown server")
+	ErrUnknownMap       = errors.New("unknown map")
+	ErrServerRunning    = errors.New("server running")
+	ErrUnknownGenerator = errors.New("unknown generator")
 )
