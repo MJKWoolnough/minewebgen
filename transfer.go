@@ -15,6 +15,7 @@ var transferFuncs = [...]func(Transfer, string, *byteio.StickyReader, *byteio.St
 	Transfer.server,
 	Transfer.maps,
 	Transfer.generate,
+	Transfer.generator,
 }
 
 type downloadProgress struct {
