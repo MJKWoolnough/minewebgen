@@ -7,6 +7,7 @@ import (
 
 	"github.com/MJKWoolnough/minecraft"
 	"github.com/MJKWoolnough/minecraft/nbt"
+	"github.com/MJKWoolnough/minewebgen/internal/data"
 	"github.com/MJKWoolnough/ora"
 )
 
@@ -37,26 +38,23 @@ func toPaletted(o *ora.ORA, name string, palette color.Palette) (*image.Paletted
 }
 
 type generator struct {
-	Terrain struct {
-		Colours []color.RGBA
-		Blocks  []blocks
-		palette color.Palette
+	generator data.Generator
+	Terrain   struct {
+		Blocks  []data.Blocks
+		Palette color.Palette
 	}
 	Biomes struct {
-		Colours []color.RGBA
 		Values  []minecraft.Biome
-		palette color.Palette
+		Palette color.Palette
 	}
 	Plants struct {
-		Colours []color.RGBA
-		Blocks  []blocks
-		palette color.Palette
+		Blocks  []data.Blocks
+		Palette color.Palette
 	}
 }
 
 func (g *generator) Generate(name, mapPath string, o *ora.ORA, c chan paint, m chan string) error {
-
-	sTerrain, err := toPaletted(o, "terrain", g.Terrain.palette)
+	sTerrain, err := toPaletted(o, "terrain", g.Terrain.Palette)
 	if err != nil {
 		return err
 	}
@@ -72,7 +70,7 @@ func (g *generator) Generate(name, mapPath string, o *ora.ORA, c chan paint, m c
 		return layerError{"height"}
 	}
 
-	sBiomes, err := toPaletted(o, "biomes", g.Biomes.palette)
+	sBiomes, err := toPaletted(o, "biomes", g.Biomes.Palette)
 	if err != nil {
 		return err
 	}
@@ -80,7 +78,7 @@ func (g *generator) Generate(name, mapPath string, o *ora.ORA, c chan paint, m c
 	if err != nil {
 		return err
 	}
-	sPlants, err := toPaletted(o, "plants", g.Plants.palette)
+	sPlants, err := toPaletted(o, "plants", g.Plants.Palette)
 	if err != nil {
 		return err
 	}
@@ -167,10 +165,10 @@ type chunkCache struct {
 	level  *minecraft.Level
 	clear  nbt.Tag
 	cache  map[uint16]nbt.Tag
-	blocks []blocks
+	blocks []data.Blocks
 }
 
-func newCache(blocks []blocks) *chunkCache {
+func newCache(blocks []data.Blocks) *chunkCache {
 	mem := minecraft.NewMemPath()
 	l, _ := minecraft.NewLevel(mem)
 
@@ -291,9 +289,9 @@ func (g *generator) buildTerrain(mpath minecraft.Path, level *minecraft.Level, t
 					t = uint8(len(g.Terrain.Blocks) - 1)
 					h = wh
 				} else {
-					t = modeTerrain(terrain.SubImage(image.Rect(i, j, i+16, j+16)).(*image.Paletted), len(g.Terrain.Colours))
+					t = modeTerrain(terrain.SubImage(image.Rect(i, j, i+16, j+16)).(*image.Paletted), len(g.Terrain.Palette))
 					c <- paint{
-						g.Terrain.Colours[t],
+						g.Terrain.Palette[t],
 						chunkX, chunkZ,
 					}
 				}
@@ -343,7 +341,7 @@ func (g *generator) buildTerrain(mpath minecraft.Path, level *minecraft.Level, t
 					if plants != nil {
 						p := g.Plants.Blocks[plants.ColorIndexAt(int(x), int(z))]
 						py := int32(1)
-						for ; py <= int32(p.TopLevel); py++ {
+						for ; py <= int32(p.Level); py++ {
 							level.SetBlock(x, y+py, z, p.Base)
 						}
 						level.SetBlock(x, y+py, z, p.Top)
@@ -353,7 +351,7 @@ func (g *generator) buildTerrain(mpath minecraft.Path, level *minecraft.Level, t
 					}
 					t := terrain.ColorIndexAt(int(x), int(z))
 					tb := g.Terrain.Blocks[t]
-					for ; y > h-int32(tb.TopLevel); y-- {
+					for ; y > h-int32(tb.Level); y-- {
 						level.SetBlock(x, y, z, tb.Top)
 					}
 					if t != ot {

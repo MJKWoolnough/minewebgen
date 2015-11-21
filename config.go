@@ -262,21 +262,11 @@ func (gs *Generators) Names() []string {
 }
 
 var empty = struct {
-	Palette []color.RGBA
-	Biomes  []minecraft.Biome
-	Blocks  []blocks
+	Blocks []data.ColourBlocks
+	Biome  []data.ColourBiome
 }{
-	[]color.RGBA{color.RGBA{}},
-	[]minecraft.Biome{minecraft.Plains},
-	[]blocks{blocks{}},
-}
-
-func toPalette(c []color.RGBA) color.Palette {
-	p := make(color.Palette, len(c))
-	for i := range c {
-		p[i] = c[i]
-	}
-	return p
+	[]data.ColourBlocks{{Name: "Empty"}},
+	[]data.ColourBiome{{Name: "Plains", Biome: 1}},
 }
 
 func (gs *Generators) Load(gPath string) error {
@@ -305,41 +295,43 @@ func (gs *Generators) Load(gPath string) error {
 		if err != nil {
 			continue
 		}
-		err = json.NewDecoder(f).Decode(g)
+		err = json.NewDecoder(f).Decode(&g.generator)
 		if err != nil {
 			continue
 		}
 		gName := name[:len(name)-4]
 
-		// Sanity Checks
-		if len(g.Terrain.Blocks) < len(g.Terrain.Colours) {
-			g.Terrain.Colours = g.Terrain.Colours[:len(g.Terrain.Blocks)]
+		if len(g.generator.Terrain) == 0 {
+			g.generator.Terrain = empty.Blocks
 		}
-		if len(g.Terrain.Colours) == 0 {
-			g.Terrain.Colours = empty.Palette
-			g.Terrain.Blocks = empty.Blocks
+		if len(g.generator.Biomes) == 0 {
+			g.generator.Biomes = empty.Biome
 		}
-		if len(g.Terrain.Colours) == len(g.Terrain.Blocks) {
-			g.Terrain.Blocks = append(g.Terrain.Blocks, blocks{Base: minecraft.Block{ID: 9}}) // water block
-		}
-		if len(g.Biomes.Values) < len(g.Biomes.Colours) {
-			g.Biomes.Colours = g.Biomes.Colours[:len(g.Biomes.Values)]
-		}
-		if len(g.Biomes.Colours) == 0 {
-			g.Biomes.Colours = empty.Palette
-			g.Biomes.Values = empty.Biomes
-		}
-		if len(g.Plants.Blocks) < len(g.Plants.Colours) {
-			g.Plants.Colours = g.Plants.Colours[:len(g.Plants.Blocks)]
-		}
-		if len(g.Plants.Colours) == 0 {
-			g.Plants.Colours = empty.Palette
-			g.Plants.Blocks = empty.Blocks
+		if len(g.generator.Plants) == 0 {
+			g.generator.Plants = empty.Blocks
 		}
 
-		g.Terrain.palette = toPalette(g.Terrain.Colours)
-		g.Biomes.palette = toPalette(g.Biomes.Colours)
-		g.Plants.palette = toPalette(g.Plants.Colours)
+		g.Terrain.Blocks = make([]data.Blocks, len(g.generator.Terrain)+1)
+		g.Terrain.Palette = make(color.Palette, len(g.generator.Terrain))
+		for i := range g.generator.Terrain {
+			g.Terrain.Blocks[i] = g.generator.Terrain[i].Blocks
+			g.Terrain.Palette[i] = g.generator.Terrain[i].Colour
+		}
+		g.Terrain.Blocks[len(g.Terrain.Blocks)-1].Base.ID = 9
+
+		g.Biomes.Values = make([]minecraft.Biome, len(g.generator.Biomes))
+		g.Biomes.Palette = make(color.Palette, len(g.generator.Biomes))
+		for i := range g.generator.Biomes {
+			g.Biomes.Values[i] = g.generator.Biomes[i].Biome
+			g.Biomes.Palette[i] = g.generator.Biomes[i].Colour
+		}
+
+		g.Plants.Blocks = make([]data.Blocks, len(g.generator.Plants))
+		g.Plants.Palette = make(color.Palette, len(g.generator.Plants))
+		for i := range g.generator.Terrain {
+			g.Plants.Blocks[i] = g.generator.Plants[i].Blocks
+			g.Plants.Palette[i] = g.generator.Plants[i].Colour
+		}
 
 		gs.list[gName] = g
 		gs.names = append(gs.names, gName)
