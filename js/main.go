@@ -56,6 +56,7 @@ func main() {
 			body.AppendChild(tabs.New([]tabs.Tab{
 				{"Servers", ServersTab()},
 				{"Maps", MapsTab()},
+				{"Generators", GeneratorsTab},
 				{"Settings", settingsTab},
 			}))
 		}()

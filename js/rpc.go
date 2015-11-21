@@ -153,3 +153,15 @@ func (j jRPC) SetServerEULA(id int, d string) error {
 func (j jRPC) WriteCommand(id int, command string) error {
 	return j.rpc.Call("RPC.WriteCmd", data.WriteCmd{ID: id, Cmd: command}, es)
 }
+
+func (j jRPC) Generators() ([]string, error) {
+	var gs []string
+	err := j.rpc.Call("RPC.Generators", nil, &gs)
+	return gs, err
+}
+
+func (j jRPC) Generator(name string) (data.Generator, error) {
+	var g data.Generator
+	err := j.rpc.Call("RPC.Generator", name, &g)
+	return g, err
+}
