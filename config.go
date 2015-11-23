@@ -351,6 +351,24 @@ func (gs *Generators) LoadGenerator(name string, f *os.File) error {
 	return nil
 }
 
+func (gs *Generators) Remove(name, dir string) error {
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+	if _, ok := gs.list[name]; !ok {
+		return ErrUnknownGenerator
+	}
+	delete(gs.list, name)
+	for n, m := range gs.names {
+		if m == name {
+			copy(gs.names[n:], gs.names[n+1:])
+			gs.names = gs.names[:len(gs.names)-1]
+			os.Remove(path.Join(dir, name+".gen"))
+			break
+		}
+	}
+	return nil
+}
+
 type Config struct {
 	mu             sync.RWMutex
 	ServerSettings data.ServerSettings

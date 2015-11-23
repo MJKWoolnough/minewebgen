@@ -445,6 +445,10 @@ func (r RPC) Generator(name string, g *data.Generator) error {
 	return nil
 }
 
+func (r RPC) RemoveGenerator(name string, _ *struct{}) error {
+	return r.c.Generators.Remove(name, r.c.Settings().DirGenerators)
+}
+
 // Errors
 
 var (
