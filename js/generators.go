@@ -12,6 +12,7 @@ import (
 
 func GeneratorsTab(c dom.Element) {
 	go func() {
+		xjs.RemoveChildren(c)
 		gs, err := RPC.Generators()
 		if err != nil {
 			xjs.Alert("Error getting generator list: %s", err)
