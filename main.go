@@ -12,6 +12,7 @@ import (
 	"os/signal"
 
 	"github.com/MJKWoolnough/httpdir"
+	"github.com/MJKWoolnough/httpgzip"
 	"golang.org/x/net/websocket"
 )
 
@@ -36,7 +37,7 @@ func main() {
 	http.Handle("/transfer", websocket.Handler(t.Websocket))
 	http.Handle("/console", websocket.Handler(con.Websocket))
 	http.Handle("/rpc", websocket.Handler(func(conn *websocket.Conn) { jsonrpc.ServeConn(conn) }))
-	http.Handle("/", http.FileServer(dir))
+	http.Handle("/", httpgzip.FileServer(dir))
 	l, err := net.Listen("tcp", c.ServerSettings.ListenAddr)
 	if err != nil {
 		fmt.Println(os.Stderr, err)
