@@ -7,6 +7,7 @@ import (
 	"github.com/MJKWoolnough/gopherjs/tabs"
 	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xjs"
+	"github.com/MJKWoolnough/minewebgen/internal/data"
 	"honnef.co/go/js/dom"
 )
 
@@ -56,11 +57,19 @@ func GeneratorsTab(c dom.Element) {
 }
 
 func generatorProfile(name string) func(dom.Element) {
+	var (
+		loaded bool
+		g      data.Generator
+	)
 	return func(c dom.Element) {
-		g, err := RPC.Generator(name)
-		if err != nil {
-			xjs.Alert("Error while getting generator settings: %s", err)
-			return
+		if !loaded {
+			var err error
+			g, err = RPC.Generator(name)
+			if err != nil {
+				xjs.Alert("Error while getting generator settings: %s", err)
+				return
+			}
+			loaded = true
 		}
 		tTable := xjs.AppendChildren(xdom.Table(), xjs.AppendChildren(xdom.Thead(), xjs.AppendChildren(xdom.Tr(),
 			xjs.SetInnerText(xdom.Th(), "Colour"),
