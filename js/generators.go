@@ -71,6 +71,7 @@ func generatorProfile(name string) func(dom.Element) {
 			colour := xdom.Td()
 			cc := fmt.Sprintf("rgb(%d, %d, %d)", t.Colour.R, t.Colour.G, t.Colour.B)
 			colour.Style().SetProperty("background-color", cc, "")
+			colour.Style().SetProperty("border", "1px solid #000", "")
 			tTable.AppendChild(xjs.AppendChildren(xdom.Tr(),
 				colour,
 				xjs.SetInnerText(xdom.Td(), cc),
@@ -86,6 +87,7 @@ func generatorProfile(name string) func(dom.Element) {
 			colour := xdom.Td()
 			cc := fmt.Sprintf("rgb(%d, %d, %d)", b.Colour.R, b.Colour.G, b.Colour.B)
 			colour.Style().SetProperty("background-color", cc, "")
+			colour.Style().SetProperty("border", "1px solid #000", "")
 			bTable.AppendChild(xjs.AppendChildren(xdom.Tr(),
 				colour,
 				xjs.SetInnerText(xdom.Td(), cc),
@@ -101,6 +103,7 @@ func generatorProfile(name string) func(dom.Element) {
 			colour := xdom.Td()
 			cc := fmt.Sprintf("rgb(%d, %d, %d)", p.Colour.R, p.Colour.G, p.Colour.B)
 			colour.Style().SetProperty("background-color", cc, "")
+			colour.Style().SetProperty("border", "1px solid #000", "")
 			pTable.AppendChild(xjs.AppendChildren(xdom.Tr(),
 				colour,
 				xjs.SetInnerText(xdom.Td(), cc),
