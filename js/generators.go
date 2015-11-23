@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/MJKWoolnough/gopherjs/overlay"
+	"github.com/MJKWoolnough/gopherjs/tabs"
 	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xjs"
 	"honnef.co/go/js/dom"
@@ -32,7 +35,16 @@ func GeneratorsTab(c dom.Element) {
 				td := xdom.Td()
 				td.AddEventListener("click", false, func(g string) func(dom.Event) {
 					return func(dom.Event) {
-						xjs.Alert("%s", g)
+						d := xdom.Div()
+						o := overlay.New(d)
+						o.OnClose(func() {
+							GeneratorsTab(c)
+						})
+						d.AppendChild(tabs.New([]tabs.Tab{
+							{"Profile", generatorProfile(g)},
+							{"Misc", misc("generator", g, o, RPC.RemoveGenerator)},
+						}))
+						xjs.Body().AppendChild(o)
 					}
 				}(g))
 				table.AppendChild(xjs.AppendChildren(xdom.Tr(), xjs.SetInnerText(td, g)))
@@ -40,4 +52,67 @@ func GeneratorsTab(c dom.Element) {
 		}
 		c.AppendChild(table)
 	}()
+}
+
+func generatorProfile(name string) func(dom.Element) {
+	return func(c dom.Element) {
+		g, err := RPC.Generator(name)
+		if err != nil {
+			xjs.Alert("Error while getting generator settings: %s", err)
+			return
+		}
+		tTable := xjs.AppendChildren(xdom.Table(), xjs.AppendChildren(xdom.Thead(), xjs.AppendChildren(xdom.Tr(),
+			xjs.SetInnerText(xdom.Th(), "Colour"),
+			xjs.SetInnerText(xdom.Th(), "Colour Code"),
+			xjs.SetInnerText(xdom.Th(), "Name"),
+		)))
+		for _, t := range g.Terrain {
+			colour := xdom.Td()
+			cc := fmt.Sprintf("rgb(%d, %d, %d)", t.Colour.R, t.Colour.G, t.Colour.B)
+			colour.Style().SetProperty("background-color", cc, "")
+			tTable.AppendChild(xjs.AppendChildren(xdom.Tr(),
+				colour,
+				xjs.SetInnerText(xdom.Td(), cc),
+				xjs.SetInnerText(xdom.Td(), t.Name),
+			))
+		}
+		bTable := xjs.AppendChildren(xdom.Table(), xjs.AppendChildren(xdom.Thead(), xjs.AppendChildren(xdom.Tr(),
+			xjs.SetInnerText(xdom.Th(), "Colour"),
+			xjs.SetInnerText(xdom.Th(), "Colour Code"),
+			xjs.SetInnerText(xdom.Th(), "Name"),
+		)))
+		for _, b := range g.Biomes {
+			colour := xdom.Td()
+			cc := fmt.Sprintf("rgb(%d, %d, %d)", b.Colour.R, b.Colour.G, b.Colour.B)
+			colour.Style().SetProperty("background-color", cc, "")
+			bTable.AppendChild(xjs.AppendChildren(xdom.Tr(),
+				colour,
+				xjs.SetInnerText(xdom.Td(), cc),
+				xjs.SetInnerText(xdom.Td(), b.Name),
+			))
+		}
+		pTable := xjs.AppendChildren(xdom.Table(), xjs.AppendChildren(xdom.Thead(), xjs.AppendChildren(xdom.Tr(),
+			xjs.SetInnerText(xdom.Th(), "Colour"),
+			xjs.SetInnerText(xdom.Th(), "Colour Code"),
+			xjs.SetInnerText(xdom.Th(), "Name"),
+		)))
+		for _, p := range g.Plants {
+			colour := xdom.Td()
+			cc := fmt.Sprintf("rgb(%d, %d, %d)", p.Colour.R, p.Colour.G, p.Colour.B)
+			colour.Style().SetProperty("background-color", cc, "")
+			pTable.AppendChild(xjs.AppendChildren(xdom.Tr(),
+				colour,
+				xjs.SetInnerText(xdom.Td(), cc),
+				xjs.SetInnerText(xdom.Td(), p.Name),
+			))
+		}
+		xjs.AppendChildren(c,
+			xjs.SetInnerText(xdom.H2(), "Terrain"),
+			tTable,
+			xjs.SetInnerText(xdom.H2(), "Biomes"),
+			bTable,
+			xjs.SetInnerText(xdom.H2(), "Plants"),
+			pTable,
+		)
+	}
 }

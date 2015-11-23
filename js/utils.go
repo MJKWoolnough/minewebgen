@@ -350,10 +350,10 @@ func editProperties(c dom.Element, name string, id int, rpcGet func(int) (map[st
 	xjs.AppendChildren(c, xjs.AppendChildren(xdom.Form(), fs))
 }
 
-func misc(mType string, id int, o *overlay.Overlay, deleteFunc func(int) error) func(dom.Element) {
+func misc(mType string, id string, o *overlay.Overlay, deleteFunc func(string) error) func(dom.Element) {
 	return func(c dom.Element) {
 		download := xdom.A()
-		download.Href = "http://" + js.Global.Get("location").Get("host").String() + "/download/" + mType + "/" + strconv.Itoa(id) + ".zip"
+		download.Href = "http://" + js.Global.Get("location").Get("host").String() + "/download/" + mType + "/" + id + ".zip"
 		download.Target = "_blank"
 		del := xdom.Button()
 		del.AddEventListener("click", false, func(dom.Event) {

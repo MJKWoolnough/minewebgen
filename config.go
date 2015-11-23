@@ -328,7 +328,7 @@ func (gs *Generators) Load(gPath string) error {
 
 		g.Plants.Blocks = make([]data.Blocks, len(g.generator.Plants))
 		g.Plants.Palette = make(color.Palette, len(g.generator.Plants))
-		for i := range g.generator.Terrain {
+		for i := range g.generator.Plants {
 			g.Plants.Blocks[i] = g.generator.Plants[i].Blocks
 			g.Plants.Palette[i] = g.generator.Plants[i].Colour
 		}

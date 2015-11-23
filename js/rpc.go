@@ -3,6 +3,7 @@ package main
 import (
 	"net/rpc"
 	"net/rpc/jsonrpc"
+	"strconv"
 
 	"honnef.co/go/js/dom"
 
@@ -112,11 +113,19 @@ func (j jRPC) SetMapProperties(id int, properties map[string]string) error {
 	return j.rpc.Call("RPC.SetMapProperties", data.ServerProperties{id, properties}, es)
 }
 
-func (j jRPC) RemoveServer(id int) error {
+func (j jRPC) RemoveServer(sid string) error {
+	id, err := strconv.Atoi(sid)
+	if err != nil {
+		return err
+	}
 	return j.rpc.Call("RPC.RemoveServer", id, es)
 }
 
-func (j jRPC) RemoveMap(id int) error {
+func (j jRPC) RemoveMap(sid string) error {
+	id, err := strconv.Atoi(sid)
+	if err != nil {
+		return err
+	}
 	return j.rpc.Call("RPC.RemoveMap", id, es)
 }
 
@@ -164,4 +173,8 @@ func (j jRPC) Generator(name string) (data.Generator, error) {
 	var g data.Generator
 	err := j.rpc.Call("RPC.Generator", name, &g)
 	return g, err
+}
+
+func (j jRPC) RemoveGenerator(sid string) error {
+	return j.rpc.Call("RPC.RemoveGenerator", sid, es)
 }
