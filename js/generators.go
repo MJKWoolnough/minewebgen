@@ -52,7 +52,11 @@ func GeneratorsTab(c dom.Element) {
 				table.AppendChild(xjs.AppendChildren(xdom.Tr(), xjs.SetInnerText(td, g)))
 			}
 		}
-		c.AppendChild(table)
+		xjs.AppendChildren(c,
+			xjs.SetInnerText(xdom.H2(), "Generators"),
+			ng,
+			table,
+		)
 	}()
 }
 
