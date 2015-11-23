@@ -290,53 +290,63 @@ func (gs *Generators) Load(gPath string) error {
 		if name[len(name)-4:] != ".gen" {
 			continue
 		}
-		g := new(generator)
 		f, err := os.Open(path.Join(gPath, name))
 		if err != nil {
 			continue
 		}
-		err = json.NewDecoder(f).Decode(&g.generator)
+
+		gName := name[:len(name)-4]
+
+		err = gs.LoadGenerator(gName, f)
 		if err != nil {
 			continue
 		}
-		gName := name[:len(name)-4]
-
-		if len(g.generator.Terrain) == 0 {
-			g.generator.Terrain = empty.Blocks
-		}
-		if len(g.generator.Biomes) == 0 {
-			g.generator.Biomes = empty.Biome
-		}
-		if len(g.generator.Plants) == 0 {
-			g.generator.Plants = empty.Blocks
-		}
-
-		g.Terrain.Blocks = make([]data.Blocks, len(g.generator.Terrain)+1)
-		g.Terrain.Palette = make(color.Palette, len(g.generator.Terrain))
-		for i := range g.generator.Terrain {
-			g.Terrain.Blocks[i] = g.generator.Terrain[i].Blocks
-			g.Terrain.Palette[i] = g.generator.Terrain[i].Colour
-		}
-		g.Terrain.Blocks[len(g.Terrain.Blocks)-1].Base.ID = 9
-
-		g.Biomes.Values = make([]minecraft.Biome, len(g.generator.Biomes))
-		g.Biomes.Palette = make(color.Palette, len(g.generator.Biomes))
-		for i := range g.generator.Biomes {
-			g.Biomes.Values[i] = g.generator.Biomes[i].Biome
-			g.Biomes.Palette[i] = g.generator.Biomes[i].Colour
-		}
-
-		g.Plants.Blocks = make([]data.Blocks, len(g.generator.Plants))
-		g.Plants.Palette = make(color.Palette, len(g.generator.Plants))
-		for i := range g.generator.Plants {
-			g.Plants.Blocks[i] = g.generator.Plants[i].Blocks
-			g.Plants.Palette[i] = g.generator.Plants[i].Colour
-		}
-
-		gs.list[gName] = g
-		gs.names = append(gs.names, gName)
 
 	}
+	return nil
+}
+
+func (gs *Generators) LoadGenerator(name string, f *os.File) error {
+	g := new(generator)
+	err := json.NewDecoder(f).Decode(&g.generator)
+	if err != nil {
+		return err
+	}
+	if len(g.generator.Terrain) == 0 {
+		g.generator.Terrain = empty.Blocks
+	}
+	if len(g.generator.Biomes) == 0 {
+		g.generator.Biomes = empty.Biome
+	}
+	if len(g.generator.Plants) == 0 {
+		g.generator.Plants = empty.Blocks
+	}
+
+	g.Terrain.Blocks = make([]data.Blocks, len(g.generator.Terrain)+1)
+	g.Terrain.Palette = make(color.Palette, len(g.generator.Terrain))
+	for i := range g.generator.Terrain {
+		g.Terrain.Blocks[i] = g.generator.Terrain[i].Blocks
+		g.Terrain.Palette[i] = g.generator.Terrain[i].Colour
+	}
+	g.Terrain.Blocks[len(g.Terrain.Blocks)-1].Base.ID = 9
+
+	g.Biomes.Values = make([]minecraft.Biome, len(g.generator.Biomes))
+	g.Biomes.Palette = make(color.Palette, len(g.generator.Biomes))
+	for i := range g.generator.Biomes {
+		g.Biomes.Values[i] = g.generator.Biomes[i].Biome
+		g.Biomes.Palette[i] = g.generator.Biomes[i].Colour
+	}
+
+	g.Plants.Blocks = make([]data.Blocks, len(g.generator.Plants))
+	g.Plants.Palette = make(color.Palette, len(g.generator.Plants))
+	for i := range g.generator.Plants {
+		g.Plants.Blocks[i] = g.generator.Plants[i].Blocks
+		g.Plants.Palette[i] = g.generator.Plants[i].Colour
+	}
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+	gs.list[name] = g
+	gs.names = append(gs.names, name)
 	sort.Strings(gs.names)
 	return nil
 }
