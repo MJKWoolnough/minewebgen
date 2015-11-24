@@ -261,6 +261,17 @@ func (gs *Generators) Names() []string {
 	return n
 }
 
+func (gs *Generators) Download(c *Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fname := path.Base(r.URL.Path)
+		if len(fname) < 5 || fname[len(fname)-5:] != ".json" {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+		http.ServeFile(w, r, path.Join(c.Settings().DirGenerators, fname[:len(fname)-5]+".gen"))
+	}
+}
+
 var empty = struct {
 	Blocks []data.ColourBlocks
 	Biome  []data.ColourBiome
