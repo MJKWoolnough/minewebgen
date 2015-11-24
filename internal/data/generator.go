@@ -27,4 +27,5 @@ type Generator struct {
 	Terrain []ColourBlocks
 	Biomes  []ColourBiome
 	Plants  []ColourBlocks
+	Options map[string]string
 }

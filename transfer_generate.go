@@ -35,21 +35,6 @@ func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.Sticky
 	mp.Server = -2
 	mp.Unlock()
 
-	ms := DefaultMapSettings()
-	ms["level-type"] = minecraft.FlatGenerator
-	ms["generator-settings"] = "0"
-	ms["motd"] = name
-
-	pf, err := os.Create(path.Join(mapPath, "properties.map"))
-	if err != nil {
-		return err
-	}
-
-	if err = ms.WriteTo(pf); err != nil {
-		return err
-	}
-	pf.Close()
-
 	b := o.Bounds()
 	w.WriteUint8(2)
 	w.WriteInt32(int32(b.Max.X) >> 4)
@@ -111,6 +96,24 @@ func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.Sticky
 	if err = g.Generate(name, mapPath, o, c, m); err != nil {
 		return err
 	}
+
+	ms := DefaultMapSettings()
+	ms["level-type"] = minecraft.FlatGenerator
+	ms["generator-settings"] = "0"
+	ms["motd"] = name
+	for k, v := range g.generator.Options {
+		ms[k] = v
+	}
+
+	pf, err := os.Create(path.Join(mapPath, "properties.map"))
+	if err != nil {
+		return err
+	}
+
+	if err = ms.WriteTo(pf); err != nil {
+		return err
+	}
+	pf.Close()
 
 	done = true
 	mp.Lock()

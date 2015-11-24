@@ -4,6 +4,8 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"strconv"
+	"strings"
 
 	"github.com/MJKWoolnough/minecraft"
 	"github.com/MJKWoolnough/minecraft/nbt"
@@ -101,17 +103,40 @@ func (g *generator) Generate(name, mapPath string, o *ora.ORA, c chan paint, m c
 	}
 
 	level.LevelName(name)
-	level.MobSpawning(false)
-	level.KeepInventory(true)
-	level.FireTick(false)
-	level.DayLightCycle(false)
-	level.MobGriefing(false)
-	level.Spawn(10, 250, 10)
 	level.Generator(minecraft.FlatGenerator)
 	level.GeneratorOptions("0")
 	level.GameMode(minecraft.Creative)
+
+	for k, v := range g.generator.Options {
+		v = strings.ToLower(v)
+		switch strings.ToLower(k) {
+		case "generate-structures":
+			level.MapFeatures(v != "false")
+		case "hardcore":
+			level.Hardcore(v != "false")
+		case "gamemode":
+			gm, _ := strconv.Atoi(v)
+			if gm >= 0 && gm <= 3 {
+				level.GameMode(int32(gm))
+			}
+		case "difficulty":
+			d, _ := strconv.Atoi(v)
+			if d >= 0 && d <= 3 {
+				level.Difficulty(int8(d))
+			}
+		case "daylight-cycle":
+			level.DayLightCycle(v != "false")
+		case "fire-tick":
+			level.FireTick(v != "false")
+		case "keep-inventory":
+			level.KeepInventory(v != "false")
+		}
+	}
+
 	level.AllowCommands(true)
-	level.MapFeatures(false)
+	level.MobSpawning(false)
+	level.MobGriefing(false)
+	level.Spawn(10, 250, 10)
 
 	m <- "Exporting"
 	level.Save()
