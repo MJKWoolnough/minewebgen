@@ -125,7 +125,7 @@ func ServersTab() func(dom.Element) {
 								}
 								div := xdom.Div()
 								o := overlay.New(div)
-								t = append(t, tabs.Tab{"Misc.", misc("server", strconv.Itoa(s.Server.ID), o, RPC.RemoveServer)})
+								t = append(t, tabs.Tab{"Misc.", misc("server", "zip", strconv.Itoa(s.Server.ID), o, RPC.RemoveServer)})
 								div.AppendChild(tabs.New(t))
 								o.OnClose(func() {
 									go func() {

@@ -44,7 +44,7 @@ func GeneratorsTab(c dom.Element) {
 						})
 						d.AppendChild(tabs.New([]tabs.Tab{
 							{"Profile", generatorProfile(g)},
-							{"Misc", misc("generator", g, o, RPC.RemoveGenerator)},
+							{"Misc", misc("generator", "json", g, o, RPC.RemoveGenerator)},
 						}))
 						xjs.Body().AppendChild(o)
 					}
