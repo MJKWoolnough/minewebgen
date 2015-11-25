@@ -7,6 +7,7 @@ import (
 	"github.com/MJKWoolnough/gopherjs/tabs"
 	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xjs"
+	"github.com/MJKWoolnough/minewebgen/internal/data"
 	"honnef.co/go/js/dom"
 )
 
@@ -34,7 +35,7 @@ func GeneratorsTab(c dom.Element) {
 		} else {
 			for _, g := range gs {
 				td := xdom.Td()
-				td.AddEventListener("click", false, func(g string) func(dom.Event) {
+				td.AddEventListener("click", false, func(g data.Generator) func(dom.Event) {
 					return func(dom.Event) {
 						d := xdom.Div()
 						o := overlay.New(d)
@@ -42,13 +43,13 @@ func GeneratorsTab(c dom.Element) {
 							GeneratorsTab(c)
 						})
 						d.AppendChild(tabs.New([]tabs.Tab{
-							{"Profile", generatorProfile(g)},
-							{"Misc", misc("generator", "json", g, o, RPC.RemoveGenerator)},
+							{"Profile", generatorProfile(g.ID)},
+							{"Misc", misc("generator", g.ID, o, RPC.RemoveGenerator)},
 						}))
 						xjs.Body().AppendChild(o)
 					}
 				}(g))
-				table.AppendChild(xjs.AppendChildren(xdom.Tr(), xjs.SetInnerText(td, g)))
+				table.AppendChild(xjs.AppendChildren(xdom.Tr(), xjs.SetInnerText(td, g.Name)))
 			}
 		}
 		xjs.AppendChildren(c,
@@ -59,11 +60,11 @@ func GeneratorsTab(c dom.Element) {
 	}()
 }
 
-func generatorProfile(name string) func(dom.Element) {
+func generatorProfile(id int) func(dom.Element) {
 	var d dom.Node
 	return func(c dom.Element) {
 		if d == nil {
-			g, err := RPC.Generator(name)
+			g, err := RPC.Generator(id)
 			if err != nil {
 				xjs.Alert("Error while getting generator settings: %s", err)
 				return

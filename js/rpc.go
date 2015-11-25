@@ -3,7 +3,6 @@ package main
 import (
 	"net/rpc"
 	"net/rpc/jsonrpc"
-	"strconv"
 
 	"honnef.co/go/js/dom"
 
@@ -113,19 +112,11 @@ func (j jRPC) SetMapProperties(id int, properties map[string]string) error {
 	return j.rpc.Call("RPC.SetMapProperties", data.ServerProperties{id, properties}, es)
 }
 
-func (j jRPC) RemoveServer(sid string) error {
-	id, err := strconv.Atoi(sid)
-	if err != nil {
-		return err
-	}
+func (j jRPC) RemoveServer(id int) error {
 	return j.rpc.Call("RPC.RemoveServer", id, es)
 }
 
-func (j jRPC) RemoveMap(sid string) error {
-	id, err := strconv.Atoi(sid)
-	if err != nil {
-		return err
-	}
+func (j jRPC) RemoveMap(id int) error {
 	return j.rpc.Call("RPC.RemoveMap", id, es)
 }
 
@@ -163,18 +154,18 @@ func (j jRPC) WriteCommand(id int, command string) error {
 	return j.rpc.Call("RPC.WriteCmd", data.WriteCmd{ID: id, Cmd: command}, es)
 }
 
-func (j jRPC) Generators() ([]string, error) {
-	var gs []string
+func (j jRPC) Generators() ([]data.Generator, error) {
+	var gs []data.Generator
 	err := j.rpc.Call("RPC.Generators", nil, &gs)
 	return gs, err
 }
 
-func (j jRPC) Generator(name string) (data.Generator, error) {
-	var g data.Generator
-	err := j.rpc.Call("RPC.Generator", name, &g)
+func (j jRPC) Generator(id int) (data.GeneratorData, error) {
+	var g data.GeneratorData
+	err := j.rpc.Call("RPC.Generator", id, &g)
 	return g, err
 }
 
-func (j jRPC) RemoveGenerator(sid string) error {
-	return j.rpc.Call("RPC.RemoveGenerator", sid, es)
+func (j jRPC) RemoveGenerator(id int) error {
+	return j.rpc.Call("RPC.RemoveGenerator", id, es)
 }

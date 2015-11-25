@@ -119,7 +119,7 @@ func MapsTab() func(dom.Element) {
 							div.AppendChild(tabs.New([]tabs.Tab{
 								{"General", mapGeneral(m.Map)},
 								{"Properties", mapProperties(m.Map)},
-								{"Misc.", misc("map", "zip", strconv.Itoa(m.Map.ID), o, RPC.RemoveMap)},
+								{"Misc.", misc("map", m.Map.ID, o, RPC.RemoveMap)},
 							}))
 							o.OnClose(func() {
 								go func() {

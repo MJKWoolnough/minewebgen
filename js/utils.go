@@ -339,10 +339,10 @@ func editProperties(c dom.Element, name string, id int, rpcGet func(int) (map[st
 	xjs.AppendChildren(c, xjs.AppendChildren(xdom.Form(), fs))
 }
 
-func misc(mType, ext, id string, o *overlay.Overlay, deleteFunc func(string) error) func(dom.Element) {
+func misc(mType string, id int, o *overlay.Overlay, deleteFunc func(int) error) func(dom.Element) {
 	return func(c dom.Element) {
 		download := xdom.A()
-		download.Href = "http://" + js.Global.Get("location").Get("host").String() + "/download/" + mType + "/" + id + "." + ext
+		download.Href = "http://" + js.Global.Get("location").Get("host").String() + "/download/" + mType + "/" + strconv.Itoa(id) + ".zip"
 		download.Target = "_blank"
 		del := xdom.Button()
 		del.AddEventListener("click", false, func(dom.Event) {
@@ -362,7 +362,7 @@ func misc(mType, ext, id string, o *overlay.Overlay, deleteFunc func(string) err
 		xjs.AppendChildren(c,
 			xjs.AppendChildren(xdom.Fieldset(),
 				xjs.SetInnerText(xdom.Legend(), "Download"),
-				xjs.SetInnerText(xdom.Div(), "Click the following link to download the "+mType+" as a "+ext+" file."),
+				xjs.SetInnerText(xdom.Div(), "Click the following link to download the "+mType+" as a zip file."),
 				xjs.SetInnerText(download, download.Href),
 			),
 			xjs.AppendChildren(xdom.Fieldset(),
