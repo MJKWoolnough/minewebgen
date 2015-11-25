@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"sync"
 
@@ -31,10 +32,11 @@ func (s *Servers) New(path string) *data.Server {
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	id := 0
-	for _, ser := range s.List {
-		if ser.ID >= id {
-			id = ser.ID + 1
+	id := len(s.List)
+	for n, ser := range s.List {
+		if n != ser.ID {
+			id = n
+			break
 		}
 	}
 	ser := &data.Server{
@@ -45,6 +47,7 @@ func (s *Servers) New(path string) *data.Server {
 		Map:  -1,
 	}
 	s.List = append(s.List, ser)
+	sort.Sort(s)
 	return ser
 }
 

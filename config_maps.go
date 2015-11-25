@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"sync"
 
@@ -73,10 +74,11 @@ func (m *Maps) New(path string) *data.Map {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	id := 0
-	for _, mp := range m.List {
-		if mp.ID >= id {
-			id = mp.ID + 1
+	id := len(m.List)
+	for n, mp := range m.List {
+		if n != mp.ID {
+			id = n
+			break
 		}
 	}
 	mp := &data.Map{
@@ -86,6 +88,7 @@ func (m *Maps) New(path string) *data.Map {
 		Server: -1,
 	}
 	m.List = append(m.List, mp)
+	sort.Sort(m)
 	return mp
 }
 

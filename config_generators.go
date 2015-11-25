@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"sync"
 
@@ -22,10 +23,11 @@ func (gs *Generators) New(path string) *data.Generator {
 	}
 	gs.mu.Lock()
 	defer gs.mu.Unlock()
-	id := 0
-	for _, g := range gs.List {
-		if g.ID >= id {
-			id = g.ID + 1
+	id := len(gs.List)
+	for n, g := range gs.List {
+		if n != g.ID {
+			id = n
+			break
 		}
 	}
 	g := &data.Generator{
@@ -34,6 +36,7 @@ func (gs *Generators) New(path string) *data.Generator {
 		Name: "New Generator",
 	}
 	gs.List = append(gs.List, g)
+	sort.Sort(gs)
 	return g
 }
 
