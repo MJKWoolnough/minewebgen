@@ -40,9 +40,9 @@ func LoadConfig(filename string) (*Config, error) {
 			return nil, err
 		}
 	}
-	sort.Sort(c.Servers)
-	sort.Sort(c.Maps)
-	sort.Sort(c.Generators)
+	sort.Sort(&c.Servers)
+	sort.Sort(&c.Maps)
+	sort.Sort(&c.Generators)
 	return c, nil
 }
 
