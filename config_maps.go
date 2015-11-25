@@ -88,3 +88,15 @@ func (m *Maps) New(path string) *data.Map {
 	m.List = append(m.List, mp)
 	return mp
 }
+
+func (m *Maps) Len() int {
+	return len(m.List)
+}
+
+func (m *Maps) Less(i, j int) bool {
+	return m.List[i].ID < m.List[j].ID
+}
+
+func (m *Maps) Swap(i, j int) {
+	m.List[i], m.List[j] = m.List[j], m.List[i]
+}

@@ -89,3 +89,15 @@ func (s *Servers) Download(w http.ResponseWriter, r *http.Request) {
 	serv.Lock()
 	serv.State = data.StateStopped
 }
+
+func (s *Servers) Len() int {
+	return len(s.List)
+}
+
+func (s *Servers) Less(i, j int) bool {
+	return s.List[i].ID < s.List[j].ID
+}
+
+func (s *Servers) Swap(i, j int) {
+	s.List[i], s.List[j] = s.List[j], s.List[i]
+}

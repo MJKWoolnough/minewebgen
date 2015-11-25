@@ -80,3 +80,15 @@ func (gs *Generators) Remove(id int) error {
 	}
 	return nil
 }
+
+func (gs *Generators) Len() int {
+	return len(gs.List)
+}
+
+func (gs *Generators) Less(i, j int) bool {
+	return gs.List[i].ID < gs.List[j].ID
+}
+
+func (gs *Generators) Swap(i, j int) {
+	gs.List[i], gs.List[j] = gs.List[j], gs.List[i]
+}

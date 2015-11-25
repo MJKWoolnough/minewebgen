@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"sort"
 	"sync"
 
 	"github.com/MJKWoolnough/minewebgen/internal/data"
@@ -39,6 +40,9 @@ func LoadConfig(filename string) (*Config, error) {
 			return nil, err
 		}
 	}
+	sort.Sort(c.Servers)
+	sort.Sort(c.Maps)
+	sort.Sort(c.Generators)
 	return c, nil
 }
 
