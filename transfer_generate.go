@@ -8,6 +8,7 @@ import (
 
 	"github.com/MJKWoolnough/byteio"
 	"github.com/MJKWoolnough/minecraft"
+	"github.com/MJKWoolnough/minewebgen/internal/data"
 	"github.com/MJKWoolnough/ora"
 )
 
@@ -50,7 +51,7 @@ func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.Sticky
 		w.WriteUint8(1)
 		w.WriteInt16(int16(len(gNames)))
 		for _, gName := range gNames {
-			writeString(w, gName)
+			data.WriteString(w, gName)
 		}
 		if w.Err != nil {
 			return w.Err
@@ -77,7 +78,7 @@ func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.Sticky
 			select {
 			case message := <-m:
 				w.WriteUint8(3)
-				writeString(w, message)
+				data.WriteString(w, message)
 			case p := <-c:
 				w.WriteUint8(4)
 				w.WriteInt32(p.X)

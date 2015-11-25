@@ -16,29 +16,18 @@ import (
 	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xform"
 	"github.com/MJKWoolnough/gopherjs/xjs"
+	"github.com/MJKWoolnough/minewebgen/internal/data"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/websocket"
 	"honnef.co/go/js/dom"
 )
 
 func ReadError(r *byteio.StickyReader) error {
-	s := ReadString(r)
+	s := data.ReadString(r)
 	if r.Err != nil {
 		return r.Err
 	}
 	return errors.New(s)
-}
-
-func WriteString(w *byteio.StickyWriter, s string) {
-	w.WriteUint16(uint16(len(s)))
-	w.Write([]byte(s))
-}
-
-func ReadString(r *byteio.StickyReader) string {
-	length := r.ReadUint16()
-	str := make([]byte, int(length))
-	io.ReadFull(r, str)
-	return string(str)
 }
 
 func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom.Node {
@@ -139,7 +128,7 @@ func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom
 
 			if url.Checked {
 				w.WriteUint8(typeID << 1)
-				WriteString(&w, urlI.Value)
+				data.WriteString(&w, urlI.Value)
 				length := int(r.ReadInt32())
 				total := 0
 				for total < length {
@@ -168,7 +157,7 @@ func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom
 			d.RemoveChild(pb)
 			xjs.SetInnerText(status, "Checking File")
 
-			WriteString(&w, name.Value)
+			data.WriteString(&w, name.Value)
 
 			var (
 				canvas *dom.HTMLCanvasElement
@@ -189,7 +178,7 @@ func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom
 					for i := range files {
 						files[i] = xform.Option{
 							Value: strconv.Itoa(i),
-							Label: ReadString(&r),
+							Label: data.ReadString(&r),
 						}
 					}
 					j := xform.SelectBox("files", files...)
@@ -233,7 +222,7 @@ func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom
 					ctx = canvas.GetContext2d()
 					ctx.Scale(8, 8)
 				case 3:
-					xjs.SetInnerText(status, ReadString(&r))
+					xjs.SetInnerText(status, data.ReadString(&r))
 				case 4:
 					x := r.ReadInt32()
 					y := r.ReadInt32()

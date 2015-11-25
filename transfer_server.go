@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/MJKWoolnough/byteio"
+	"github.com/MJKWoolnough/minewebgen/internal/data"
 )
 
 func (t Transfer) server(name string, r *byteio.StickyReader, w *byteio.StickyWriter, f *os.File, size int64) error {
@@ -43,7 +44,7 @@ func (t Transfer) server(name string, r *byteio.StickyReader, w *byteio.StickyWr
 			w.WriteUint8(1)
 			w.WriteInt16(int16(len(jars)))
 			for _, jar := range jars {
-				writeString(w, jar.Name)
+				data.WriteString(w, jar.Name)
 			}
 			if w.Err != nil {
 				return w.Err

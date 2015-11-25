@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/MJKWoolnough/byteio"
+	"github.com/MJKWoolnough/minewebgen/internal/data"
 	"golang.org/x/net/websocket"
 )
 
@@ -58,7 +59,7 @@ func (t Transfer) handle(r *byteio.StickyReader, w *byteio.StickyWriter) error {
 	}
 	var size int64
 	if transferType&1 == 0 {
-		url := readString(r)
+		url := data.ReadString(r)
 		if r.Err != nil {
 			return err
 		}
@@ -81,7 +82,7 @@ func (t Transfer) handle(r *byteio.StickyReader, w *byteio.StickyWriter) error {
 		size = int64(length)
 	}
 	f.Seek(0, 0)
-	name := readString(r)
+	name := data.ReadString(r)
 	if r.Err != nil {
 		return r.Err
 	}

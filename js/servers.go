@@ -385,7 +385,7 @@ func serverConsole(s data.Server) func(dom.Element) {
 					}
 					return
 				case 1:
-					log.Value += ReadString(&r)
+					log.Value += data.ReadString(&r)
 					log.Set("scrollTop", log.Get("scrollHeight"))
 				}
 			}

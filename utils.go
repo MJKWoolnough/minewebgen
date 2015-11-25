@@ -8,23 +8,12 @@ import (
 	"syscall"
 
 	"github.com/MJKWoolnough/byteio"
+	"github.com/MJKWoolnough/minewebgen/internal/data"
 )
 
 func writeError(w *byteio.StickyWriter, err error) {
 	w.WriteUint8(0)
-	writeString(w, err.Error())
-}
-
-func readString(r *byteio.StickyReader) string {
-	length := r.ReadUint16()
-	str := make([]byte, int(length))
-	io.ReadFull(r, str)
-	return string(str)
-}
-
-func writeString(w *byteio.StickyWriter, str string) {
-	w.WriteUint16(uint16(len(str)))
-	w.Write([]byte(str))
+	data.WriteString(w, err.Error())
 }
 
 func moveFile(from, to string) error {
