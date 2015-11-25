@@ -116,11 +116,8 @@ func (s *Servers) Remove(id int) {
 	s.mu.Unlock()
 	for n, ser := range s.List {
 		if ser.ID == id {
-			l := len(s.List)
-			if l != n {
-				s.List[n], s.List[l-1] = s.List[l-1], s.List[n]
-			}
-			s.List = s.List[:l-1]
+			copy(s.List[n:], s.List[n+1:])
+			s.List = s.List[:len(s.List)-1]
 			os.RemoveAll(ser.Path)
 			break
 		}
@@ -175,11 +172,8 @@ func (m *Maps) Remove(id int) {
 	m.mu.Unlock()
 	for n, mp := range m.List {
 		if mp.ID == id {
-			l := len(m.List)
-			if l != n {
-				m.List[n], m.List[l-1] = m.List[l-1], m.List[n]
-			}
-			m.List = m.List[:l-1]
+			copy(m.List[n:], m.List[n+1:])
+			m.List = m.List[:len(m.List)-1]
 			os.RemoveAll(mp.Path)
 			break
 		}
@@ -300,11 +294,8 @@ func (gs *Generators) Remove(id int) error {
 	gs.mu.Unlock()
 	for n, g := range gs.List {
 		if g.ID == id {
-			l := len(gs.List)
-			if l != n {
-				gs.List[n], gs.List[l-1] = gs.List[l-1], gs.List[n]
-			}
-			gs.List = gs.List[:l-1]
+			copy(gs.List[n:], gs.List[n+1:])
+			gs.List = gs.List[:len(gs.List)-1]
 			os.RemoveAll(g.Path)
 			break
 		}
