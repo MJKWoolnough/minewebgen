@@ -23,7 +23,7 @@ type ColourBiome struct {
 	Name   string
 }
 
-type Generator struct {
+type GeneratorData struct {
 	Terrain []ColourBlocks
 	Biomes  []ColourBiome
 	Plants  []ColourBlocks

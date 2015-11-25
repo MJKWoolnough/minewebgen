@@ -32,7 +32,7 @@ func main() {
 
 	t := Transfer{c}
 	con := Console{controller}
-	http.Handle("/download/generator/", c.Generators.Download(c))
+	http.Handle("/download/generator/", http.HandlerFunc(c.Generators.Download))
 	http.Handle("/download/server/", http.HandlerFunc(c.Servers.Download))
 	http.Handle("/download/maps/", http.HandlerFunc(c.Maps.Download))
 	http.Handle("/transfer", websocket.Handler(t.Websocket))

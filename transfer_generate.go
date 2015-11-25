@@ -1,9 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
-	"image/color"
 	"os"
+	"os/exec"
 	"path"
 
 	"github.com/MJKWoolnough/byteio"
@@ -41,68 +42,50 @@ func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.Sticky
 	w.WriteInt32(int32(b.Max.X) >> 4)
 	w.WriteInt32(int32(b.Max.Y) >> 4)
 
-	gNames := t.c.Generators.Names()
-	var gID int16
-	if len(gNames) == 0 {
+	t.c.Generators.mu.RLock()
+	gs := make([]data.Generator, len(t.c.Generators.List))
+	for n, g := range t.c.Generators.List {
+		gs[n] = *g
+	}
+	t.c.Generators.mu.RUnlock()
+	var g data.Generator
+	if len(gs) == 0 {
 		return errors.New("no generators installed")
-	} else if len(gNames) == 1 {
-		gID = 0
+	} else if len(gs) == 1 {
+		g = gs[0]
 	} else {
 		w.WriteUint8(1)
-		w.WriteInt16(int16(len(gNames)))
-		for _, gName := range gNames {
-			data.WriteString(w, gName)
+		w.WriteInt16(int16(len(gs)))
+		for _, tg := range gs {
+			data.WriteString(w, tg.Name)
 		}
 		if w.Err != nil {
 			return w.Err
 		}
-		gID = r.ReadInt16()
-		if gID < 0 || int(gID) >= len(gNames) {
+		gID := r.ReadInt16()
+		if gID < 0 || int(gID) >= len(gs) {
 			return errors.New("unknown generator")
 		}
-	}
-
-	g := t.c.Generators.Get(gNames[gID])
-	if g == nil {
-		return errors.New("generator removed")
-	}
-
-	c := make(chan paint, 1024)
-	m := make(chan string, 4)
-	e := make(chan struct{}, 0)
-	defer close(e)
-	go func() {
-		defer close(c)
-		defer close(m)
-		for {
-			select {
-			case message := <-m:
-				w.WriteUint8(3)
-				data.WriteString(w, message)
-			case p := <-c:
-				w.WriteUint8(4)
-				w.WriteInt32(p.X)
-				w.WriteInt32(p.Y)
-				r, g, b, a := p.RGBA()
-				w.WriteUint8(uint8(r >> 8))
-				w.WriteUint8(uint8(g >> 8))
-				w.WriteUint8(uint8(b >> 8))
-				w.WriteUint8(uint8(a >> 8))
-			case <-e:
-				return
-			}
-		}
-	}()
-
-	if err = g.Generate(name, mapPath, o, c, m); err != nil {
-		return err
+		g = gs[gID]
 	}
 
 	ms := DefaultMapSettings()
 	ms["level-type"] = minecraft.FlatGenerator
 	ms["generator-settings"] = "0"
 	ms["motd"] = name
-	for k, v := range g.generator.Options {
+
+	j, err := os.Open(path.Join(g.Path, "data.gen"))
+	if err != nil {
+		return err
+	}
+	var gj data.GeneratorData
+	err = json.NewDecoder(j).Decode(&gj)
+	j.Close()
+	if err != nil {
+		return err
+	}
+
+	for k, v := range gj.Options {
 		ms[k] = v
 	}
 
@@ -116,15 +99,42 @@ func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.Sticky
 	}
 	pf.Close()
 
+	cmd := exec.Command(t.c.Settings().GeneratorPath)
+	cmd.ExtraFiles = append(cmd.ExtraFiles, f)
+	cmd.Dir, err = os.Getwd()
+	if err != nil {
+		return err
+	}
+	cmd.Stdout = w
+	pw, err := cmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	pww := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{pw}}
+	pww.WriteInt64(size)
+	data.WriteString(&pww, g.Path)
+	data.WriteString(&pww, name)
+	data.WriteString(&pww, mapPath)
+
+	if pww.Err != nil {
+		return pww.Err
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		return err
+	}
+
 	done = true
 	mp.Lock()
 	mp.Server = -1
 	mp.Unlock()
 
 	return nil
-}
-
-type paint struct {
-	color.Color
-	X, Y int32
 }

@@ -18,6 +18,10 @@ func (t Transfer) server(name string, r *byteio.StickyReader, w *byteio.StickyWr
 	}
 	jars := make([]*zip.File, 0, 16)
 	for _, file := range zr.File {
+		if file.Name == "server.jar" {
+			jars = []*zip.File{file}
+			break
+		}
 		if strings.HasSuffix(file.Name, ".jar") {
 			jars = append(jars, file)
 		}
@@ -55,9 +59,8 @@ func (t Transfer) server(name string, r *byteio.StickyReader, w *byteio.StickyWr
 			}
 			if int(p) >= len(jars) || p < 0 {
 				return errors.New("error selecting server jar")
-			} else {
-				jars[0] = jars[p]
 			}
+			jars[0] = jars[p]
 		}
 		if err == nil {
 			err = unzip(zr, d)

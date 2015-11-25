@@ -431,22 +431,33 @@ func (r RPC) SetServerEULA(d data.ServerEULA, _ *struct{}) error {
 	return err
 }
 
-func (r RPC) Generators(_ struct{}, gs *[]string) error {
-	*gs = r.c.Generators.Names()
+func (r RPC) Generators(_ struct{}, list *[]data.Generator) error {
+	r.c.Generators.mu.RLock()
+	defer r.c.Generators.mu.RUnlock()
+	*list = make([]data.Generator, len(r.c.Generators.List))
+	for n, g := range r.c.Generators.List {
+		(*list)[n] = *g
+	}
 	return nil
 }
 
-func (r RPC) Generator(name string, g *data.Generator) error {
-	tg := r.c.Generators.Get(name)
-	if tg == nil {
+func (r RPC) Generator(id int, gd *data.GeneratorData) error {
+	g := r.c.Generator(id)
+	if g == nil {
 		return ErrUnknownGenerator
 	}
-	*g = tg.generator
-	return nil
+	f, err := os.Open(path.Join(g.Path, "data.gen"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return json.NewDecoder(f).Decode(gd)
 }
 
-func (r RPC) RemoveGenerator(name string, _ *struct{}) error {
-	return r.c.Generators.Remove(name, r.c.Settings().DirGenerators)
+func (r RPC) RemoveGenerator(id int, _ *struct{}) error {
+	r.c.RemoveGenerator(id)
+	go r.c.Save()
+	return nil
 }
 
 // Errors

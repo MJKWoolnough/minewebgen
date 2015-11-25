@@ -3,16 +3,13 @@ package main
 import (
 	"archive/zip"
 	"encoding/json"
-	"image/color"
 	"io"
 	"net/http"
 	"os"
 	"path"
-	"sort"
 	"strconv"
 	"sync"
 
-	"github.com/MJKWoolnough/minecraft"
 	"github.com/MJKWoolnough/minewebgen/internal/data"
 )
 
@@ -242,138 +239,73 @@ func (m *Maps) New(path string) *data.Map {
 }
 
 type Generators struct {
-	mu    sync.RWMutex
-	list  map[string]*generator
-	names []string
+	mu   sync.RWMutex
+	List []*data.Generator
 }
 
-func (gs *Generators) Get(name string) *generator {
+func (gs *Generators) New(path string) *data.Generator {
+	gPath := freePath(path)
+	if gPath == "" {
+		return nil
+	}
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+	id := 0
+	for _, g := range gs.List {
+		if g.ID >= id {
+			id = g.ID + 1
+		}
+	}
+	g := &data.Generator{
+		ID:   id,
+		Path: gPath,
+		Name: "New Generator",
+	}
+	gs.List = append(gs.List, g)
+	return g
+}
+
+func (gs *Generators) Get(id int) *data.Generator {
 	gs.mu.RLock()
 	defer gs.mu.RUnlock()
-	return gs.list[name]
-}
-
-func (gs *Generators) Names() []string {
-	gs.mu.RLock()
-	defer gs.mu.RUnlock()
-	n := make([]string, len(gs.names))
-	copy(n, gs.names)
-	return n
-}
-
-func (gs *Generators) Download(c *Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fname := path.Base(r.URL.Path)
-		if len(fname) < 5 || fname[len(fname)-5:] != ".json" {
-			http.Error(w, "not found", http.StatusNotFound)
-			return
+	for _, g := range gs.List {
+		if g.ID == id {
+			return g
 		}
-		http.ServeFile(w, r, path.Join(c.Settings().DirGenerators, fname[:len(fname)-5]+".gen"))
-	}
-}
-
-var empty = struct {
-	Blocks []data.ColourBlocks
-	Biome  []data.ColourBiome
-}{
-	[]data.ColourBlocks{{Name: "Empty"}},
-	[]data.ColourBiome{{Name: "Plains", Biome: 1}},
-}
-
-func (gs *Generators) Load(gPath string) error {
-	d, err := os.Open(gPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		return err
-	}
-	fs, err := d.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	gs.list = make(map[string]*generator)
-	gs.names = make([]string, 0, 32)
-	for _, name := range fs {
-		if len(name) < 5 {
-			continue
-		}
-		if name[len(name)-4:] != ".gen" {
-			continue
-		}
-		f, err := os.Open(path.Join(gPath, name))
-		if err != nil {
-			continue
-		}
-
-		gName := name[:len(name)-4]
-
-		err = gs.LoadGenerator(gName, f)
-		if err != nil {
-			continue
-		}
-
 	}
 	return nil
 }
 
-func (gs *Generators) LoadGenerator(name string, f *os.File) error {
-	g := new(generator)
-	err := json.NewDecoder(f).Decode(&g.generator)
+func (gs *Generators) Download(w http.ResponseWriter, r *http.Request) {
+	b := path.Base(r.URL.Path)
+	if len(b) < 5 || b[len(b)-4:] != ".zip" {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	id, err := strconv.Atoi(b[:len(b)-4])
 	if err != nil {
-		return err
+		http.Error(w, "not found", http.StatusNotFound)
 	}
-	if len(g.generator.Terrain) == 0 {
-		g.generator.Terrain = empty.Blocks
+	g := gs.Get(id)
+	if g == nil {
+		http.Error(w, "unknown generator", http.StatusNotFound)
+		return
 	}
-	if len(g.generator.Biomes) == 0 {
-		g.generator.Biomes = empty.Biome
-	}
-	if len(g.generator.Plants) == 0 {
-		g.generator.Plants = empty.Blocks
-	}
-
-	g.Terrain.Blocks = make([]data.Blocks, len(g.generator.Terrain)+1)
-	g.Terrain.Palette = make(color.Palette, len(g.generator.Terrain))
-	for i := range g.generator.Terrain {
-		g.Terrain.Blocks[i] = g.generator.Terrain[i].Blocks
-		g.Terrain.Palette[i] = g.generator.Terrain[i].Colour
-	}
-	g.Terrain.Blocks[len(g.Terrain.Blocks)-1].Base.ID = 9
-
-	g.Biomes.Values = make([]minecraft.Biome, len(g.generator.Biomes))
-	g.Biomes.Palette = make(color.Palette, len(g.generator.Biomes))
-	for i := range g.generator.Biomes {
-		g.Biomes.Values[i] = g.generator.Biomes[i].Biome
-		g.Biomes.Palette[i] = g.generator.Biomes[i].Colour
-	}
-
-	g.Plants.Blocks = make([]data.Blocks, len(g.generator.Plants))
-	g.Plants.Palette = make(color.Palette, len(g.generator.Plants))
-	for i := range g.generator.Plants {
-		g.Plants.Blocks[i] = g.generator.Plants[i].Blocks
-		g.Plants.Palette[i] = g.generator.Plants[i].Colour
-	}
-	gs.mu.Lock()
-	defer gs.mu.Unlock()
-	gs.list[name] = g
-	gs.names = append(gs.names, name)
-	sort.Strings(gs.names)
-	return nil
+	w.Header().Set("Content-Type", "application/zip")
+	archive(w, g.Path)
 }
 
-func (gs *Generators) Remove(name, dir string) error {
+func (gs *Generators) Remove(id int) error {
 	gs.mu.Lock()
-	defer gs.mu.Unlock()
-	if _, ok := gs.list[name]; !ok {
-		return ErrUnknownGenerator
-	}
-	delete(gs.list, name)
-	for n, m := range gs.names {
-		if m == name {
-			copy(gs.names[n:], gs.names[n+1:])
-			gs.names = gs.names[:len(gs.names)-1]
-			os.Remove(path.Join(dir, name+".gen"))
+	gs.mu.Unlock()
+	for n, g := range gs.List {
+		if g.ID == id {
+			l := len(gs.List)
+			if l != n {
+				gs.List[n], gs.List[l-1] = gs.List[l-1], gs.List[n]
+			}
+			gs.List = gs.List[:l-1]
+			os.RemoveAll(g.Path)
 			break
 		}
 	}
@@ -399,14 +331,12 @@ func LoadConfig(filename string) (*Config, error) {
 	c.ServerSettings.DirServers = "servers"
 	c.ServerSettings.DirMaps = "maps"
 	c.ServerSettings.DirGenerators = "generators"
+	c.ServerSettings.GeneratorPath = "./generator"
 	c.filename = filename
 	f, err := os.Open(filename)
 	if err == nil {
 		defer f.Close()
 		err = json.NewDecoder(f).Decode(c)
-		if err == nil {
-			err = c.Generators.Load(c.ServerSettings.DirGenerators)
-		}
 	}
 	if err != nil {
 		if !os.IsNotExist(err) {
@@ -473,4 +403,20 @@ func (c *Config) SetSettings(s data.ServerSettings) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.ServerSettings = s
+}
+
+func (c *Config) Generator(id int) *data.Generator {
+	if id < 0 {
+		return nil
+	}
+	return c.Generators.Get(id)
+}
+
+func (c *Config) NewGenerator() *data.Generator {
+	p := c.Settings().DirGenerators
+	return c.Generators.New(p)
+}
+
+func (c *Config) RemoveGenerator(id int) {
+	c.Generators.Remove(id)
 }

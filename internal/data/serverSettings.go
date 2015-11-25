@@ -32,6 +32,7 @@ type ServerSettings struct {
 	ServerName                         string
 	ListenAddr                         string
 	DirServers, DirMaps, DirGenerators string
+	GeneratorPath                      string
 }
 
 type Server struct {
@@ -52,4 +53,10 @@ type Map struct {
 	sync.RWMutex `json:"-"`
 	Name         string
 	Server       int
+}
+
+type Generator struct {
+	ID   int
+	Path string
+	Name string
 }
