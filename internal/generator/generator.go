@@ -40,7 +40,7 @@ func toPaletted(o *ora.ORA, name string, palette color.Palette) (*image.Paletted
 }
 
 type generator struct {
-	generator data.Generator
+	generator data.GeneratorData
 	Terrain   struct {
 		Blocks  []data.Blocks
 		Palette color.Palette
