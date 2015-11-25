@@ -39,6 +39,39 @@ func toPaletted(o *ora.ORA, name string, palette color.Palette) (*image.Paletted
 	return p, nil
 }
 
+type level struct {
+	*minecraft.Level
+}
+
+func (l *level) checkMem() {
+
+}
+
+func (l *level) GetBiome(x, z int32) (minecraft.Biome, error) {
+	l.checkMem()
+	return l.Level.GetBiome(x, z)
+}
+
+func (l *level) GetBlock(x, y, z int32) (minecraft.Block, error) {
+	l.checkMem()
+	return l.Level.GetBlock(x, y, z)
+}
+
+func (l *level) GetHeight(x, z int32) (int32, error) {
+	l.checkMem()
+	return l.Level.GetHeight(x, z)
+}
+
+func (l *level) SetBiome(x, z int32, biome minecraft.Biome) error {
+	l.checkMem()
+	return l.Level.SetBiome(x, z, biome)
+}
+
+func (l *level) SetBlock(x, y, z int32, block minecraft.Block) error {
+	l.checkMem()
+	return l.Level.SetBlock(x, y, z, block)
+}
+
 type generator struct {
 	generator data.GeneratorData
 	Terrain   struct {
@@ -90,10 +123,11 @@ func (g *generator) Generate(name, mapPath string, o *ora.ORA, c chan paint, m c
 		return err
 	}
 
-	level, err := minecraft.NewLevel(p)
+	l, err := minecraft.NewLevel(p)
 	if err != nil {
 		return err
 	}
+	level := &level{l}
 
 	level.LevelName(name)
 
@@ -292,7 +326,7 @@ func (c *chunkCache) getFromCache(x, z int32, terrain uint8, height int32) nbt.T
 	return chunk
 }
 
-func (g *generator) buildTerrain(mpath minecraft.Path, level *minecraft.Level, terrain, biomes, plants *image.Paletted, height, water *image.Gray, c chan paint) error {
+func (g *generator) buildTerrain(mpath minecraft.Path, level *level, terrain, biomes, plants *image.Paletted, height, water *image.Gray, c chan paint) error {
 	b := terrain.Bounds()
 	proceed := make(chan uint8, 10)
 	errChan := make(chan error, 1)
