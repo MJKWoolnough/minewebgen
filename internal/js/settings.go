@@ -65,7 +65,7 @@ func settingsTab(c dom.Element) {
 		xform.Label("Maps Path", "mapsPath"), mp, xdom.Br(),
 		xform.Label("Generators Path", "gensPath"), gp, xdom.Br(),
 		xform.Label("Generator Executable", "genExe"), ge, xdom.Br(),
-		xform.Label("Generator Memory (MB)", "mamMem"), mm, xdom.Br(),
+		xform.Label("Generator Memory (MB)", "maxMem"), mm, xdom.Br(),
 		sb,
 	)))
 }
