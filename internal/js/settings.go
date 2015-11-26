@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/MJKWoolnough/gopherjs/xdom"
 	"github.com/MJKWoolnough/gopherjs/xform"
 	"github.com/MJKWoolnough/gopherjs/xjs"
@@ -47,6 +49,11 @@ func settingsTab(c dom.Element) {
 				return
 			}
 			SetTitle(sn.Value)
+			span := xdom.Span()
+			span.Style().Set("color", "#f00")
+			c.AppendChild(xjs.SetInnerText(span, "Saved!"))
+			time.Sleep(5 * time.Second)
+			c.RemoveChild(span)
 			sb.Disabled = false
 		}()
 	})
