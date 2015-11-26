@@ -28,6 +28,7 @@ func GeneratorsTab(c dom.Element) {
 				GeneratorsTab(c)
 			})
 			d.AppendChild(transferFile("Map", "Upload/Download", 3, o))
+			xjs.Body().AppendChild(o)
 		})
 		table := xjs.AppendChildren(xdom.Table(), xjs.AppendChildren(xdom.Tr(), xjs.SetInnerText(xdom.Th(), "Generator")))
 		if len(gs) == 0 {
