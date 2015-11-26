@@ -23,11 +23,13 @@ func settingsTab(c dom.Element) {
 	mp.Required = true
 	gp := xform.InputText("gensPath", s.DirGenerators)
 	gp.Required = true
-	ge := xform.InputText("genExe", s.GeneratorPath)
+	ge := xform.InputText("genExe", s.GeneratorExecutable)
 	ge.Required = true
+	mm := xform.InputNumber("maxMem", 100, 10000, float64(s.GeneratorMaxMem/1024/1024))
+	mm.Required = true
 	sb := xform.InputSubmit("Save")
 	sb.AddEventListener("click", false, func(e dom.Event) {
-		if sn.Value == "" || la.Value == "" || sp.Value == "" || mp.Value == "" {
+		if sn.Value == "" || la.Value == "" || sp.Value == "" || mp.Value == "" || gp.Value == "" || ge.Value == "" || !mm.CheckValidity() {
 			return
 		}
 		e.PreventDefault()
@@ -38,7 +40,8 @@ func settingsTab(c dom.Element) {
 			s.DirServers = sp.Value
 			s.DirMaps = mp.Value
 			s.DirGenerators = gp.Value
-			s.GeneratorPath = ge.Value
+			s.GeneratorExecutable = ge.Value
+			s.GeneratorMaxMem = int64(mm.ValueAsNumber * 1024 * 1024)
 			if err := RPC.SetSettings(s); err != nil {
 				xjs.Alert("Error saving settings: %s", err)
 				return
@@ -55,6 +58,7 @@ func settingsTab(c dom.Element) {
 		xform.Label("Maps Path", "mapsPath"), mp, xdom.Br(),
 		xform.Label("Generators Path", "gensPath"), gp, xdom.Br(),
 		xform.Label("Generator Executable", "genExe"), ge, xdom.Br(),
+		xform.Label("Generator Memory (MB)", "mamMem"), mm, xdom.Br(),
 		sb,
 	)))
 }

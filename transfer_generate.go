@@ -89,7 +89,7 @@ func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.Sticky
 	}
 	pf.Close()
 
-	cmd := exec.Command(t.c.Settings().GeneratorPath)
+	cmd := exec.Command(t.c.Settings().GeneratorExecutable)
 	cmd.ExtraFiles = append(cmd.ExtraFiles, f)
 	cmd.Dir, err = os.Getwd()
 	if err != nil {
@@ -107,6 +107,7 @@ func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.Sticky
 	}
 
 	pww := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{pw}}
+	pww.WriteInt64(t.c.Settings().GeneratorMaxMem)
 	pww.WriteInt64(size)
 	data.WriteString(&pww, g.Path)
 	data.WriteString(&pww, name)
