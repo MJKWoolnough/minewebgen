@@ -75,4 +75,9 @@ func main() {
 		controller.stopAll()
 		log.Println("...servers stopped")
 	}
+	if len(gp.cmds) > 0 {
+		log.Println("Stopping all generators...")
+		gp.StopAll()
+		log.Println("...generators stopped")
+	}
 }
