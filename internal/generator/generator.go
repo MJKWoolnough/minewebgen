@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -41,11 +42,27 @@ func toPaletted(o *ora.ORA, name string, palette color.Palette) (*image.Paletted
 
 type level struct {
 	*minecraft.Level
-	memoryLimit int64
+	MemoryLimit int64
+	memStats    runtime.MemStats
+	toCheck     uint16
 }
 
-func (l *level) checkMem() {
+const CHECKLEVEL = 1024
 
+func (l *level) checkMem() {
+	if l.MemoryLimit == 0 {
+		return
+	}
+	if l.toCheck == CHECKLEVEL {
+		runtime.ReadMemStats(&l.memStats)
+		if l.memStats.HeapAlloc > uint64(l.MemoryLimit) {
+			l.Save()
+			l.Close()
+		}
+		l.toCheck = 0
+	} else {
+		l.toCheck++
+	}
 }
 
 func (l *level) GetBiome(x, z int32) (minecraft.Biome, error) {
@@ -128,7 +145,7 @@ func (g *generator) Generate(name, mapPath string, o *ora.ORA, c chan paint, m c
 	if err != nil {
 		return err
 	}
-	level := &level{l, memoryLimit}
+	level := &level{Level: l, MemoryLimit: memoryLimit}
 
 	level.LevelName(name)
 
