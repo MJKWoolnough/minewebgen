@@ -10,14 +10,9 @@ import (
 	"github.com/MJKWoolnough/byteio"
 	"github.com/MJKWoolnough/minecraft"
 	"github.com/MJKWoolnough/minewebgen/internal/data"
-	"github.com/MJKWoolnough/ora"
 )
 
 func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.StickyWriter, f *os.File, size int64) error {
-	o, err := ora.Open(f, size)
-	if err != nil {
-		return err
-	}
 	mp := t.c.NewMap()
 	if mp == nil {
 		return errors.New("failed to create map")
@@ -36,11 +31,6 @@ func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.Sticky
 	mapPath := mp.Path
 	mp.Server = -2
 	mp.Unlock()
-
-	b := o.Bounds()
-	w.WriteUint8(2)
-	w.WriteInt32(int32(b.Max.X) >> 4)
-	w.WriteInt32(int32(b.Max.Y) >> 4)
 
 	t.c.Generators.mu.RLock()
 	gs := make([]data.Generator, len(t.c.Generators.List))

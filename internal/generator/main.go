@@ -86,13 +86,18 @@ func generate(r *byteio.StickyReader, w *byteio.StickyWriter, of *os.File) error
 		return err
 	}
 
+	b := o.Bounds()
+	w.WriteUint8(2)
+	w.WriteInt32(int32(b.Max.X) >> 4)
+	w.WriteInt32(int32(b.Max.Y) >> 4)
+
 	c := make(chan paint, 1024)
 	m := make(chan string, 4)
 	e := make(chan struct{}, 0)
-	defer close(e)
 	go func() {
-		defer close(c)
+		defer close(e)
 		defer close(m)
+		defer close(c)
 		for {
 			select {
 			case message := <-m:
@@ -113,10 +118,11 @@ func generate(r *byteio.StickyReader, w *byteio.StickyWriter, of *os.File) error
 		}
 	}()
 
-	if err = g.Generate(levelName, mapPath, o, c, m); err != nil {
-		return err
-	}
-	return nil
+	err = g.Generate(levelName, mapPath, o, c, m)
+
+	e <- struct{}{}
+	<-e
+	return err
 }
 
 type paint struct {
