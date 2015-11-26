@@ -63,7 +63,7 @@ func main() {
 }
 
 func generate(r *byteio.StickyReader, w *byteio.StickyWriter, of *os.File) error {
-	memoryLimit := r.ReadInt64()
+	memoryLimit := r.ReadUint64()
 	size := r.ReadInt64()
 	gPath := data.ReadString(r)
 	levelName := data.ReadString(r)

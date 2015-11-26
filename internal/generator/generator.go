@@ -42,7 +42,7 @@ func toPaletted(o *ora.ORA, name string, palette color.Palette) (*image.Paletted
 
 type level struct {
 	*minecraft.Level
-	MemoryLimit int64
+	MemoryLimit uint64
 	memStats    runtime.MemStats
 	toCheck     uint16
 }
@@ -106,7 +106,7 @@ type generator struct {
 	}
 }
 
-func (g *generator) Generate(name, mapPath string, o *ora.ORA, c chan paint, m chan string, memoryLimit int64) error {
+func (g *generator) Generate(name, mapPath string, o *ora.ORA, c chan paint, m chan string, memoryLimit uint64) error {
 	sTerrain, err := toPaletted(o, "terrain", g.Terrain.Palette)
 	if err != nil {
 		return err

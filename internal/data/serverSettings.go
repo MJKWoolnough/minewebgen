@@ -33,7 +33,7 @@ type ServerSettings struct {
 	ListenAddr                         string
 	DirServers, DirMaps, DirGenerators string
 	GeneratorExecutable                string
-	GeneratorMaxMem                    int64
+	GeneratorMaxMem                    uint64
 }
 
 type Server struct {

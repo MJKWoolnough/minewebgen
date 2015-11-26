@@ -43,7 +43,7 @@ func settingsTab(c dom.Element) {
 			s.DirMaps = mp.Value
 			s.DirGenerators = gp.Value
 			s.GeneratorExecutable = ge.Value
-			s.GeneratorMaxMem = int64(mm.ValueAsNumber * 1024 * 1024)
+			s.GeneratorMaxMem = uint64(mm.ValueAsNumber * 1024 * 1024)
 			if err := RPC.SetSettings(s); err != nil {
 				xjs.Alert("Error saving settings: %s", err)
 				return
