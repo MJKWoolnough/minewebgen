@@ -17,6 +17,7 @@ func (t Transfer) generator(name string, r *byteio.StickyReader, w *byteio.Stick
 	if g == nil {
 		return errors.New("error creating generator")
 	}
+	g.Name = name
 
 	done := false
 	defer func() {
