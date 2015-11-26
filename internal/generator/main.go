@@ -119,7 +119,7 @@ func generate(r *byteio.StickyReader, w *byteio.StickyWriter, of *os.File) error
 		}
 	}()
 
-	err = g.Generate(levelName, mapPath, o, c, m)
+	err = g.Generate(levelName, mapPath, o, c, m, memoryLimit)
 
 	e <- struct{}{}
 	<-e
