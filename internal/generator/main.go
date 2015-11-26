@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"image/color"
 	"os"
+	"path"
 
 	"github.com/MJKWoolnough/byteio"
 	"github.com/MJKWoolnough/minecraft"
@@ -51,18 +52,13 @@ func LoadGenerator(f *os.File) (*generator, error) {
 	return g, nil
 }
 
-func errCheck(err error) {
-	if err != nil {
-
-	}
-}
-
 func main() {
 	r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{os.Stdin}}
 	w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{os.Stdout}}
-	if err := generate(&r, &w, os.NewFile(3, "data.gen")); err != nil {
+	if err := generate(&r, &w, os.NewFile(3, "data.ora")); err != nil {
 		w.WriteUint8(0)
 		data.WriteString(&w, err.Error())
+		os.Exit(1)
 	}
 }
 
@@ -78,12 +74,12 @@ func generate(r *byteio.StickyReader, w *byteio.StickyWriter, of *os.File) error
 	if err != nil {
 		return err
 	}
-	f, err := os.Open(gPath)
+	f, err := os.Open(path.Join(gPath, "data.gen"))
 	if err != nil {
 		return err
 	}
 	g, err := LoadGenerator(f)
-	if e := (f.Close()); e != nil {
+	if e := f.Close(); e != nil {
 		return e
 	}
 	if err != nil {
