@@ -28,7 +28,7 @@ func LoadConfig(filename string) (*Config, error) {
 	c.ServerSettings.DirServers = "servers"
 	c.ServerSettings.DirMaps = "maps"
 	c.ServerSettings.DirGenerators = "generators"
-	c.ServerSettings.GeneratorExecutable = "./generator"
+	c.ServerSettings.GeneratorExecutable = "generator"
 	c.ServerSettings.GeneratorMaxMem = 512 * 1024 * 1024
 	c.filename = filename
 	f, err := os.Open(filename)
