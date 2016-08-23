@@ -23,7 +23,7 @@ func rpcInit() error {
 		return err
 	}
 	conn.WebSocket.Call("addEventListener", "close", func(*js.Object) {
-		xjs.RemoveChildren(dom.GetWindow().Document().(dom.HTMLDocument).Body()).AppendChild(xjs.SetInnerText(xdom.H1(), "Connection Lost"))
+		xjs.RemoveChildren(xdom.Body()).AppendChild(xjs.SetInnerText(xdom.H1(), "Connection Lost"))
 	}, false)
 	dom.GetWindow().AddEventListener("beforeunload", false, func(dom.Event) {
 		switch conn.ReadyState {
