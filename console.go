@@ -19,7 +19,7 @@ type Console struct {
 
 func (c Console) Websocket(conn *websocket.Conn) {
 	conn.PayloadType = websocket.BinaryFrame
-	r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{conn}}
+	r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{Reader: conn}}
 	w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
 
 	err := c.handle(&r, &w)

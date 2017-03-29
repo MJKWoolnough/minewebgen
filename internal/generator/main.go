@@ -53,8 +53,8 @@ func LoadGenerator(f *os.File) (*generator, error) {
 }
 
 func main() {
-	r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{os.Stdin}}
-	w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{os.Stdout}}
+	r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{Reader: os.Stdin}}
+	w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: os.Stdout}}
 	if err := generate(&r, &w, os.NewFile(3, "data.ora")); err != nil {
 		w.WriteUint8(0)
 		data.WriteString(&w, err.Error())
