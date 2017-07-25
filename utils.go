@@ -11,7 +11,7 @@ import (
 	"github.com/MJKWoolnough/minewebgen/internal/data"
 )
 
-func writeError(w *byteio.StickyWriter, err error) {
+func writeError(w *byteio.StickyLittleEndianWriter, err error) {
 	w.WriteUint8(0)
 	data.WriteString(w, err.Error())
 }

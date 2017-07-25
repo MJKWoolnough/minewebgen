@@ -22,7 +22,7 @@ import (
 	"honnef.co/go/js/dom"
 )
 
-func ReadError(r *byteio.StickyReader) error {
+func ReadError(r *byteio.StickyLittleEndianReader) error {
 	s := data.ReadString(r)
 	if r.Err != nil {
 		return r.Err
@@ -120,8 +120,8 @@ func transferFile(typeName, method string, typeID uint8, o *overlay.Overlay) dom
 				return
 			}
 			defer conn.Close()
-			w := byteio.StickyWriter{Writer: byteio.LittleEndianWriter{Writer: conn}}
-			r := byteio.StickyReader{Reader: byteio.LittleEndianReader{Reader: conn}}
+			w := byteio.StickyLittleEndianWriter{Writer: conn}
+			r := byteio.StickyLittleEndianReader{Reader: conn}
 
 			pb := progress.New(color.RGBA{255, 0, 0, 0}, color.RGBA{0, 0, 255, 0}, 400, 50)
 			d.AppendChild(pb)

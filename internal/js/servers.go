@@ -360,8 +360,8 @@ func serverConsole(s data.Server) func(dom.Element) {
 				return
 			}
 			defer conn.Close()
-			w := byteio.StickyWriter{Writer: byteio.LittleEndianWriter{Writer: conn}}
-			r := byteio.StickyReader{Reader: byteio.LittleEndianReader{Reader: conn}}
+			w := byteio.StickyLittleEndianWriter{Writer: conn}
+			r := byteio.StickyLittleEndianReader{Reader: conn}
 			updateStop := make(chan struct{})
 			registerUpdateStopper(c, updateStop)
 			done := false

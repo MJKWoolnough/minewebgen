@@ -12,7 +12,7 @@ import (
 	"github.com/MJKWoolnough/minewebgen/internal/data"
 )
 
-func (t Transfer) generator(name string, r *byteio.StickyReader, w *byteio.StickyWriter, f *os.File, size int64) error {
+func (t Transfer) generator(name string, r *byteio.StickyLittleEndianReader, w *byteio.StickyLittleEndianWriter, f *os.File, size int64) error {
 	g := t.c.Generators.New(t.c.Settings().DirGenerators)
 	if g == nil {
 		return errors.New("error creating generator")

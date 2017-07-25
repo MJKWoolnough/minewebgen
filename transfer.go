@@ -12,7 +12,7 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-var transferFuncs = [...]func(Transfer, string, *byteio.StickyReader, *byteio.StickyWriter, *os.File, int64) error{
+var transferFuncs = [...]func(Transfer, string, *byteio.StickyLittleEndianReader, *byteio.StickyLittleEndianWriter, *os.File, int64) error{
 	Transfer.server,
 	Transfer.maps,
 	Transfer.generate,
@@ -21,7 +21,7 @@ var transferFuncs = [...]func(Transfer, string, *byteio.StickyReader, *byteio.St
 
 type downloadProgress struct {
 	io.Reader
-	*byteio.StickyWriter
+	*byteio.StickyLittleEndianWriter
 }
 
 func (d downloadProgress) Read(b []byte) (int, error) {
@@ -37,8 +37,8 @@ type Transfer struct {
 
 func (t Transfer) Websocket(conn *websocket.Conn) {
 	conn.PayloadType = websocket.BinaryFrame
-	r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{Reader: conn}}
-	w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
+	r := byteio.StickyLittleEndianReader{Reader: conn}
+	w := byteio.StickyLittleEndianWriter{Writer: conn}
 
 	err := t.handle(&r, &w)
 	if err != nil {
@@ -46,7 +46,7 @@ func (t Transfer) Websocket(conn *websocket.Conn) {
 	}
 }
 
-func (t Transfer) handle(r *byteio.StickyReader, w *byteio.StickyWriter) error {
+func (t Transfer) handle(r *byteio.StickyLittleEndianReader, w *byteio.StickyLittleEndianWriter) error {
 	transferType := r.ReadUint8()
 
 	if transferType>>1 > uint8(len(transferFuncs)) {

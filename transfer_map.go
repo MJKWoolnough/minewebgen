@@ -8,7 +8,7 @@ import (
 	"github.com/MJKWoolnough/byteio"
 )
 
-func (t Transfer) maps(name string, _ *byteio.StickyReader, _ *byteio.StickyWriter, f *os.File, size int64) error {
+func (t Transfer) maps(name string, _ *byteio.StickyLittleEndianReader, _ *byteio.StickyLittleEndianWriter, f *os.File, size int64) error {
 	zr, err := zip.NewReader(f, size)
 	if err != nil {
 		return err

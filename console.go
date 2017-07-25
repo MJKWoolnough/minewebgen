@@ -19,8 +19,8 @@ type Console struct {
 
 func (c Console) Websocket(conn *websocket.Conn) {
 	conn.PayloadType = websocket.BinaryFrame
-	r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{Reader: conn}}
-	w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: conn}}
+	r := byteio.StickyLittleEndianReader{Reader: conn}
+	w := byteio.StickyLittleEndianWriter{Writer: conn}
 
 	err := c.handle(&r, &w)
 	if err != nil {
@@ -34,7 +34,7 @@ var logPaths = []string{
 	"server.log",
 }
 
-func (c Console) handle(r *byteio.StickyReader, w *byteio.StickyWriter) error {
+func (c Console) handle(r *byteio.StickyLittleEndianReader, w *byteio.StickyLittleEndianWriter) error {
 	id := int(r.ReadInt32())
 	if r.Err != nil {
 		return r.Err
@@ -118,7 +118,7 @@ func (c Console) handle(r *byteio.StickyReader, w *byteio.StickyWriter) error {
 }
 
 type partWriter struct {
-	*byteio.StickyWriter
+	*byteio.StickyLittleEndianWriter
 }
 
 func (pw partWriter) Write(p []byte) (int, error) {
@@ -132,7 +132,7 @@ func (pw partWriter) Write(p []byte) (int, error) {
 		p = p[len(b):]
 		pw.WriteUint8(1)
 		pw.WriteUint16(uint16(len(b)))
-		pw.StickyWriter.Write(b)
+		pw.StickyLittleEndianWriter.Write(b)
 	}
 	return l, nil
 }

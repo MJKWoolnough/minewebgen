@@ -63,7 +63,7 @@ var gp = &generatorProcesses{
 	cmds: make([]*exec.Cmd, 0, 2),
 }
 
-func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.StickyWriter, f *os.File, size int64) error {
+func (t Transfer) generate(name string, r *byteio.StickyLittleEndianReader, w *byteio.StickyLittleEndianWriter, f *os.File, size int64) error {
 	gp.Add(1)
 	defer gp.Done()
 	mp := t.c.NewMap()
@@ -164,7 +164,7 @@ func (t Transfer) generate(name string, r *byteio.StickyReader, w *byteio.Sticky
 	}
 	defer gp.Remove(cmd)
 
-	pww := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: pw}}
+	pww := byteio.StickyLittleEndianWriter{Writer: pw}
 	pww.WriteUint64(t.c.Settings().GeneratorMaxMem)
 	pww.WriteInt64(size)
 	data.WriteString(&pww, g.Path)

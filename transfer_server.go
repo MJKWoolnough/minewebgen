@@ -11,7 +11,7 @@ import (
 	"github.com/MJKWoolnough/minewebgen/internal/data"
 )
 
-func (t Transfer) server(name string, r *byteio.StickyReader, w *byteio.StickyWriter, f *os.File, size int64) error {
+func (t Transfer) server(name string, r *byteio.StickyLittleEndianReader, w *byteio.StickyLittleEndianWriter, f *os.File, size int64) error {
 	zr, err := zip.NewReader(f, size)
 	if err != nil {
 		return err

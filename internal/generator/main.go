@@ -53,8 +53,8 @@ func LoadGenerator(f *os.File) (*generator, error) {
 }
 
 func main() {
-	r := byteio.StickyReader{Reader: &byteio.LittleEndianReader{Reader: os.Stdin}}
-	w := byteio.StickyWriter{Writer: &byteio.LittleEndianWriter{Writer: os.Stdout}}
+	r := byteio.StickyLittleEndianReader{Reader: os.Stdin}
+	w := byteio.StickyLittleEndianWriter{Writer: os.Stdout}
 	if err := generate(&r, &w, os.NewFile(3, "data.ora")); err != nil {
 		w.WriteUint8(0)
 		data.WriteString(&w, err.Error())
@@ -62,7 +62,7 @@ func main() {
 	}
 }
 
-func generate(r *byteio.StickyReader, w *byteio.StickyWriter, of *os.File) error {
+func generate(r *byteio.StickyLittleEndianReader, w *byteio.StickyLittleEndianWriter, of *os.File) error {
 	memoryLimit := r.ReadUint64()
 	size := r.ReadInt64()
 	gPath := data.ReadString(r)
