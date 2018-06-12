@@ -3,7 +3,7 @@ package data
 import (
 	"io"
 
-	"github.com/MJKWoolnough/byteio"
+	"vimagination.zapto.org/byteio"
 )
 
 func WriteString(w *byteio.StickyLittleEndianWriter, s string) {

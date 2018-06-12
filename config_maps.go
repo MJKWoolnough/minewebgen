@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/MJKWoolnough/minewebgen/internal/data"
+	"vimagination.zapto.org/minewebgen/internal/data"
 )
 
 type Maps struct {

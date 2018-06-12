@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/MJKWoolnough/minewebgen/internal/data"
+	"vimagination.zapto.org/minewebgen/internal/data"
 )
 
 type runner struct {

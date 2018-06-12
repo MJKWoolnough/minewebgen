@@ -8,8 +8,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/MJKWoolnough/byteio"
-	"github.com/MJKWoolnough/minewebgen/internal/data"
+	"vimagination.zapto.org/byteio"
+	"vimagination.zapto.org/minewebgen/internal/data"
 )
 
 func (t Transfer) generator(name string, r *byteio.StickyLittleEndianReader, w *byteio.StickyLittleEndianWriter, f *os.File, size int64) error {

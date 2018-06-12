@@ -7,8 +7,8 @@ import (
 	"path"
 	"syscall"
 
-	"github.com/MJKWoolnough/byteio"
-	"github.com/MJKWoolnough/minewebgen/internal/data"
+	"vimagination.zapto.org/byteio"
+	"vimagination.zapto.org/minewebgen/internal/data"
 )
 
 func writeError(w *byteio.StickyLittleEndianWriter, err error) {

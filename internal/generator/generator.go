@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/MJKWoolnough/minecraft"
-	"github.com/MJKWoolnough/minecraft/nbt"
-	"github.com/MJKWoolnough/minewebgen/internal/data"
-	"github.com/MJKWoolnough/ora"
+	"vimagination.zapto.org/minecraft"
+	"vimagination.zapto.org/minecraft/nbt"
+	"vimagination.zapto.org/minewebgen/internal/data"
+	"vimagination.zapto.org/ora"
 )
 
 func toGray(o *ora.ORA, name string) (*image.Gray, error) {

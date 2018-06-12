@@ -1,11 +1,11 @@
-package main
+package main // import "vimagination.zapto.org/minewebgen/internal/js"
 
 import (
-	"github.com/MJKWoolnough/gopherjs/style"
-	"github.com/MJKWoolnough/gopherjs/tabs"
-	"github.com/MJKWoolnough/gopherjs/xdom"
-	"github.com/MJKWoolnough/gopherjs/xjs"
 	"honnef.co/go/js/dom"
+	"vimagination.zapto.org/gopherjs/style"
+	"vimagination.zapto.org/gopherjs/tabs"
+	"vimagination.zapto.org/gopherjs/xdom"
+	"vimagination.zapto.org/gopherjs/xjs"
 )
 
 func init() {

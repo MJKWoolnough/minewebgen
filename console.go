@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/fsnotify.v1"
 
-	"github.com/MJKWoolnough/byteio"
+	"vimagination.zapto.org/byteio"
 	"golang.org/x/net/websocket"
 )
 

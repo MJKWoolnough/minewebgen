@@ -5,13 +5,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/MJKWoolnough/gopherjs/overlay"
-	"github.com/MJKWoolnough/gopherjs/style"
-	"github.com/MJKWoolnough/gopherjs/tabs"
-	"github.com/MJKWoolnough/gopherjs/xdom"
-	"github.com/MJKWoolnough/gopherjs/xform"
-	"github.com/MJKWoolnough/gopherjs/xjs"
-	"github.com/MJKWoolnough/minewebgen/internal/data"
+	"vimagination.zapto.org/gopherjs/overlay"
+	"vimagination.zapto.org/gopherjs/style"
+	"vimagination.zapto.org/gopherjs/tabs"
+	"vimagination.zapto.org/gopherjs/xdom"
+	"vimagination.zapto.org/gopherjs/xform"
+	"vimagination.zapto.org/gopherjs/xjs"
+	"vimagination.zapto.org/minewebgen/internal/data"
 	"honnef.co/go/js/dom"
 )
 

@@ -1,4 +1,4 @@
-package main
+package main // import "vimagination.zapto.org/minewebgen"
 
 import (
 	"flag"
@@ -11,9 +11,9 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/MJKWoolnough/httpdir"
-	"github.com/MJKWoolnough/httpgzip"
 	"golang.org/x/net/websocket"
+	"vimagination.zapto.org/httpdir"
+	"vimagination.zapto.org/httpgzip"
 )
 
 var dir http.FileSystem = httpdir.Default

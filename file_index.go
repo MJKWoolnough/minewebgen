@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"github.com/MJKWoolnough/httpdir"
+	"vimagination.zapto.org/httpdir"
 )
 
 func init() {

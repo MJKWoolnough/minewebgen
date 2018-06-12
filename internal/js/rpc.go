@@ -6,9 +6,9 @@ import (
 
 	"honnef.co/go/js/dom"
 
-	"github.com/MJKWoolnough/gopherjs/xdom"
-	"github.com/MJKWoolnough/gopherjs/xjs"
-	"github.com/MJKWoolnough/minewebgen/internal/data"
+	"vimagination.zapto.org/gopherjs/xdom"
+	"vimagination.zapto.org/gopherjs/xjs"
+	"vimagination.zapto.org/minewebgen/internal/data"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/websocket"
 )

@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/MJKWoolnough/byteio"
+	"vimagination.zapto.org/byteio"
 )
 
 func (t Transfer) maps(name string, _ *byteio.StickyLittleEndianReader, _ *byteio.StickyLittleEndianWriter, f *os.File, size int64) error {

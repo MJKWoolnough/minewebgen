@@ -6,7 +6,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/MJKWoolnough/minewebgen/internal/data"
+	"vimagination.zapto.org/minewebgen/internal/data"
 )
 
 type Config struct {

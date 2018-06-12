@@ -1,4 +1,4 @@
-package main
+package main // import "vimagination.zapto.org/minewebgen/internal/generator"
 
 import (
 	"encoding/json"
@@ -6,10 +6,10 @@ import (
 	"os"
 	"path"
 
-	"github.com/MJKWoolnough/byteio"
-	"github.com/MJKWoolnough/minecraft"
-	"github.com/MJKWoolnough/minewebgen/internal/data"
-	"github.com/MJKWoolnough/ora"
+	"vimagination.zapto.org/byteio"
+	"vimagination.zapto.org/minecraft"
+	"vimagination.zapto.org/minewebgen/internal/data"
+	"vimagination.zapto.org/ora"
 )
 
 func LoadGenerator(f *os.File) (*generator, error) {

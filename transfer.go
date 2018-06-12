@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/MJKWoolnough/byteio"
-	"github.com/MJKWoolnough/minewebgen/internal/data"
+	"vimagination.zapto.org/byteio"
+	"vimagination.zapto.org/minewebgen/internal/data"
 	"golang.org/x/net/websocket"
 )
 

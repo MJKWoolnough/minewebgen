@@ -9,9 +9,9 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/MJKWoolnough/memio"
-	"github.com/MJKWoolnough/minecraft"
-	"github.com/MJKWoolnough/minewebgen/internal/data"
+	"vimagination.zapto.org/memio"
+	"vimagination.zapto.org/minecraft"
+	"vimagination.zapto.org/minewebgen/internal/data"
 )
 
 type RPC struct {

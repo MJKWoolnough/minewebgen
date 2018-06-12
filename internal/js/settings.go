@@ -3,9 +3,9 @@ package main
 import (
 	"time"
 
-	"github.com/MJKWoolnough/gopherjs/xdom"
-	"github.com/MJKWoolnough/gopherjs/xform"
-	"github.com/MJKWoolnough/gopherjs/xjs"
+	"vimagination.zapto.org/gopherjs/xdom"
+	"vimagination.zapto.org/gopherjs/xform"
+	"vimagination.zapto.org/gopherjs/xjs"
 	"honnef.co/go/js/dom"
 )
 

@@ -8,9 +8,9 @@ import (
 	"path"
 	"sync"
 
-	"github.com/MJKWoolnough/byteio"
-	"github.com/MJKWoolnough/minecraft"
-	"github.com/MJKWoolnough/minewebgen/internal/data"
+	"vimagination.zapto.org/byteio"
+	"vimagination.zapto.org/minecraft"
+	"vimagination.zapto.org/minewebgen/internal/data"
 )
 
 type generatorProcesses struct {

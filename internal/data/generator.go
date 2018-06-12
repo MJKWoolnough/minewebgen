@@ -1,9 +1,9 @@
-package data
+package data // import "vimagination.zapto.org/minewebgen/internal/data"
 
 import (
 	"image/color"
 
-	"github.com/MJKWoolnough/minecraft"
+	"vimagination.zapto.org/minecraft"
 )
 
 type Blocks struct {
