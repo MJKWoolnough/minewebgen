@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -9,7 +10,6 @@ import (
 	"path"
 	"strconv"
 
-	"vimagination.zapto.org/memio"
 	"vimagination.zapto.org/minecraft"
 	"vimagination.zapto.org/minewebgen/internal/data"
 )
@@ -383,12 +383,12 @@ func (r RPC) CreateSuperflatMap(data data.SuperFlatMap, _ *struct{}) error {
 
 func (r RPC) CreateCustomMap(data data.CustomMap, _ *struct{}) error {
 	// check settings for validity
-	var buf []byte
-	err := json.NewEncoder(memio.Create(&buf)).Encode(data.GeneratorSettings)
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(data.GeneratorSettings)
 	if err != nil {
 		return err
 	}
-	return r.createMap(data.DefaultMap, string(buf))
+	return r.createMap(data.DefaultMap, buf.String())
 }
 
 func (r RPC) ServerEULA(id int, d *string) error {
