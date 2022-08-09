@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"os"
 	"path"
@@ -407,7 +407,7 @@ func (r RPC) ServerEULA(id int, d *string) error {
 			return nil
 		}
 	}
-	b, err := ioutil.ReadAll(f)
+	b, err := io.ReadAll(f)
 	if err != nil {
 		return err
 	}

@@ -3,13 +3,12 @@ package main
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 
+	"golang.org/x/net/websocket"
 	"vimagination.zapto.org/byteio"
 	"vimagination.zapto.org/minewebgen/internal/data"
-	"golang.org/x/net/websocket"
 )
 
 var transferFuncs = [...]func(Transfer, string, *byteio.StickyLittleEndianReader, *byteio.StickyLittleEndianWriter, *os.File, int64) error{
@@ -53,7 +52,7 @@ func (t Transfer) handle(r *byteio.StickyLittleEndianReader, w *byteio.StickyLit
 		return errors.New("invalid transfer type")
 	}
 
-	f, err := ioutil.TempFile("", "mineWebGen")
+	f, err := os.CreateTemp("", "mineWebGen")
 	if err != nil {
 		return err
 	}
